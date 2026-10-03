@@ -1,0 +1,102 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:broiler_fms/domain/current_account_domain.dart';
+import 'package:broiler_fms/domain/domain_exception.dart';
+import 'package:broiler_fms/domain/models/account.dart';
+import 'package:broiler_fms/domain/models/expense.dart';
+import 'package:broiler_fms/domain/rules/expense_category_rule.dart';
+import 'package:broiler_fms/repository/batch/local_batch_repository.dart';
+import 'package:broiler_fms/repository/expense/local_expense_repository.dart';
+
+/// Mobile-side expense actions, used by Manager. Unlike the other entry
+/// types, Staff never records an expense, financial data is restricted
+/// to Manager and above, matching [LocalExpenseRepository]'s own
+/// restriction.
+///
+/// No bird-count rule applies here, an expense does not change how
+/// many birds are in a batch.
+class ExpenseDomain {
+  ExpenseDomain({
+    required LocalExpenseRepository expenseRepo,
+    required LocalBatchRepository batchRepo,
+    required Account currentAccount,
+  })  : _expenseRepo = expenseRepo,
+        _batchRepo = batchRepo,
+        _currentAccount = currentAccount;
+
+  final LocalExpenseRepository _expenseRepo;
+  final LocalBatchRepository _batchRepo;
+  final Account _currentAccount;
+
+  /// Records an expense, after checking the batch is open and the
+  /// category is one the database allows.
+  Future<Expense> recordExpense({
+    required String batchId,
+    required String category,
+    required DateTime date,
+    required double amount,
+    double? quantity,
+    double? unitPrice,
+    String? feedType,
+    String? medicationName,
+    String? description,
+  }) async {
+    await _checkBatchOpen(batchId);
+
+    final categoryError = expenseCategoryError(category);
+    if (categoryError != null) {
+      throw DomainException(categoryError);
+    }
+
+    return _expenseRepo.record(
+      batchId: batchId,
+      recordedBy: _currentAccount.accountId,
+      category: category,
+      date: date,
+      amount: amount,
+      quantity: quantity,
+      unitPrice: unitPrice,
+      feedType: feedType,
+      medicationName: medicationName,
+      description: description,
+    );
+  }
+
+  /// All expenses for one batch.
+  Future<List<Expense>> getByBatch(String batchId) {
+    return _expenseRepo.getByBatch(batchId);
+  }
+
+  /// Same as [getByBatch], but emits a new list whenever the data
+  /// changes.
+  Stream<List<Expense>> watchByBatch(String batchId) {
+    return _expenseRepo.watchByBatch(batchId);
+  }
+
+  /// Throws if the batch is missing or already closed.
+  Future<void> _checkBatchOpen(String batchId) async {
+    final batch = await _batchRepo.getById(batchId);
+    if (batch == null) {
+      throw const DomainException('This batch could not be found.');
+    }
+    if (batch.isClosed) {
+      throw const DomainException(
+        'This batch is closed, so no more expenses can be recorded.',
+      );
+    }
+  }
+}
+
+/// Builds an [ExpenseDomain] for the currently signed-in account.
+/// Throws if nobody is resolved as signed in yet.
+final expenseDomainProvider = Provider<ExpenseDomain>((ref) {
+  final currentAccount = ref.watch(currentAccountProvider).value;
+  if (currentAccount == null) {
+    throw const DomainException('No account is currently signed in.');
+  }
+  return ExpenseDomain(
+    expenseRepo: ref.watch(localExpenseRepositoryProvider),
+    batchRepo: ref.watch(localBatchRepositoryProvider),
+    currentAccount: currentAccount,
+  );
+});
