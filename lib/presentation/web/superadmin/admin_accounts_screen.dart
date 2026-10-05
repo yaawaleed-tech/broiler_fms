@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:broiler_fms/domain/account/remote_account_domain.dart';
-import 'package:broiler_fms/domain/auth_domain.dart';
+import 'package:broiler_fms/domain/web_auth_domain_provider.dart';
 import 'package:broiler_fms/domain/domain_exception.dart';
 import 'package:broiler_fms/domain/models/account.dart';
 import 'package:broiler_fms/presentation/shared/theme/app_theme.dart';

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:broiler_fms/domain/business/business_domain.dart';
-import 'package:broiler_fms/domain/current_account_domain.dart';
+import 'package:broiler_fms/domain/web_current_account_domain.dart';
 import 'package:broiler_fms/domain/domain_exception.dart';
 import 'package:broiler_fms/presentation/shared/theme/app_theme.dart';
 
@@ -60,10 +60,11 @@ class _RegisterBusinessScreenState
         businessType: _textOrNull(_businessTypeController),
         description: _textOrNull(_descriptionController),
       );
-      // The cached Account still shows businessId as null until this
-      // is invalidated, the router's guard reads from that cache, not
-      // directly from Supabase, so it has to be told to refetch.
-      ref.invalidate(currentAccountProvider);
+      // webCurrentAccountProvider is a Riverpod FutureProvider, so its
+      // last result stays cached until something invalidates it. The
+      // router's guard reads that cached value, not Supabase directly,
+      // so it has to be told to refetch after the business is created.
+      ref.invalidate(webCurrentAccountProvider);
       if (!mounted) return;
       context.go('/');
     } on DomainException catch (e) {

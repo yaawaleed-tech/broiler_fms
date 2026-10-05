@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:broiler_fms/domain/current_account_domain.dart';
+import 'package:broiler_fms/domain/web_current_account_domain.dart';
 import 'package:broiler_fms/presentation/web/admin/accounts_screen.dart';
 import 'package:broiler_fms/presentation/web/admin/admin_shell.dart';
 import 'package:broiler_fms/presentation/web/admin/batch_view_screen.dart';
@@ -19,7 +19,7 @@ import 'package:broiler_fms/presentation/web/superadmin/admin_accounts_screen.da
 /// '/overview', which lives inside AdminShell's sidebar.
 final webRouterProvider = Provider<GoRouter>((ref) {
   Future<String?> redirect(BuildContext context, GoRouterState state) async {
-    final account = await ref.read(currentAccountProvider.future);
+    final account = await ref.read(webCurrentAccountProvider.future);
     final isLoggingIn = state.matchedLocation.startsWith('/login');
     final isRegisteringBusiness =
         state.matchedLocation == '/register-business';

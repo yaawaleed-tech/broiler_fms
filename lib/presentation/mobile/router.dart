@@ -103,23 +103,11 @@ final mobileRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
-        path: '/batches/:batchId/harvests',
-        builder: (context, state) => const Scaffold(
-          body: Center(child: Text('Price a harvest coming soon')),
-        ),
-      ),
-      GoRoute(
         path: '/batches/:batchId/assign-staff',
         builder: (context, state) {
           final batchId = state.pathParameters['batchId']!;
           return AssignStaffScreen(batchId: batchId);
         },
-      ),
-      GoRoute(
-        path: '/batches/:batchId/financial',
-        builder: (context, state) => const Scaffold(
-          body: Center(child: Text('Financial summary coming soon')),
-        ),
       ),
       GoRoute(
         path: '/register-batch',

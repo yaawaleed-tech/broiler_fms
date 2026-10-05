@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:broiler_fms/domain/auth_domain.dart';
-import 'package:broiler_fms/domain/current_account_domain.dart';
+import 'package:broiler_fms/domain/web_auth_domain_provider.dart';
+import 'package:broiler_fms/domain/web_current_account_domain.dart';
 import 'package:broiler_fms/domain/domain_exception.dart';
 import 'package:broiler_fms/presentation/shared/theme/app_theme.dart';
 
@@ -43,7 +43,7 @@ class _CodeScreenState extends ConsumerState<CodeScreen> {
         email: widget.email,
         code: code,
       );
-      ref.invalidate(currentAccountProvider);
+      ref.invalidate(webCurrentAccountProvider);
       if (!mounted) return;
       context.go('/');
     } on DomainException catch (e) {

@@ -1,25 +1,26 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'package:broiler_fms/data/remote/supabase_provider.dart';
-import 'package:broiler_fms/domain/current_account_domain.dart';
 import 'package:broiler_fms/domain/domain_exception.dart';
 
 /// Email OTP login, used by every role. Wraps Supabase Auth directly,
 /// since there is no repository for authentication itself, only for
 /// the Account data that exists once someone is signed in.
+///
+/// [onLoginSuccess] runs right after a code is verified. AuthDomain
+/// itself never knows whether "who's signed in" is resolved through a
+/// local cache (mobile) or a direct Supabase call (web) — each
+/// platform's own provider supplies the right callback, so this file
+/// stays free of any import that could reach dart:ffi.
 class AuthDomain {
   AuthDomain({
     required SupabaseClient supabase,
-    required CurrentAccountDomain currentAccountDomain,
+    required Future<void> Function() onLoginSuccess,
   })  : _supabase = supabase,
-        _currentAccountDomain = currentAccountDomain;
+        _onLoginSuccess = onLoginSuccess;
 
   final SupabaseClient _supabase;
-  final CurrentAccountDomain _currentAccountDomain;
+  final Future<void> Function() _onLoginSuccess;
 
-  /// Sends a 6-digit login code to [email]. Throws if Supabase
-  /// rejects the request, e.g. no account exists for that email.
   Future<void> sendLoginCode(String email) async {
     try {
       await _supabase.auth.signInWithOtp(email: email);
@@ -28,9 +29,6 @@ class AuthDomain {
     }
   }
 
-  /// Verifies [code] for [email]. On success, immediately resolves
-  /// and caches this device's own Account, so every other Domain
-  /// class has a currentAccount ready the moment login finishes.
   Future<void> verifyLoginCode({
     required String email,
     required String code,
@@ -46,20 +44,10 @@ class AuthDomain {
         'That code is incorrect or has expired.',
       );
     }
-    await _currentAccountDomain.resolveAndCacheMyAccount();
+    await _onLoginSuccess();
   }
 
-  /// Signs out and clears this device's local state.
   Future<void> logOut() async {
     await _supabase.auth.signOut();
   }
 }
-
-/// Builds an [AuthDomain] wired to the shared Supabase client and
-/// [CurrentAccountDomain].
-final authDomainProvider = Provider<AuthDomain>((ref) {
-  return AuthDomain(
-    supabase: ref.watch(supabaseClientProvider),
-    currentAccountDomain: ref.watch(currentAccountDomainProvider),
-  );
-});
