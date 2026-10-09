@@ -8,6 +8,7 @@ import 'package:broiler_fms/domain/models/financial_summary.dart';
 import 'package:broiler_fms/domain/rules/batch_closure_rule.dart';
 import 'package:broiler_fms/domain/rules/financial_summary_rule.dart';
 import 'package:broiler_fms/repository/batch/local_batch_repository.dart';
+import 'package:broiler_fms/repository/batch/remote_batch_repository.dart';
 import 'package:broiler_fms/repository/expense/local_expense_repository.dart';
 import 'package:broiler_fms/repository/feed/local_feed_repository.dart';
 import 'package:broiler_fms/repository/harvest/local_harvest_repository.dart';
@@ -16,7 +17,7 @@ import 'package:broiler_fms/repository/sale/local_sale_repository.dart';
 import 'package:broiler_fms/repository/weight/local_weight_repository.dart';
 import 'package:broiler_fms/domain/rules/bird_count_rule.dart';
 
-/// Mobile-side batch actions, used by Manager.
+/// Mobile-side batch actions, used by Manager and Staff.
 ///
 /// Presentation calls this class and never a repository directly.
 /// [businessId] on create and [closedBy] on close are never passed in
@@ -25,6 +26,7 @@ import 'package:broiler_fms/domain/rules/bird_count_rule.dart';
 class BatchDomain {
   BatchDomain({
     required LocalBatchRepository batchRepo,
+    required RemoteBatchRepository remoteBatchRepo,
     required LocalHarvestRepository harvestRepo,
     required LocalMortalityRepository mortalityRepo,
     required LocalExpenseRepository expenseRepo,
@@ -33,6 +35,7 @@ class BatchDomain {
     required LocalWeightRepository weightRepo,
     required Account currentAccount,
   })  : _batchRepo = batchRepo,
+        _remoteBatchRepo = remoteBatchRepo,
         _harvestRepo = harvestRepo,
         _mortalityRepo = mortalityRepo,
         _expenseRepo = expenseRepo,
@@ -42,6 +45,7 @@ class BatchDomain {
         _currentAccount = currentAccount;
 
   final LocalBatchRepository _batchRepo;
+  final RemoteBatchRepository _remoteBatchRepo;
   final LocalHarvestRepository _harvestRepo;
   final LocalMortalityRepository _mortalityRepo;
   final LocalExpenseRepository _expenseRepo;
@@ -110,6 +114,17 @@ class BatchDomain {
   /// One batch by id, or null if it isn't in local storage.
   Future<Batch?> getById(String batchId) {
     return _batchRepo.getById(batchId);
+  }
+
+  /// Pulls the latest batches from Supabase and overwrites the local
+  /// cache — the batch counterpart to AccountDomain.refreshStaffPool().
+  /// Needs connectivity; RLS returns only the rows this signed-in
+  /// account is allowed to see, for every role, so nothing is filtered
+  /// by hand here, and nothing enqueues: this data already lives on
+  /// the server and must never be pushed back up.
+  Future<void> refreshBatches() async {
+    final batches = await _remoteBatchRepo.getAll();
+    await _batchRepo.upsertAll(batches);
   }
 
 
@@ -258,6 +273,7 @@ final batchDomainProvider = Provider<BatchDomain>((ref) {
   }
   return BatchDomain(
     batchRepo: ref.watch(localBatchRepositoryProvider),
+    remoteBatchRepo: ref.watch(remoteBatchRepositoryProvider),
     harvestRepo: ref.watch(localHarvestRepositoryProvider),
     mortalityRepo: ref.watch(localMortalityRepositoryProvider),
     expenseRepo: ref.watch(localExpenseRepositoryProvider),

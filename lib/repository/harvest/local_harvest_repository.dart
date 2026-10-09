@@ -5,6 +5,7 @@ import 'package:broiler_fms/data/local/database.dart' as local;
 import 'package:broiler_fms/domain/models/harvest.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:broiler_fms/data/local/local_sync_queue_repository.dart';
 
 import 'package:broiler_fms/data/local/database_provider.dart';
 
@@ -18,6 +19,24 @@ class LocalHarvestRepository {
 
   final local.AppDatabase _db;
   static const _uuid = Uuid();
+  late final LocalSyncQueueRepository _syncQueueRepo =
+      LocalSyncQueueRepository(_db);
+
+  /// Overwrites the cache with harvest entries just pulled from
+  /// Supabase, mirroring LocalBatchRepository.upsertAll.
+  ///
+  /// Deliberately never touches the sync queue: the enqueue() call
+  /// lives inside the local-origin write below (record), which has to
+  /// travel up. This is the opposite direction — data that is already
+  /// on the server — and queuing it would loop pointless pushes.
+  Future<void> upsertAll(List<Harvest> harvests) {
+    return _db.batch((batch) {
+      batch.insertAllOnConflictUpdate(
+        _db.harvestEntries,
+        harvests.map(_toCompanion).toList(),
+      );
+    });
+  }
 
   /// Saves a new harvest entry on the device and returns it.
   /// The id is created here so the entry works fully offline.
@@ -36,6 +55,11 @@ class LocalHarvestRepository {
       recordedAt: DateTime.now(),
     );
     await _db.into(_db.harvestEntries).insert(_toCompanion(harvest));
+    await _syncQueueRepo.enqueue(
+      entityTable: 'harvest_entries',
+      recordId: harvest.harvestId,
+      operation: 'insert',
+    );
     return harvest;
   }
 
@@ -53,6 +77,13 @@ class LocalHarvestRepository {
       ..where((h) => h.harvestId.equals(harvestId));
     final row = await query.getSingleOrNull();
     return row == null ? null : _fromRow(row);
+  }
+
+  /// Stamps [syncedAt] once the entry has reached Supabase.
+  Future<void> markSynced(String harvestId, DateTime at) {
+    final query = _db.update(_db.harvestEntries)
+      ..where((h) => h.harvestId.equals(harvestId));
+    return query.write(local.HarvestEntriesCompanion(syncedAt: Value(at)));
   }
 
   /// Same as [getByBatch], but emits a new list whenever the data changes.

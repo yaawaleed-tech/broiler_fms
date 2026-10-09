@@ -5,6 +5,7 @@ import 'package:broiler_fms/data/local/database.dart' as local;
 import 'package:broiler_fms/domain/models/feed.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:broiler_fms/data/local/database_provider.dart';
+import 'package:broiler_fms/data/local/local_sync_queue_repository.dart';
 
 /// Feed entries stored on the device, used by the mobile app
 /// (Staff only). It talks only to Drift and always returns [Feed]
@@ -14,6 +15,24 @@ class LocalFeedRepository {
 
   final local.AppDatabase _db;
   static const _uuid = Uuid();
+  late final LocalSyncQueueRepository _syncQueueRepo =
+      LocalSyncQueueRepository(_db);
+
+  /// Overwrites the cache with feed entries just pulled from Supabase,
+  /// mirroring LocalBatchRepository.upsertAll.
+  ///
+  /// Deliberately never touches the sync queue: the enqueue() call
+  /// lives inside the local-origin write below (record), which has to
+  /// travel up. This is the opposite direction — data that is already
+  /// on the server — and queuing it would loop pointless pushes.
+  Future<void> upsertAll(List<Feed> feeds) {
+    return _db.batch((batch) {
+      batch.insertAllOnConflictUpdate(
+        _db.feedEntries,
+        feeds.map(_toCompanion).toList(),
+      );
+    });
+  }
 
   /// Saves a new feed entry on the device and returns it.
   /// The id is created here so the entry works fully offline.
@@ -32,6 +51,11 @@ class LocalFeedRepository {
       recordedAt: DateTime.now(),
     );
     await _db.into(_db.feedEntries).insert(_toCompanion(feed));
+    await _syncQueueRepo.enqueue(
+      entityTable: 'feed_entries',
+      recordId: feed.feedEntryId,
+      operation: 'insert',
+    );
     return feed;
   }
 
@@ -48,6 +72,21 @@ class LocalFeedRepository {
     final query = _db.select(_db.feedEntries)
       ..where((f) => f.batchId.equals(batchId));
     return query.watch().map((rows) => rows.map(_fromRow).toList());
+  }
+
+  /// One feed entry by id, or null if it isn't in local storage.
+  Future<Feed?> getById(String feedEntryId) async {
+    final query = _db.select(_db.feedEntries)
+      ..where((f) => f.feedEntryId.equals(feedEntryId));
+    final row = await query.getSingleOrNull();
+    return row == null ? null : _fromRow(row);
+  }
+
+  /// Stamps [syncedAt] once the entry has reached Supabase.
+  Future<void> markSynced(String feedEntryId, DateTime at) {
+    final query = _db.update(_db.feedEntries)
+      ..where((f) => f.feedEntryId.equals(feedEntryId));
+    return query.write(local.FeedEntriesCompanion(syncedAt: Value(at)));
   }
 
   /// Drift row to the standard [Feed]. Lives here, not in the model,

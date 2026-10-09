@@ -15,7 +15,8 @@ class AuthDomain {
   AuthDomain({
     required SupabaseClient supabase,
     required Future<void> Function() onLoginSuccess,
-  })  : _supabase = supabase,
+  })
+      : _supabase = supabase,
         _onLoginSuccess = onLoginSuccess;
 
   final SupabaseClient _supabase;
@@ -37,12 +38,20 @@ class AuthDomain {
       await _supabase.auth.verifyOTP(
         email: email,
         token: code,
-        type: OtpType.email,
+        type: OtpType.magiclink,
       );
     } on AuthException {
-      throw const DomainException(
-        'That code is incorrect or has expired.',
-      );
+      try {
+        await _supabase.auth.verifyOTP(
+          email: email,
+          token: code,
+          type: OtpType.signup,
+        );
+      } on AuthException {
+        throw const DomainException(
+          'That code is incorrect or has expired.',
+        );
+      }
     }
     await _onLoginSuccess();
   }

@@ -7,6 +7,7 @@ import 'package:broiler_fms/domain/models/expense.dart';
 import 'package:broiler_fms/domain/rules/expense_category_rule.dart';
 import 'package:broiler_fms/repository/batch/local_batch_repository.dart';
 import 'package:broiler_fms/repository/expense/local_expense_repository.dart';
+import 'package:broiler_fms/repository/expense/remote_expense_repository.dart';
 
 /// Mobile-side expense actions, used by Manager. Unlike the other entry
 /// types, Staff never records an expense, financial data is restricted
@@ -18,13 +19,16 @@ import 'package:broiler_fms/repository/expense/local_expense_repository.dart';
 class ExpenseDomain {
   ExpenseDomain({
     required LocalExpenseRepository expenseRepo,
+    required RemoteExpenseRepository remoteExpenseRepo,
     required LocalBatchRepository batchRepo,
     required Account currentAccount,
   })  : _expenseRepo = expenseRepo,
+        _remoteExpenseRepo = remoteExpenseRepo,
         _batchRepo = batchRepo,
         _currentAccount = currentAccount;
 
   final LocalExpenseRepository _expenseRepo;
+  final RemoteExpenseRepository _remoteExpenseRepo;
   final LocalBatchRepository _batchRepo;
   final Account _currentAccount;
 
@@ -73,6 +77,16 @@ class ExpenseDomain {
     return _expenseRepo.watchByBatch(batchId);
   }
 
+  /// Pulls the latest expenses from Supabase and overwrites the local
+  /// cache — same contract as BatchDomain.refreshBatches(): needs
+  /// connectivity, RLS scopes the rows (Staff gets none back, financial
+  /// data is Manager-only by design), and nothing enqueues because this
+  /// data already lives on the server.
+  Future<void> refreshExpenses() async {
+    final expenses = await _remoteExpenseRepo.getAll();
+    await _expenseRepo.upsertAll(expenses);
+  }
+
   /// Throws if the batch is missing or already closed.
   Future<void> _checkBatchOpen(String batchId) async {
     final batch = await _batchRepo.getById(batchId);
@@ -96,6 +110,7 @@ final expenseDomainProvider = Provider<ExpenseDomain>((ref) {
   }
   return ExpenseDomain(
     expenseRepo: ref.watch(localExpenseRepositoryProvider),
+    remoteExpenseRepo: ref.watch(remoteExpenseRepositoryProvider),
     batchRepo: ref.watch(localBatchRepositoryProvider),
     currentAccount: currentAccount,
   );

@@ -7,6 +7,7 @@ import 'package:broiler_fms/domain/models/harvest.dart';
 import 'package:broiler_fms/domain/rules/bird_count_rule.dart';
 import 'package:broiler_fms/repository/batch/local_batch_repository.dart';
 import 'package:broiler_fms/repository/harvest/local_harvest_repository.dart';
+import 'package:broiler_fms/repository/harvest/remote_harvest_repository.dart';
 import 'package:broiler_fms/repository/mortality/local_mortality_repository.dart';
 import 'package:broiler_fms/domain/current_account_domain.dart';
 
@@ -20,15 +21,18 @@ import 'package:broiler_fms/domain/current_account_domain.dart';
 class HarvestDomain {
   HarvestDomain({
     required LocalHarvestRepository harvestRepo,
+    required RemoteHarvestRepository remoteHarvestRepo,
     required LocalBatchRepository batchRepo,
     required LocalMortalityRepository mortalityRepo,
     required Account currentAccount,
   })  : _harvestRepo = harvestRepo,
+        _remoteHarvestRepo = remoteHarvestRepo,
         _batchRepo = batchRepo,
         _mortalityRepo = mortalityRepo,
         _currentAccount = currentAccount;
 
   final LocalHarvestRepository _harvestRepo;
+  final RemoteHarvestRepository _remoteHarvestRepo;
   final LocalBatchRepository _batchRepo;
   final LocalMortalityRepository _mortalityRepo;
   final Account _currentAccount;
@@ -67,6 +71,16 @@ class HarvestDomain {
   /// Presentation is never allowed to call a repository directly.
   Future<Harvest?> getById(String harvestId) {
     return _harvestRepo.getById(harvestId);
+  }
+
+  /// Pulls the latest harvest entries from Supabase and overwrites
+  /// the local cache — same contract as BatchDomain.refreshBatches():
+  /// needs connectivity, RLS scopes the rows to this account's own
+  /// business (Staff: only assigned batches), and nothing enqueues
+  /// because this data already lives on the server.
+  Future<void> refreshHarvestEntries() async {
+    final harvests = await _remoteHarvestRepo.getAll();
+    await _harvestRepo.upsertAll(harvests);
   }
 
   /// Loads the batch, and throws if it is missing or already closed.
@@ -128,6 +142,7 @@ final harvestDomainProvider = Provider<HarvestDomain>((ref) {
   }
   return HarvestDomain(
     harvestRepo: ref.watch(localHarvestRepositoryProvider),
+    remoteHarvestRepo: ref.watch(remoteHarvestRepositoryProvider),
     batchRepo: ref.watch(localBatchRepositoryProvider),
     mortalityRepo: ref.watch(localMortalityRepositoryProvider),
     currentAccount: currentAccount,

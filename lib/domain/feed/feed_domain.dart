@@ -6,6 +6,7 @@ import 'package:broiler_fms/domain/models/account.dart';
 import 'package:broiler_fms/domain/models/feed.dart';
 import 'package:broiler_fms/repository/batch/local_batch_repository.dart';
 import 'package:broiler_fms/repository/feed/local_feed_repository.dart';
+import 'package:broiler_fms/repository/feed/remote_feed_repository.dart';
 
 /// Mobile-side feed actions, used by Staff.
 ///
@@ -14,13 +15,16 @@ import 'package:broiler_fms/repository/feed/local_feed_repository.dart';
 class FeedDomain {
   FeedDomain({
     required LocalFeedRepository feedRepo,
+    required RemoteFeedRepository remoteFeedRepo,
     required LocalBatchRepository batchRepo,
     required Account currentAccount,
   })  : _feedRepo = feedRepo,
+        _remoteFeedRepo = remoteFeedRepo,
         _batchRepo = batchRepo,
         _currentAccount = currentAccount;
 
   final LocalFeedRepository _feedRepo;
+  final RemoteFeedRepository _remoteFeedRepo;
   final LocalBatchRepository _batchRepo;
   final Account _currentAccount;
 
@@ -50,6 +54,16 @@ class FeedDomain {
     return _feedRepo.watchByBatch(batchId);
   }
 
+  /// Pulls the latest feed entries from Supabase and overwrites the
+  /// local cache — same contract as BatchDomain.refreshBatches():
+  /// needs connectivity, RLS scopes the rows to this account's own
+  /// business (Staff: only assigned batches), and nothing enqueues
+  /// because this data already lives on the server.
+  Future<void> refreshFeedEntries() async {
+    final feeds = await _remoteFeedRepo.getAll();
+    await _feedRepo.upsertAll(feeds);
+  }
+
   /// Throws if the batch is missing or already closed.
   Future<void> _checkBatchOpen(String batchId) async {
     final batch = await _batchRepo.getById(batchId);
@@ -73,6 +87,7 @@ final feedDomainProvider = Provider<FeedDomain>((ref) {
   }
   return FeedDomain(
     feedRepo: ref.watch(localFeedRepositoryProvider),
+    remoteFeedRepo: ref.watch(remoteFeedRepositoryProvider),
     batchRepo: ref.watch(localBatchRepositoryProvider),
     currentAccount: currentAccount,
   );

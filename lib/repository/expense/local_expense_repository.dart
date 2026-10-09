@@ -5,6 +5,7 @@ import 'package:broiler_fms/data/local/database.dart' as local;
 import 'package:broiler_fms/domain/models/expense.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:broiler_fms/data/local/database_provider.dart';
+import 'package:broiler_fms/data/local/local_sync_queue_repository.dart';
 
 /// Expenses stored on the device, used by the mobile app (Manager only,
 /// unlike the other entry types). It talks only to Drift and always
@@ -17,6 +18,24 @@ class LocalExpenseRepository {
 
   final local.AppDatabase _db;
   static const _uuid = Uuid();
+  late final LocalSyncQueueRepository _syncQueueRepo =
+      LocalSyncQueueRepository(_db);
+
+  /// Overwrites the cache with expenses just pulled from Supabase,
+  /// mirroring LocalBatchRepository.upsertAll.
+  ///
+  /// Deliberately never touches the sync queue: the enqueue() call
+  /// lives inside the local-origin write below (record), which has to
+  /// travel up. This is the opposite direction — data that is already
+  /// on the server — and queuing it would loop pointless pushes.
+  Future<void> upsertAll(List<Expense> expenses) {
+    return _db.batch((batch) {
+      batch.insertAllOnConflictUpdate(
+        _db.expenses,
+        expenses.map(_toCompanion).toList(),
+      );
+    });
+  }
 
   /// Saves a new expense on the device and returns it.
   /// The id is created here so the expense works fully offline.
@@ -47,6 +66,11 @@ class LocalExpenseRepository {
       description: description,
     );
     await _db.into(_db.expenses).insert(_toCompanion(expense));
+    await _syncQueueRepo.enqueue(
+      entityTable: 'expenses',
+      recordId: expense.expenseId,
+      operation: 'insert',
+    );
     return expense;
   }
 
@@ -63,6 +87,21 @@ class LocalExpenseRepository {
     final query = _db.select(_db.expenses)
       ..where((e) => e.batchId.equals(batchId));
     return query.watch().map((rows) => rows.map(_fromRow).toList());
+  }
+
+  /// One expense by id, or null if it isn't in local storage.
+  Future<Expense?> getById(String expenseId) async {
+    final query = _db.select(_db.expenses)
+      ..where((e) => e.expenseId.equals(expenseId));
+    final row = await query.getSingleOrNull();
+    return row == null ? null : _fromRow(row);
+  }
+
+  /// Stamps [syncedAt] once the expense has reached Supabase.
+  Future<void> markSynced(String expenseId, DateTime at) {
+    final query = _db.update(_db.expenses)
+      ..where((e) => e.expenseId.equals(expenseId));
+    return query.write(local.ExpensesCompanion(syncedAt: Value(at)));
   }
 
   /// Drift row to the standard [Expense]. Lives here, not in the model,

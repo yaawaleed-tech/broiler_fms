@@ -7,6 +7,7 @@ import 'package:broiler_fms/domain/models/batch.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:broiler_fms/data/local/database_provider.dart';
+import 'package:broiler_fms/data/local/local_sync_queue_repository.dart';
 
 /// Batches stored on the device, used by the mobile app (Manager and
 /// Staff). It talks only to Drift and always returns [Batch] objects.
@@ -18,6 +19,26 @@ class LocalBatchRepository {
 
   final local.AppDatabase _db;
   static const _uuid = Uuid();
+  late final LocalSyncQueueRepository _syncQueueRepo =
+      LocalSyncQueueRepository(_db);
+
+  /// Overwrites the cache with batches just pulled from Supabase,
+  /// mirroring LocalAccountRepository.upsertAll.
+  ///
+  /// Deliberately never touches the sync queue: the enqueue() calls
+  /// live only inside the local-origin writes below (create, assign,
+  /// close), which have to travel up. This is the opposite direction —
+  /// data that is already on the server — and queuing it would loop
+  /// pointless pushes, which for Staff would fail forever anyway: they
+  /// have no RLS UPDATE on batch.
+  Future<void> upsertAll(List<Batch> batches) {
+    return _db.batch((batch) {
+      batch.insertAllOnConflictUpdate(
+        _db.batches,
+        batches.map(_toCompanion).toList(),
+      );
+    });
+  }
 
   /// Registers a new batch. Starts unassigned and open.
   Future<Batch> create({
@@ -40,25 +61,44 @@ class LocalBatchRepository {
       description: description,
     );
     await _db.into(_db.batches).insert(_toCompanion(batch));
+    await _syncQueueRepo.enqueue(
+      entityTable: 'batches',
+      recordId: batch.batchId,
+      operation: 'insert',
+    );
     return batch;
   }
 
   /// Assigns a Staff account to a batch, or replaces the current one.
   Future<void> assignStaff(String batchId, String staffId) {
-    return (_db.update(_db.batches)..where((b) => b.batchId.equals(batchId)))
+    final result = (_db.update(_db.batches)..where((b) => b.batchId.equals(batchId)))
         .write(local.BatchesCompanion(
       assignedStaffId: Value(staffId),
     ));
+    return result.then((_) async {
+      await _syncQueueRepo.enqueue(
+        entityTable: 'batches',
+        recordId: batchId,
+        operation: 'update',
+      );
+    });
   }
 
   /// Closes a batch. No more entries can be logged against it afterwards.
   Future<void> close(String batchId, String closedBy) {
-    return (_db.update(_db.batches)..where((b) => b.batchId.equals(batchId)))
+    final result = (_db.update(_db.batches)..where((b) => b.batchId.equals(batchId)))
         .write(local.BatchesCompanion(
       isClosed: const Value(true),
       closedBy: Value(closedBy),
       closedAt: Value(DateTime.now()),
     ));
+    return result.then((_) async {
+      await _syncQueueRepo.enqueue(
+        entityTable: 'batches',
+        recordId: batchId,
+        operation: 'update',
+      );
+    });
   }
 
   /// All batches in the business. For Manager, who sees everything.
@@ -117,7 +157,11 @@ class LocalBatchRepository {
     );
   }
 
-  /// Standard [Batch] to the values Drift needs for an insert.
+  /// Standard [Batch] to the values Drift needs for an insert or an
+  /// upsert. Every column is present on purpose: a column absent from
+  /// the companion keeps its old value on conflict-update and falls to
+  /// its default on insert, which would silently drop an assignment
+  /// or a close that only exists on the server.
   local.BatchesCompanion _toCompanion(Batch b) {
     return local.BatchesCompanion(
       batchId: Value(b.batchId),
@@ -127,8 +171,11 @@ class LocalBatchRepository {
       startDate: Value(b.startDate),
       isClosed: Value(b.isClosed),
       createdAt: Value(b.createdAt),
+      assignedStaffId: Value(b.assignedStaffId),
+      closedBy: Value(b.closedBy),
       breed: Value(b.breed),
       description: Value(b.description),
+      closedAt: Value(b.closedAt),
     );
   }
 }

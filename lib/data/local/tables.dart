@@ -84,6 +84,44 @@ class Batches extends Table {
   Set<Column> get primaryKey => {batchId};
 }
 
+/// Single source of truth for "what still needs to reach Supabase".
+/// Every local write/update that needs to sync enqueues a row here,
+/// in the SAME transaction as the write itself.
+class SyncQueue extends Table {
+  /// Auto-incrementing local id. Not synced anywhere — pure local bookkeeping.
+  IntColumn get id => integer().autoIncrement()();
+
+  /// Target table name, matching the local Drift table name
+  /// (e.g. 'batches', 'harvest_entries', 'sales'). Supabase's own
+  /// tables are singular, so the sync engine maps these to the
+  /// singular name on the way out — see the pushers in lib/sync.
+  TextColumn get entityTable => text()();
+
+  /// The client-generated UUID of the row this entry describes — matches
+  /// the entity's own primary key, reused verbatim, never remapped.
+  TextColumn get recordId => text()();
+
+  /// 'insert' or 'update'.
+  TextColumn get operation =>
+      text().customConstraint("NOT NULL CHECK (operation IN ('insert', 'update'))")();
+
+  /// When this row was enqueued (queue ordering, not the source row's own timestamp).
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  /// Failed push attempts. Read by the retry/backoff policy (later phase).
+  IntColumn get attempts => integer().withDefault(const Constant(0))();
+
+  /// Error from the most recent failed attempt. Null until first failure.
+  TextColumn get lastError => text().nullable()();
+
+  /// The server rejected this row for good (e.g. the bird-count
+  /// trigger fired). Rejected rows stay in the table so logout can
+  /// still warn about them, but pendingRows() excludes them so drain()
+  /// never retries what cannot succeed.
+  BoolColumn get rejected =>
+      boolean().withDefault(const Constant(false))();
+}
+
 class Expenses extends Table {
   TextColumn get expenseId => text()();
   TextColumn get batchId => text().references(Batches, #batchId)();

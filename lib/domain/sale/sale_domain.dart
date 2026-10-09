@@ -7,6 +7,7 @@ import 'package:broiler_fms/domain/models/sale.dart';
 import 'package:broiler_fms/domain/rules/sale_shape_rule.dart';
 import 'package:broiler_fms/repository/harvest/local_harvest_repository.dart';
 import 'package:broiler_fms/repository/sale/local_sale_repository.dart';
+import 'package:broiler_fms/repository/sale/remote_sale_repository.dart';
 
 /// Mobile-side sale actions, used by Manager.
 ///
@@ -16,13 +17,16 @@ import 'package:broiler_fms/repository/sale/local_sale_repository.dart';
 class SaleDomain {
   SaleDomain({
     required LocalSaleRepository saleRepo,
+    required RemoteSaleRepository remoteSaleRepo,
     required LocalHarvestRepository harvestRepo,
     required Account currentAccount,
   })  : _saleRepo = saleRepo,
+        _remoteSaleRepo = remoteSaleRepo,
         _harvestRepo = harvestRepo,
         _currentAccount = currentAccount;
 
   final LocalSaleRepository _saleRepo;
+  final RemoteSaleRepository _remoteSaleRepo;
   final LocalHarvestRepository _harvestRepo;
   final Account _currentAccount;
 
@@ -85,6 +89,16 @@ class SaleDomain {
     return _saleRepo.getByHarvest(harvestId);
   }
 
+  /// Pulls the latest sales from Supabase and overwrites the local
+  /// cache — same contract as BatchDomain.refreshBatches(): needs
+  /// connectivity, RLS scopes the rows (Staff gets none back, financial
+  /// data is Manager-only by design), and nothing enqueues because this
+  /// data already lives on the server.
+  Future<void> refreshSales() async {
+    final sales = await _remoteSaleRepo.getAll();
+    await _saleRepo.upsertAll(sales);
+  }
+
   /// Throws if the harvest being priced does not exist locally.
   Future<void> _checkHarvestExists(String harvestId) async {
     final harvest = await _harvestRepo.getById(harvestId);
@@ -111,6 +125,7 @@ final saleDomainProvider = Provider<SaleDomain>((ref) {
   }
   return SaleDomain(
     saleRepo: ref.watch(localSaleRepositoryProvider),
+    remoteSaleRepo: ref.watch(remoteSaleRepositoryProvider),
     harvestRepo: ref.watch(localHarvestRepositoryProvider),
     currentAccount: currentAccount,
   );

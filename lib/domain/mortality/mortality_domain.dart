@@ -9,6 +9,7 @@ import 'package:broiler_fms/domain/rules/bird_count_rule.dart';
 import 'package:broiler_fms/repository/batch/local_batch_repository.dart';
 import 'package:broiler_fms/repository/harvest/local_harvest_repository.dart';
 import 'package:broiler_fms/repository/mortality/local_mortality_repository.dart';
+import 'package:broiler_fms/repository/mortality/remote_mortality_repository.dart';
 
 /// Mobile-side mortality actions, used by Staff.
 ///
@@ -18,15 +19,18 @@ import 'package:broiler_fms/repository/mortality/local_mortality_repository.dart
 class MortalityDomain {
   MortalityDomain({
     required LocalMortalityRepository mortalityRepo,
+    required RemoteMortalityRepository remoteMortalityRepo,
     required LocalBatchRepository batchRepo,
     required LocalHarvestRepository harvestRepo,
     required Account currentAccount,
   })  : _mortalityRepo = mortalityRepo,
+        _remoteMortalityRepo = remoteMortalityRepo,
         _batchRepo = batchRepo,
         _harvestRepo = harvestRepo,
         _currentAccount = currentAccount;
 
   final LocalMortalityRepository _mortalityRepo;
+  final RemoteMortalityRepository _remoteMortalityRepo;
   final LocalBatchRepository _batchRepo;
   final LocalHarvestRepository _harvestRepo;
   final Account _currentAccount;
@@ -59,6 +63,16 @@ class MortalityDomain {
   /// changes.
   Stream<List<Mortality>> watchByBatch(String batchId) {
     return _mortalityRepo.watchByBatch(batchId);
+  }
+
+  /// Pulls the latest mortality entries from Supabase and overwrites
+  /// the local cache — same contract as BatchDomain.refreshBatches():
+  /// needs connectivity, RLS scopes the rows to this account's own
+  /// business (Staff: only assigned batches), and nothing enqueues
+  /// because this data already lives on the server.
+  Future<void> refreshMortalityEntries() async {
+    final mortalities = await _remoteMortalityRepo.getAll();
+    await _mortalityRepo.upsertAll(mortalities);
   }
 
   /// Loads the batch, and throws if it is missing or already closed.
@@ -119,6 +133,7 @@ final mortalityDomainProvider = Provider<MortalityDomain>((ref) {
   }
   return MortalityDomain(
     mortalityRepo: ref.watch(localMortalityRepositoryProvider),
+    remoteMortalityRepo: ref.watch(remoteMortalityRepositoryProvider),
     batchRepo: ref.watch(localBatchRepositoryProvider),
     harvestRepo: ref.watch(localHarvestRepositoryProvider),
     currentAccount: currentAccount,

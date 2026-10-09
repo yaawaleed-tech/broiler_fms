@@ -6,6 +6,7 @@ import 'package:broiler_fms/domain/models/account.dart';
 import 'package:broiler_fms/domain/models/weight_sample.dart';
 import 'package:broiler_fms/repository/batch/local_batch_repository.dart';
 import 'package:broiler_fms/repository/weight/local_weight_repository.dart';
+import 'package:broiler_fms/repository/weight/remote_weight_repository.dart';
 
 /// Mobile-side weight sample actions, used by Staff.
 ///
@@ -14,13 +15,16 @@ import 'package:broiler_fms/repository/weight/local_weight_repository.dart';
 class WeightDomain {
   WeightDomain({
     required LocalWeightRepository weightRepo,
+    required RemoteWeightRepository remoteWeightRepo,
     required LocalBatchRepository batchRepo,
     required Account currentAccount,
   })  : _weightRepo = weightRepo,
+        _remoteWeightRepo = remoteWeightRepo,
         _batchRepo = batchRepo,
         _currentAccount = currentAccount;
 
   final LocalWeightRepository _weightRepo;
+  final RemoteWeightRepository _remoteWeightRepo;
   final LocalBatchRepository _batchRepo;
   final Account _currentAccount;
 
@@ -52,6 +56,16 @@ class WeightDomain {
     return _weightRepo.watchByBatch(batchId);
   }
 
+  /// Pulls the latest weight samples from Supabase and overwrites the
+  /// local cache — same contract as BatchDomain.refreshBatches():
+  /// needs connectivity, RLS scopes the rows to this account's own
+  /// business (Staff: only assigned batches), and nothing enqueues
+  /// because this data already lives on the server.
+  Future<void> refreshWeightSamples() async {
+    final samples = await _remoteWeightRepo.getAll();
+    await _weightRepo.upsertAll(samples);
+  }
+
   /// Throws if the batch is missing or already closed.
   Future<void> _checkBatchOpen(String batchId) async {
     final batch = await _batchRepo.getById(batchId);
@@ -75,6 +89,7 @@ final weightDomainProvider = Provider<WeightDomain>((ref) {
   }
   return WeightDomain(
     weightRepo: ref.watch(localWeightRepositoryProvider),
+    remoteWeightRepo: ref.watch(remoteWeightRepositoryProvider),
     batchRepo: ref.watch(localBatchRepositoryProvider),
     currentAccount: currentAccount,
   );

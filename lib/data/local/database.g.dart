@@ -5726,6 +5726,535 @@ class SalesCompanion extends UpdateCompanion<Sale> {
   }
 }
 
+class $SyncQueueTable extends SyncQueue
+    with TableInfo<$SyncQueueTable, SyncQueueData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SyncQueueTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _entityTableMeta = const VerificationMeta(
+    'entityTable',
+  );
+  @override
+  late final GeneratedColumn<String> entityTable = GeneratedColumn<String>(
+    'entity_table',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _recordIdMeta = const VerificationMeta(
+    'recordId',
+  );
+  @override
+  late final GeneratedColumn<String> recordId = GeneratedColumn<String>(
+    'record_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _operationMeta = const VerificationMeta(
+    'operation',
+  );
+  @override
+  late final GeneratedColumn<String> operation = GeneratedColumn<String>(
+    'operation',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints:
+        'NOT NULL CHECK (operation IN (\'insert\', \'update\'))',
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _attemptsMeta = const VerificationMeta(
+    'attempts',
+  );
+  @override
+  late final GeneratedColumn<int> attempts = GeneratedColumn<int>(
+    'attempts',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _lastErrorMeta = const VerificationMeta(
+    'lastError',
+  );
+  @override
+  late final GeneratedColumn<String> lastError = GeneratedColumn<String>(
+    'last_error',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _rejectedMeta = const VerificationMeta(
+    'rejected',
+  );
+  @override
+  late final GeneratedColumn<bool> rejected = GeneratedColumn<bool>(
+    'rejected',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("rejected" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    entityTable,
+    recordId,
+    operation,
+    createdAt,
+    attempts,
+    lastError,
+    rejected,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sync_queue';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SyncQueueData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('entity_table')) {
+      context.handle(
+        _entityTableMeta,
+        entityTable.isAcceptableOrUnknown(
+          data['entity_table']!,
+          _entityTableMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_entityTableMeta);
+    }
+    if (data.containsKey('record_id')) {
+      context.handle(
+        _recordIdMeta,
+        recordId.isAcceptableOrUnknown(data['record_id']!, _recordIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_recordIdMeta);
+    }
+    if (data.containsKey('operation')) {
+      context.handle(
+        _operationMeta,
+        operation.isAcceptableOrUnknown(data['operation']!, _operationMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_operationMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('attempts')) {
+      context.handle(
+        _attemptsMeta,
+        attempts.isAcceptableOrUnknown(data['attempts']!, _attemptsMeta),
+      );
+    }
+    if (data.containsKey('last_error')) {
+      context.handle(
+        _lastErrorMeta,
+        lastError.isAcceptableOrUnknown(data['last_error']!, _lastErrorMeta),
+      );
+    }
+    if (data.containsKey('rejected')) {
+      context.handle(
+        _rejectedMeta,
+        rejected.isAcceptableOrUnknown(data['rejected']!, _rejectedMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SyncQueueData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SyncQueueData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      entityTable: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entity_table'],
+      )!,
+      recordId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}record_id'],
+      )!,
+      operation: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}operation'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      attempts: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}attempts'],
+      )!,
+      lastError: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_error'],
+      ),
+      rejected: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}rejected'],
+      )!,
+    );
+  }
+
+  @override
+  $SyncQueueTable createAlias(String alias) {
+    return $SyncQueueTable(attachedDatabase, alias);
+  }
+}
+
+class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
+  /// Auto-incrementing local id. Not synced anywhere — pure local bookkeeping.
+  final int id;
+
+  /// Target table name, matching the local Drift table name
+  /// (e.g. 'batches', 'harvest_entries', 'sales'). Supabase's own
+  /// tables are singular, so the sync engine maps these to the
+  /// singular name on the way out — see the pushers in lib/sync.
+  final String entityTable;
+
+  /// The client-generated UUID of the row this entry describes — matches
+  /// the entity's own primary key, reused verbatim, never remapped.
+  final String recordId;
+
+  /// 'insert' or 'update'.
+  final String operation;
+
+  /// When this row was enqueued (queue ordering, not the source row's own timestamp).
+  final DateTime createdAt;
+
+  /// Failed push attempts. Read by the retry/backoff policy (later phase).
+  final int attempts;
+
+  /// Error from the most recent failed attempt. Null until first failure.
+  final String? lastError;
+
+  /// The server rejected this row for good (e.g. the bird-count
+  /// trigger fired). Rejected rows stay in the table so logout can
+  /// still warn about them, but pendingRows() excludes them so drain()
+  /// never retries what cannot succeed.
+  final bool rejected;
+  const SyncQueueData({
+    required this.id,
+    required this.entityTable,
+    required this.recordId,
+    required this.operation,
+    required this.createdAt,
+    required this.attempts,
+    this.lastError,
+    required this.rejected,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['entity_table'] = Variable<String>(entityTable);
+    map['record_id'] = Variable<String>(recordId);
+    map['operation'] = Variable<String>(operation);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['attempts'] = Variable<int>(attempts);
+    if (!nullToAbsent || lastError != null) {
+      map['last_error'] = Variable<String>(lastError);
+    }
+    map['rejected'] = Variable<bool>(rejected);
+    return map;
+  }
+
+  SyncQueueCompanion toCompanion(bool nullToAbsent) {
+    return SyncQueueCompanion(
+      id: Value(id),
+      entityTable: Value(entityTable),
+      recordId: Value(recordId),
+      operation: Value(operation),
+      createdAt: Value(createdAt),
+      attempts: Value(attempts),
+      lastError: lastError == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastError),
+      rejected: Value(rejected),
+    );
+  }
+
+  factory SyncQueueData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SyncQueueData(
+      id: serializer.fromJson<int>(json['id']),
+      entityTable: serializer.fromJson<String>(json['entityTable']),
+      recordId: serializer.fromJson<String>(json['recordId']),
+      operation: serializer.fromJson<String>(json['operation']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      attempts: serializer.fromJson<int>(json['attempts']),
+      lastError: serializer.fromJson<String?>(json['lastError']),
+      rejected: serializer.fromJson<bool>(json['rejected']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'entityTable': serializer.toJson<String>(entityTable),
+      'recordId': serializer.toJson<String>(recordId),
+      'operation': serializer.toJson<String>(operation),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'attempts': serializer.toJson<int>(attempts),
+      'lastError': serializer.toJson<String?>(lastError),
+      'rejected': serializer.toJson<bool>(rejected),
+    };
+  }
+
+  SyncQueueData copyWith({
+    int? id,
+    String? entityTable,
+    String? recordId,
+    String? operation,
+    DateTime? createdAt,
+    int? attempts,
+    Value<String?> lastError = const Value.absent(),
+    bool? rejected,
+  }) => SyncQueueData(
+    id: id ?? this.id,
+    entityTable: entityTable ?? this.entityTable,
+    recordId: recordId ?? this.recordId,
+    operation: operation ?? this.operation,
+    createdAt: createdAt ?? this.createdAt,
+    attempts: attempts ?? this.attempts,
+    lastError: lastError.present ? lastError.value : this.lastError,
+    rejected: rejected ?? this.rejected,
+  );
+  SyncQueueData copyWithCompanion(SyncQueueCompanion data) {
+    return SyncQueueData(
+      id: data.id.present ? data.id.value : this.id,
+      entityTable: data.entityTable.present
+          ? data.entityTable.value
+          : this.entityTable,
+      recordId: data.recordId.present ? data.recordId.value : this.recordId,
+      operation: data.operation.present ? data.operation.value : this.operation,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      attempts: data.attempts.present ? data.attempts.value : this.attempts,
+      lastError: data.lastError.present ? data.lastError.value : this.lastError,
+      rejected: data.rejected.present ? data.rejected.value : this.rejected,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncQueueData(')
+          ..write('id: $id, ')
+          ..write('entityTable: $entityTable, ')
+          ..write('recordId: $recordId, ')
+          ..write('operation: $operation, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('attempts: $attempts, ')
+          ..write('lastError: $lastError, ')
+          ..write('rejected: $rejected')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    entityTable,
+    recordId,
+    operation,
+    createdAt,
+    attempts,
+    lastError,
+    rejected,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SyncQueueData &&
+          other.id == this.id &&
+          other.entityTable == this.entityTable &&
+          other.recordId == this.recordId &&
+          other.operation == this.operation &&
+          other.createdAt == this.createdAt &&
+          other.attempts == this.attempts &&
+          other.lastError == this.lastError &&
+          other.rejected == this.rejected);
+}
+
+class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
+  final Value<int> id;
+  final Value<String> entityTable;
+  final Value<String> recordId;
+  final Value<String> operation;
+  final Value<DateTime> createdAt;
+  final Value<int> attempts;
+  final Value<String?> lastError;
+  final Value<bool> rejected;
+  const SyncQueueCompanion({
+    this.id = const Value.absent(),
+    this.entityTable = const Value.absent(),
+    this.recordId = const Value.absent(),
+    this.operation = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.attempts = const Value.absent(),
+    this.lastError = const Value.absent(),
+    this.rejected = const Value.absent(),
+  });
+  SyncQueueCompanion.insert({
+    this.id = const Value.absent(),
+    required String entityTable,
+    required String recordId,
+    required String operation,
+    this.createdAt = const Value.absent(),
+    this.attempts = const Value.absent(),
+    this.lastError = const Value.absent(),
+    this.rejected = const Value.absent(),
+  }) : entityTable = Value(entityTable),
+       recordId = Value(recordId),
+       operation = Value(operation);
+  static Insertable<SyncQueueData> custom({
+    Expression<int>? id,
+    Expression<String>? entityTable,
+    Expression<String>? recordId,
+    Expression<String>? operation,
+    Expression<DateTime>? createdAt,
+    Expression<int>? attempts,
+    Expression<String>? lastError,
+    Expression<bool>? rejected,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (entityTable != null) 'entity_table': entityTable,
+      if (recordId != null) 'record_id': recordId,
+      if (operation != null) 'operation': operation,
+      if (createdAt != null) 'created_at': createdAt,
+      if (attempts != null) 'attempts': attempts,
+      if (lastError != null) 'last_error': lastError,
+      if (rejected != null) 'rejected': rejected,
+    });
+  }
+
+  SyncQueueCompanion copyWith({
+    Value<int>? id,
+    Value<String>? entityTable,
+    Value<String>? recordId,
+    Value<String>? operation,
+    Value<DateTime>? createdAt,
+    Value<int>? attempts,
+    Value<String?>? lastError,
+    Value<bool>? rejected,
+  }) {
+    return SyncQueueCompanion(
+      id: id ?? this.id,
+      entityTable: entityTable ?? this.entityTable,
+      recordId: recordId ?? this.recordId,
+      operation: operation ?? this.operation,
+      createdAt: createdAt ?? this.createdAt,
+      attempts: attempts ?? this.attempts,
+      lastError: lastError ?? this.lastError,
+      rejected: rejected ?? this.rejected,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (entityTable.present) {
+      map['entity_table'] = Variable<String>(entityTable.value);
+    }
+    if (recordId.present) {
+      map['record_id'] = Variable<String>(recordId.value);
+    }
+    if (operation.present) {
+      map['operation'] = Variable<String>(operation.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (attempts.present) {
+      map['attempts'] = Variable<int>(attempts.value);
+    }
+    if (lastError.present) {
+      map['last_error'] = Variable<String>(lastError.value);
+    }
+    if (rejected.present) {
+      map['rejected'] = Variable<bool>(rejected.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncQueueCompanion(')
+          ..write('id: $id, ')
+          ..write('entityTable: $entityTable, ')
+          ..write('recordId: $recordId, ')
+          ..write('operation: $operation, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('attempts: $attempts, ')
+          ..write('lastError: $lastError, ')
+          ..write('rejected: $rejected')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -5742,6 +6271,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $VaccinationEntriesTable(this);
   late final $HarvestEntriesTable harvestEntries = $HarvestEntriesTable(this);
   late final $SalesTable sales = $SalesTable(this);
+  late final $SyncQueueTable syncQueue = $SyncQueueTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -5757,6 +6287,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     vaccinationEntries,
     harvestEntries,
     sales,
+    syncQueue,
   ];
 }
 
@@ -12240,6 +12771,259 @@ typedef $$SalesTableProcessedTableManager =
       Sale,
       PrefetchHooks Function({bool harvestId, bool recordedBy})
     >;
+typedef $$SyncQueueTableCreateCompanionBuilder =
+    SyncQueueCompanion Function({
+      Value<int> id,
+      required String entityTable,
+      required String recordId,
+      required String operation,
+      Value<DateTime> createdAt,
+      Value<int> attempts,
+      Value<String?> lastError,
+      Value<bool> rejected,
+    });
+typedef $$SyncQueueTableUpdateCompanionBuilder =
+    SyncQueueCompanion Function({
+      Value<int> id,
+      Value<String> entityTable,
+      Value<String> recordId,
+      Value<String> operation,
+      Value<DateTime> createdAt,
+      Value<int> attempts,
+      Value<String?> lastError,
+      Value<bool> rejected,
+    });
+
+class $$SyncQueueTableFilterComposer
+    extends Composer<_$AppDatabase, $SyncQueueTable> {
+  $$SyncQueueTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get entityTable => $composableBuilder(
+    column: $table.entityTable,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get recordId => $composableBuilder(
+    column: $table.recordId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get operation => $composableBuilder(
+    column: $table.operation,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get attempts => $composableBuilder(
+    column: $table.attempts,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get rejected => $composableBuilder(
+    column: $table.rejected,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SyncQueueTableOrderingComposer
+    extends Composer<_$AppDatabase, $SyncQueueTable> {
+  $$SyncQueueTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get entityTable => $composableBuilder(
+    column: $table.entityTable,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get recordId => $composableBuilder(
+    column: $table.recordId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get operation => $composableBuilder(
+    column: $table.operation,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get attempts => $composableBuilder(
+    column: $table.attempts,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get rejected => $composableBuilder(
+    column: $table.rejected,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SyncQueueTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SyncQueueTable> {
+  $$SyncQueueTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get entityTable => $composableBuilder(
+    column: $table.entityTable,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get recordId =>
+      $composableBuilder(column: $table.recordId, builder: (column) => column);
+
+  GeneratedColumn<String> get operation =>
+      $composableBuilder(column: $table.operation, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get attempts =>
+      $composableBuilder(column: $table.attempts, builder: (column) => column);
+
+  GeneratedColumn<String> get lastError =>
+      $composableBuilder(column: $table.lastError, builder: (column) => column);
+
+  GeneratedColumn<bool> get rejected =>
+      $composableBuilder(column: $table.rejected, builder: (column) => column);
+}
+
+class $$SyncQueueTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SyncQueueTable,
+          SyncQueueData,
+          $$SyncQueueTableFilterComposer,
+          $$SyncQueueTableOrderingComposer,
+          $$SyncQueueTableAnnotationComposer,
+          $$SyncQueueTableCreateCompanionBuilder,
+          $$SyncQueueTableUpdateCompanionBuilder,
+          (
+            SyncQueueData,
+            BaseReferences<_$AppDatabase, $SyncQueueTable, SyncQueueData>,
+          ),
+          SyncQueueData,
+          PrefetchHooks Function()
+        > {
+  $$SyncQueueTableTableManager(_$AppDatabase db, $SyncQueueTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SyncQueueTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SyncQueueTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SyncQueueTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> entityTable = const Value.absent(),
+                Value<String> recordId = const Value.absent(),
+                Value<String> operation = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> attempts = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                Value<bool> rejected = const Value.absent(),
+              }) => SyncQueueCompanion(
+                id: id,
+                entityTable: entityTable,
+                recordId: recordId,
+                operation: operation,
+                createdAt: createdAt,
+                attempts: attempts,
+                lastError: lastError,
+                rejected: rejected,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String entityTable,
+                required String recordId,
+                required String operation,
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> attempts = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                Value<bool> rejected = const Value.absent(),
+              }) => SyncQueueCompanion.insert(
+                id: id,
+                entityTable: entityTable,
+                recordId: recordId,
+                operation: operation,
+                createdAt: createdAt,
+                attempts: attempts,
+                lastError: lastError,
+                rejected: rejected,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SyncQueueTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SyncQueueTable,
+      SyncQueueData,
+      $$SyncQueueTableFilterComposer,
+      $$SyncQueueTableOrderingComposer,
+      $$SyncQueueTableAnnotationComposer,
+      $$SyncQueueTableCreateCompanionBuilder,
+      $$SyncQueueTableUpdateCompanionBuilder,
+      (
+        SyncQueueData,
+        BaseReferences<_$AppDatabase, $SyncQueueTable, SyncQueueData>,
+      ),
+      SyncQueueData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -12264,4 +13048,6 @@ class $AppDatabaseManager {
       $$HarvestEntriesTableTableManager(_db, _db.harvestEntries);
   $$SalesTableTableManager get sales =>
       $$SalesTableTableManager(_db, _db.sales);
+  $$SyncQueueTableTableManager get syncQueue =>
+      $$SyncQueueTableTableManager(_db, _db.syncQueue);
 }

@@ -31,16 +31,32 @@ part 'database.g.dart';
     VaccinationEntries,
     HarvestEntries,
     Sales,
+    SyncQueue,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
-  // Bump this and write a migration strategy below whenever a
-  // table definition changes after the app is already in real use.
-  // Safe to leave at 1 for now, nothing has shipped yet.
+  /// Lets tests point the same schema at an in-memory database,
+  /// instead of the on-disk file the app itself opens.
+  AppDatabase.forTesting(super.executor);
+
+  // Bump this whenever a table definition changes after the app is
+  // already in real use, and extend the onUpgrade strategy below.
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 3;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onUpgrade: (m, from, to) async {
+          // Additive only: SyncQueue gains a rejected flag. New
+          // installs get the column straight from createAll(), which
+          // the default onCreate runs.
+          if (from < 3) {
+            await m.addColumn(syncQueue, syncQueue.rejected);
+          }
+        },
+      );
 }
 
 LazyDatabase _openConnection() {

@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:broiler_fms/presentation/mobile/router.dart';
 import 'package:broiler_fms/presentation/shared/theme/app_theme.dart';
+import 'package:broiler_fms/sync/sync_providers.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,6 +36,14 @@ class BroilerFmsApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // The sync engine's automatic triggers, alive for as long as this
+    // root widget is: one drains when connectivity comes back, the
+    // other debounces a drain after local writes. Watching (rather
+    // than calling start() from main()) is what keeps them running,
+    // and ProviderScope's teardown is what stops them.
+    ref.watch(connectivitySyncTriggerProvider);
+    ref.watch(lifecycleSyncTriggerProvider);
+
     final router = ref.watch(mobileRouterProvider);
     return MaterialApp.router(
       title: 'Broiler FMS',

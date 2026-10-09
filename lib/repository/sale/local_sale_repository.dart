@@ -7,6 +7,7 @@ import 'package:broiler_fms/domain/models/sale.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:broiler_fms/data/local/database_provider.dart';
+import 'package:broiler_fms/data/local/local_sync_queue_repository.dart';
 
 /// Sales stored on the device, used by the mobile app (Manager). It talks
 /// only to Drift and always returns [Sale] objects.
@@ -18,6 +19,24 @@ class LocalSaleRepository {
 
   final local.AppDatabase _db;
   static const _uuid = Uuid();
+  late final LocalSyncQueueRepository _syncQueueRepo =
+      LocalSyncQueueRepository(_db);
+
+  /// Overwrites the cache with sales just pulled from Supabase,
+  /// mirroring LocalBatchRepository.upsertAll.
+  ///
+  /// Deliberately never touches the sync queue: the enqueue() call
+  /// lives inside the local-origin write below (record), which has to
+  /// travel up. This is the opposite direction — data that is already
+  /// on the server — and queuing it would loop pointless pushes.
+  Future<void> upsertAll(List<Sale> sales) {
+    return _db.batch((batch) {
+      batch.insertAllOnConflictUpdate(
+        _db.sales,
+        sales.map(_toCompanion).toList(),
+      );
+    });
+  }
 
   /// Saves a new sale on the device and returns it.
   /// The id is created here so the sale works fully offline.
@@ -50,6 +69,11 @@ class LocalSaleRepository {
       paymentStatus: paymentStatus,
     );
     await _db.into(_db.sales).insert(_toCompanion(sale));
+    await _syncQueueRepo.enqueue(
+      entityTable: 'sales',
+      recordId: sale.saleId,
+      operation: 'insert',
+    );
     return sale;
   }
 
@@ -59,6 +83,14 @@ class LocalSaleRepository {
       ..where((s) => s.harvestId.equals(harvestId));
     final rows = await query.get();
     return rows.map(_fromRow).toList();
+  }
+
+  /// One sale by id, or null if it isn't in local storage.
+  Future<Sale?> getById(String saleId) async {
+    final query = _db.select(_db.sales)
+      ..where((s) => s.saleId.equals(saleId));
+    final row = await query.getSingleOrNull();
+    return row == null ? null : _fromRow(row);
   }
 
   /// Drift row to the standard [Sale]. Lives here, not in the model,

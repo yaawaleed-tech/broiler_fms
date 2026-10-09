@@ -3,10 +3,9 @@ import 'package:uuid/uuid.dart';
 
 import 'package:broiler_fms/data/local/database.dart' as local;
 import 'package:broiler_fms/domain/models/mortality.dart';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:broiler_fms/data/local/database_provider.dart';
+import 'package:broiler_fms/data/local/local_sync_queue_repository.dart';
 
 /// Mortality entries stored on the device, used by the mobile app
 /// (Staff only). It talks only to Drift and always returns [Mortality]
@@ -16,6 +15,24 @@ class LocalMortalityRepository {
 
   final local.AppDatabase _db;
   static const _uuid = Uuid();
+  late final LocalSyncQueueRepository _syncQueueRepo =
+      LocalSyncQueueRepository(_db);
+
+  /// Overwrites the cache with mortality entries just pulled from
+  /// Supabase, mirroring LocalBatchRepository.upsertAll.
+  ///
+  /// Deliberately never touches the sync queue: the enqueue() call
+  /// lives inside the local-origin write below (record), which has to
+  /// travel up. This is the opposite direction — data that is already
+  /// on the server — and queuing it would loop pointless pushes.
+  Future<void> upsertAll(List<Mortality> mortalities) {
+    return _db.batch((batch) {
+      batch.insertAllOnConflictUpdate(
+        _db.mortalityEntries,
+        mortalities.map(_toCompanion).toList(),
+      );
+    });
+  }
 
   /// Saves a new mortality entry on the device and returns it.
   /// The id is created here so the entry works fully offline.
@@ -36,6 +53,11 @@ class LocalMortalityRepository {
       description: description,
     );
     await _db.into(_db.mortalityEntries).insert(_toCompanion(mortality));
+    await _syncQueueRepo.enqueue(
+      entityTable: 'mortality_entries',
+      recordId: mortality.mortalityId,
+      operation: 'insert',
+    );
     return mortality;
   }
 
@@ -52,6 +74,21 @@ class LocalMortalityRepository {
     final query = _db.select(_db.mortalityEntries)
       ..where((m) => m.batchId.equals(batchId));
     return query.watch().map((rows) => rows.map(_fromRow).toList());
+  }
+
+  /// One mortality entry by id, or null if it isn't in local storage.
+  Future<Mortality?> getById(String mortalityId) async {
+    final query = _db.select(_db.mortalityEntries)
+      ..where((m) => m.mortalityId.equals(mortalityId));
+    final row = await query.getSingleOrNull();
+    return row == null ? null : _fromRow(row);
+  }
+
+  /// Stamps [syncedAt] once the entry has reached Supabase.
+  Future<void> markSynced(String mortalityId, DateTime at) {
+    final query = _db.update(_db.mortalityEntries)
+      ..where((m) => m.mortalityId.equals(mortalityId));
+    return query.write(local.MortalityEntriesCompanion(syncedAt: Value(at)));
   }
 
   /// Drift row to the standard [Mortality]. Lives here, not in the

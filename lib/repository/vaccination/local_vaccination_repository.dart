@@ -5,6 +5,7 @@ import 'package:broiler_fms/data/local/database.dart' as local;
 import 'package:broiler_fms/domain/models/vaccination.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:broiler_fms/data/local/database_provider.dart';
+import 'package:broiler_fms/data/local/local_sync_queue_repository.dart';
 
 /// Vaccination entries stored on the device, used by the mobile app
 /// (Staff only). It talks only to Drift and always returns
@@ -14,6 +15,24 @@ class LocalVaccinationRepository {
 
   final local.AppDatabase _db;
   static const _uuid = Uuid();
+  late final LocalSyncQueueRepository _syncQueueRepo =
+      LocalSyncQueueRepository(_db);
+
+  /// Overwrites the cache with vaccination entries just pulled from
+  /// Supabase, mirroring LocalBatchRepository.upsertAll.
+  ///
+  /// Deliberately never touches the sync queue: the enqueue() call
+  /// lives inside the local-origin write below (record), which has to
+  /// travel up. This is the opposite direction — data that is already
+  /// on the server — and queuing it would loop pointless pushes.
+  Future<void> upsertAll(List<Vaccination> vaccinations) {
+    return _db.batch((batch) {
+      batch.insertAllOnConflictUpdate(
+        _db.vaccinationEntries,
+        vaccinations.map(_toCompanion).toList(),
+      );
+    });
+  }
 
   /// Saves a new vaccination entry on the device and returns it.
   /// The id is created here so the entry works fully offline.
@@ -34,6 +53,11 @@ class LocalVaccinationRepository {
     await _db
         .into(_db.vaccinationEntries)
         .insert(_toCompanion(vaccination));
+    await _syncQueueRepo.enqueue(
+      entityTable: 'vaccination_entries',
+      recordId: vaccination.vaccinationId,
+      operation: 'insert',
+    );
     return vaccination;
   }
 
@@ -50,6 +74,22 @@ class LocalVaccinationRepository {
     final query = _db.select(_db.vaccinationEntries)
       ..where((v) => v.batchId.equals(batchId));
     return query.watch().map((rows) => rows.map(_fromRow).toList());
+  }
+
+  /// One vaccination entry by id, or null if it isn't in local storage.
+  Future<Vaccination?> getById(String vaccinationId) async {
+    final query = _db.select(_db.vaccinationEntries)
+      ..where((v) => v.vaccinationId.equals(vaccinationId));
+    final row = await query.getSingleOrNull();
+    return row == null ? null : _fromRow(row);
+  }
+
+  /// Stamps [syncedAt] once the entry has reached Supabase.
+  Future<void> markSynced(String vaccinationId, DateTime at) {
+    final query = _db.update(_db.vaccinationEntries)
+      ..where((v) => v.vaccinationId.equals(vaccinationId));
+    return query
+        .write(local.VaccinationEntriesCompanion(syncedAt: Value(at)));
   }
 
   /// Drift row to the standard [Vaccination]. Lives here, not in the

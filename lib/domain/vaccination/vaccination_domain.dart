@@ -6,6 +6,7 @@ import 'package:broiler_fms/domain/models/account.dart';
 import 'package:broiler_fms/domain/models/vaccination.dart';
 import 'package:broiler_fms/repository/batch/local_batch_repository.dart';
 import 'package:broiler_fms/repository/vaccination/local_vaccination_repository.dart';
+import 'package:broiler_fms/repository/vaccination/remote_vaccination_repository.dart';
 
 /// Mobile-side vaccination actions, used by Staff.
 ///
@@ -14,13 +15,16 @@ import 'package:broiler_fms/repository/vaccination/local_vaccination_repository.
 class VaccinationDomain {
   VaccinationDomain({
     required LocalVaccinationRepository vaccinationRepo,
+    required RemoteVaccinationRepository remoteVaccinationRepo,
     required LocalBatchRepository batchRepo,
     required Account currentAccount,
   })  : _vaccinationRepo = vaccinationRepo,
+        _remoteVaccinationRepo = remoteVaccinationRepo,
         _batchRepo = batchRepo,
         _currentAccount = currentAccount;
 
   final LocalVaccinationRepository _vaccinationRepo;
+  final RemoteVaccinationRepository _remoteVaccinationRepo;
   final LocalBatchRepository _batchRepo;
   final Account _currentAccount;
 
@@ -50,6 +54,17 @@ class VaccinationDomain {
     return _vaccinationRepo.watchByBatch(batchId);
   }
 
+  /// Pulls the latest vaccination entries from Supabase and
+  /// overwrites the local cache — same contract as
+  /// BatchDomain.refreshBatches(): needs connectivity, RLS scopes
+  /// the rows to this account's own business (Staff: only assigned
+  /// batches), and nothing enqueues because this data already lives
+  /// on the server.
+  Future<void> refreshVaccinationEntries() async {
+    final vaccinations = await _remoteVaccinationRepo.getAll();
+    await _vaccinationRepo.upsertAll(vaccinations);
+  }
+
   /// Throws if the batch is missing or already closed.
   Future<void> _checkBatchOpen(String batchId) async {
     final batch = await _batchRepo.getById(batchId);
@@ -73,6 +88,7 @@ final vaccinationDomainProvider = Provider<VaccinationDomain>((ref) {
   }
   return VaccinationDomain(
     vaccinationRepo: ref.watch(localVaccinationRepositoryProvider),
+    remoteVaccinationRepo: ref.watch(remoteVaccinationRepositoryProvider),
     batchRepo: ref.watch(localBatchRepositoryProvider),
     currentAccount: currentAccount,
   );
