@@ -7,8 +7,10 @@ import 'package:broiler_fms/repository/batch/remote_batch_repository.dart';
 import 'package:broiler_fms/repository/expense/remote_expense_repository.dart';
 import 'package:broiler_fms/repository/feed/remote_feed_repository.dart';
 import 'package:broiler_fms/repository/harvest/remote_harvest_repository.dart';
+import 'package:broiler_fms/repository/mortality/remote_mortality_repository.dart';
 import 'package:broiler_fms/repository/sale/remote_sale_repository.dart';
 import 'package:broiler_fms/repository/weight/remote_weight_repository.dart';
+import 'package:broiler_fms/domain/rules/bird_count_rule.dart';
 
 /// Web-side batch reads, used by Admin. Read-only on purpose, Admin
 /// never creates, assigns, or closes a batch, only Manager does,
@@ -26,12 +28,14 @@ class RemoteBatchDomain {
     required RemoteSaleRepository saleRepo,
     required RemoteFeedRepository feedRepo,
     required RemoteWeightRepository weightRepo,
+    required RemoteMortalityRepository mortalityRepo,
   })  : _batchRepo = batchRepo,
         _harvestRepo = harvestRepo,
         _expenseRepo = expenseRepo,
         _saleRepo = saleRepo,
         _feedRepo = feedRepo,
-        _weightRepo = weightRepo;
+        _weightRepo = weightRepo,
+        _mortalityRepo = mortalityRepo;
 
   final RemoteBatchRepository _batchRepo;
   final RemoteHarvestRepository _harvestRepo;
@@ -39,10 +43,44 @@ class RemoteBatchDomain {
   final RemoteSaleRepository _saleRepo;
   final RemoteFeedRepository _feedRepo;
   final RemoteWeightRepository _weightRepo;
+  final RemoteMortalityRepository _mortalityRepo;
 
   /// All batches in Admin's business.
   Future<List<Batch>> getAll() {
     return _batchRepo.getAll();
+  }
+
+  /// One batch by id, resolved with its assigned-staff and
+  /// closed-by names, or null if it isn't visible to this account.
+  Future<Batch?> getById(String batchId) {
+    return _batchRepo.getById(batchId);
+  }
+
+  /// Map of staff account id to list of assigned batch names.
+  Future<Map<String, List<String>>> getAssignedBatchesMap() {
+    return _batchRepo.getAssignedBatchesMap();
+  }
+
+  /// Total birds recorded as dead in this batch so far.
+  Future<int> getTotalMortality(String batchId) async {
+    final entries = await _mortalityRepo.getByBatch(batchId);
+    return entries.fold<int>(0, (sum, entry) => sum + entry.count);
+  }
+
+  /// Total birds already harvested from this batch so far.
+  Future<int> getTotalHarvested(String batchId) => _totalHarvested(batchId);
+
+  /// How many birds in this batch have not yet been harvested or
+  /// recorded as mortality. Same formula mobile's BatchDomain uses,
+  /// from rules/bird_count_rule.dart.
+  Future<int> getRemainingBirdCount(Batch batch) async {
+    final mortality = await getTotalMortality(batch.batchId);
+    final harvested = await _totalHarvested(batch.batchId);
+    return remainingBirdCount(
+      startingBirdCount: batch.startingBirdCount,
+      currentMortalityTotal: mortality,
+      currentHarvestTotal: harvested,
+    );
   }
 
   /// The computed financial picture for one batch: expenses, revenue,
@@ -131,5 +169,6 @@ final remoteBatchDomainProvider = Provider<RemoteBatchDomain>((ref) {
     saleRepo: ref.watch(remoteSaleRepositoryProvider),
     feedRepo: ref.watch(remoteFeedRepositoryProvider),
     weightRepo: ref.watch(remoteWeightRepositoryProvider),
+    mortalityRepo: ref.watch(remoteMortalityRepositoryProvider),
   );
 });

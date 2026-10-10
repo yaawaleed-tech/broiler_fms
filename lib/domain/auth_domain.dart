@@ -24,8 +24,21 @@ class AuthDomain {
 
   Future<void> sendLoginCode(String email) async {
     try {
+      final status = await _supabase.rpc(
+        'check_account_login_status',
+        params: {'p_email': email},
+      ) as String?;
+      if (status == 'inactive') {
+        throw const DomainException(
+          'This account has been deactivated. Contact your Admin for help.',
+        );
+      }
+      // 'active', 'pending', and null (unknown email) all fall through
+      // to the OTP request exactly as before.
       await _supabase.auth.signInWithOtp(email: email);
     } on AuthException catch (e) {
+      throw DomainException(e.message);
+    } on PostgrestException catch (e) {
       throw DomainException(e.message);
     }
   }

@@ -3,10 +3,15 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:broiler_fms/domain/current_account_domain.dart';
+import 'package:broiler_fms/domain/logout_domain.dart';
+import 'package:broiler_fms/domain/session_poll_trigger.dart';
 import 'package:broiler_fms/presentation/mobile/router.dart';
 import 'package:broiler_fms/presentation/shared/theme/app_theme.dart';
+import 'package:broiler_fms/presentation/shared/widgets/session_poller.dart';
 import 'package:broiler_fms/sync/sync_providers.dart';
 
 Future<void> main() async {
@@ -30,6 +35,23 @@ Future<Map<String, dynamic>> _loadConfig() async {
   return jsonDecode(contents) as Map<String, dynamic>;
 }
 
+/// Forced logout from the session poller: runs forcedLogOut (bounded
+/// drain, then wipe-or-keep), drops the cached account, and goes to
+/// login with an explanation. Never blocked by unsynced data, unlike
+/// the voluntary logout — the lockout always happens, only the fate
+/// of local rows differs.
+Future<void> _forceLogOut(BuildContext context, WidgetRef ref) async {
+  try {
+    await ref.read(logoutDomainProvider).forcedLogOut();
+  } catch (_) {
+    // Forced means forced: the lockout proceeds regardless.
+  }
+  ref.invalidate(currentAccountProvider);
+  if (context.mounted) {
+    context.go('/login', extra: forcedLogoutMessage);
+  }
+}
+
 /// The mobile app's root widget, used by Staff and Manager.
 class BroilerFmsApp extends ConsumerWidget {
   const BroilerFmsApp({super.key});
@@ -45,10 +67,17 @@ class BroilerFmsApp extends ConsumerWidget {
     ref.watch(lifecycleSyncTriggerProvider);
 
     final router = ref.watch(mobileRouterProvider);
-    return MaterialApp.router(
-      title: 'Broiler FMS',
-      theme: buildAppTheme(),
-      routerConfig: router,
+    // Session watch lives at the root because mobile has no persistent
+    // authenticated shell — every screen is independent. The trigger
+    // itself skips ticks with no signed-in session, so this is a no-op
+    // while logged out.
+    return SessionPoller(
+      onAccessLost: () => _forceLogOut(context, ref),
+      child: MaterialApp.router(
+        title: 'Broiler FMS',
+        theme: buildAppTheme(),
+        routerConfig: router,
+      ),
     );
   }
 }

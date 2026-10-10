@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:broiler_fms/domain/account/remote_account_domain.dart';
+import 'package:broiler_fms/domain/session_poll_trigger.dart';
 import 'package:broiler_fms/domain/web_auth_domain_provider.dart';
+import 'package:broiler_fms/domain/web_current_account_domain.dart';
 import 'package:broiler_fms/domain/domain_exception.dart';
 import 'package:broiler_fms/domain/models/account.dart';
 import 'package:broiler_fms/presentation/shared/theme/app_theme.dart';
 import 'package:broiler_fms/presentation/shared/widgets/badge.dart';
 import 'package:broiler_fms/presentation/shared/widgets/confirm_dialog.dart';
+import 'package:broiler_fms/presentation/shared/widgets/session_poller.dart';
 import 'package:go_router/go_router.dart';
 
 final _adminsProvider = FutureProvider.autoDispose<List<Account>>(
@@ -154,16 +157,57 @@ class AdminAccountsScreen extends ConsumerWidget {
       confirmLabel: 'Log out',
     );
     if (confirmed != true) return;
+    if (!context.mounted) return;
 
-    await ref.read(authDomainProvider).logOut();
-    if (context.mounted) context.go('/login');
+    try {
+      await ref.read(authDomainProvider).logOut();
+      ref.invalidate(webCurrentAccountProvider);
+      if (context.mounted) context.go('/login');
+    } on DomainException catch (e) {
+      ref.invalidate(webCurrentAccountProvider);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message)),
+        );
+        context.go('/login');
+      }
+    } catch (e) {
+      // signOut can throw a raw AuthException/AuthRetryableFetchException,
+      // not just DomainException — surface it instead of swallowing it.
+      ref.invalidate(webCurrentAccountProvider);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not log out: $e')),
+        );
+        context.go('/login');
+      }
+    }
+  }
+
+  /// Forced logout from the session poller: the same core as [_logOut]
+  /// (end the session, drop the cached account, go to login with an
+  /// explanation) but no confirm dialog — losing access is not
+  /// voluntary, and the message travels on the route, not a snackbar.
+  Future<void> _forceLogOut(BuildContext context, WidgetRef ref) async {
+    try {
+      await ref.read(authDomainProvider).logOut();
+    } catch (_) {
+      // Forced means forced: the session is unusable either way, so a
+      // failing sign-out must not stop the lockout.
+    }
+    ref.invalidate(webCurrentAccountProvider);
+    if (context.mounted) {
+      context.go('/login', extra: forcedLogoutMessage);
+    }
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final adminsAsync = ref.watch(_adminsProvider);
 
-    return Scaffold(
+    return SessionPoller(
+      onAccessLost: () => _forceLogOut(context, ref),
+      child: Scaffold(
       appBar: AppBar(
         title: const Text('Admin accounts'),
         actions: [
@@ -181,103 +225,146 @@ class AdminAccountsScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: OutlinedButton(
-                  onPressed: () => _addAdmin(ref, context),
-                  child: const Text('Add Admin'),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Admin accounts',
+                    style: TextStyle(
+                      fontFamily: 'RobotoSlab',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 22,
+                      color: AppColors.ink,
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => _addAdmin(ref, context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.rust,
+                      foregroundColor: AppColors.card,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    child: const Text('+ Add admin'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'One Admin account per business. Business profiles, staff, batches, and finances are managed entirely within each business and are not visible here.',
+                style: TextStyle(
+                  fontFamily: 'PublicSans',
+                  fontSize: 13.5,
+                  color: AppColors.inkMuted,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               Expanded(
                 child: admins.isEmpty
                     ? const Center(child: Text('No Admins yet.'))
-                    : ListView.separated(
-                  itemCount: admins.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 10),
-                  itemBuilder: (context, index) =>
-                      _AdminRow(account: admins[index]),
+                    : SingleChildScrollView(
+                  child: Card(
+                    color: AppColors.card,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      side: const BorderSide(
+                          color: AppColors.hairlineStrong, width: 1.5),
+                    ),
+                    child: DataTable(
+                      headingTextStyle: const TextStyle(
+                        fontFamily: 'PublicSans',
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                        color: AppColors.inkMuted,
+                      ),
+                      columns: const [
+                        DataColumn(label: Text('NAME')),
+                        DataColumn(label: Text('EMAIL')),
+                        DataColumn(label: Text('BUSINESS')),
+                        DataColumn(label: Text('STATUS')),
+                        DataColumn(label: Text('ACTIONS')),
+                      ],
+                      rows: admins.map((account) {
+                        final tone = switch (account.status) {
+                          'active' => BadgeTone.positive,
+                          'pending' => BadgeTone.warning,
+                          _ => BadgeTone.neutral,
+                        };
+                        return DataRow(
+                          cells: [
+                            DataCell(
+                              Text(
+                                account.name,
+                                style: const TextStyle(
+                                  fontFamily: 'PublicSans',
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                  color: AppColors.ink,
+                                ),
+                              ),
+                            ),
+                            DataCell(
+                              Text(
+                                account.email,
+                                style: const TextStyle(
+                                  fontFamily: 'PublicSans',
+                                  fontSize: 13,
+                                  color: AppColors.inkMuted,
+                                ),
+                              ),
+                            ),
+                            DataCell(
+                              Text(
+                                account.businessId == null
+                                    ? 'Not yet registered'
+                                    : (account.businessName ??
+                                    'Business registered'),
+                                style: const TextStyle(
+                                  fontFamily: 'PublicSans',
+                                  fontSize: 13,
+                                  color: AppColors.ink,
+                                ),
+                              ),
+                            ),
+                            DataCell(
+                              AppBadge(label: account.status, tone: tone),
+                            ),
+                            DataCell(
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (account.status != 'inactive')
+                                    TextButton(
+                                      onPressed: () => _confirmDeactivate(
+                                          ref, context, account),
+                                      child: const Text('Deactivate'),
+                                    ),
+                                  if (account.status == 'inactive')
+                                    TextButton(
+                                      onPressed: () => _updateStatus(
+                                        ref,
+                                        context,
+                                        account.accountId,
+                                        account.authUserId == null
+                                            ? 'pending'
+                                            : 'active'),
+                                      child: const Text('Reactivate'),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        );
+                      }).toList(),
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
         ),
       ),
-    );
-  }
-}
-
-class _AdminRow extends ConsumerWidget {
-  const _AdminRow({required this.account});
-
-  final Account account;
-
-  BadgeTone get _tone => switch (account.status) {
-    'active' => BadgeTone.positive,
-    'pending' => BadgeTone.warning,
-    _ => BadgeTone.neutral,
-  };
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.hairlineStrong, width: 1.5),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  account.name,
-                  style: const TextStyle(
-                    fontFamily: 'PublicSans',
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                    color: AppColors.ink,
-                  ),
-                ),
-                Text(
-                  account.email,
-                  style: const TextStyle(
-                    fontFamily: 'PublicSans',
-                    fontSize: 12,
-                    color: AppColors.inkMuted,
-                  ),
-                ),
-                Text(
-                  account.businessId == null
-                      ? 'Not yet registered'
-                      : 'Business registered',
-                  style: const TextStyle(
-                    fontFamily: 'PublicSans',
-                    fontSize: 11.5,
-                    color: AppColors.inkMuted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          AppBadge(label: account.status, tone: _tone),
-          const SizedBox(width: 12),
-          if (account.status == 'active')
-            TextButton(
-              onPressed: () => _confirmDeactivate(ref, context, account),
-              child: const Text('Deactivate'),
-            ),
-          if (account.status == 'inactive')
-            TextButton(
-              onPressed: () =>
-                  _updateStatus(ref, context, account.accountId, 'active'),
-              child: const Text('Reactivate'),
-            ),
-        ],
-      ),
-    );
+    ));
   }
 }

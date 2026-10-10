@@ -66,8 +66,10 @@ class RemoteAccountRepository {
 
   /// All Admin accounts. Super Admin's own account management screen.
   Future<List<Account>> getAdmins() async {
-    final rows =
-        await _client.from('account').select().eq('role', 'admin');
+    final rows = await _client
+        .from('account')
+        .select('*, business(name)')
+        .eq('role', 'admin');
     return rows.map(Account.fromJson).toList();
   }
 
@@ -99,13 +101,24 @@ class RemoteAccountRepository {
   /// still blocks a second one, since the slot is already spoken for
   /// until that invite is either accepted or the account is
   /// deactivated.
-  Future<bool> hasActiveManager(String businessId) async {
-    final rows = await _client
+  ///
+  /// [excludingAccountId] skips one row, so reactivating a
+  /// deactivated Manager doesn't trip on itself, only on a *different*
+  /// Manager that is already active or pending.
+  Future<bool> hasActiveManager(
+    String businessId, {
+    String? excludingAccountId,
+  }) async {
+    var query = _client
         .from('account')
         .select('account_id')
         .eq('business_id', businessId)
         .eq('role', 'manager')
         .inFilter('status', ['active', 'pending']);
+    if (excludingAccountId != null) {
+      query = query.neq('account_id', excludingAccountId);
+    }
+    final rows = await query;
     return rows.isNotEmpty;
   }
 

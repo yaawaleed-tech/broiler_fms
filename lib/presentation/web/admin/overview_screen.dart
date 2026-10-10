@@ -12,13 +12,16 @@ class _OverviewData {
   const _OverviewData({
     required this.business,
     required this.staffCount,
-    required this.hasActiveManager,
+    required this.managerStatus,
     required this.pendingInviteCount,
   });
 
   final Business? business;
   final int staffCount;
-  final bool hasActiveManager;
+
+  /// 'Active', 'Pending' (invited but not yet logged in), or 'None'
+  /// (no Manager, or the only one is inactive).
+  final String managerStatus;
   final int pendingInviteCount;
 }
 
@@ -29,7 +32,7 @@ FutureProvider.autoDispose<_OverviewData>((ref) async {
     return const _OverviewData(
       business: null,
       staffCount: 0,
-      hasActiveManager: false,
+      managerStatus: 'None',
       pendingInviteCount: 0,
     );
   }
@@ -40,14 +43,20 @@ FutureProvider.autoDispose<_OverviewData>((ref) async {
 
   final staffCount =
       accounts.where((a) => a.role == 'staff' && a.status != 'inactive').length;
-  final hasActiveManager =
-  accounts.any((a) => a.role == 'manager' && a.status == 'active');
+  final managers = accounts.where((a) => a.role == 'manager');
+  final currentManager = managers.where((m) => m.status == 'active').firstOrNull
+      ?? managers.where((m) => m.status == 'pending').firstOrNull;
+  final managerStatus = switch (currentManager?.status) {
+    'active' => 'Active',
+    'pending' => 'Pending',
+    _ => 'None', // no manager row, or every manager row is inactive
+  };
   final pendingInviteCount = accounts.where((a) => a.status == 'pending').length;
 
   return _OverviewData(
     business: business,
     staffCount: staffCount,
-    hasActiveManager: hasActiveManager,
+    managerStatus: managerStatus,
     pendingInviteCount: pendingInviteCount,
   );
 });
@@ -61,7 +70,6 @@ class OverviewScreen extends ConsumerWidget {
     final dataAsync = ref.watch(_overviewProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Overview')),
       body: dataAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(child: Text('$error')),
@@ -83,9 +91,9 @@ class OverviewScreen extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                business.name,
-                style: const TextStyle(
+              const Text(
+                'Business overview',
+                style: TextStyle(
                   fontFamily: 'RobotoSlab',
                   fontWeight: FontWeight.w700,
                   fontSize: 22,
@@ -94,28 +102,24 @@ class OverviewScreen extends ConsumerWidget {
               ),
               OutlinedButton(
                 onPressed: () => context.push('/edit-business'),
-                child: const Text('Edit'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.ink,
+                  side: const BorderSide(color: AppColors.hairlineStrong, width: 1.5),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+                child: const Text('Edit business profile'),
               ),
             ],
           ),
-          if (business.address != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              business.address!,
-              style: const TextStyle(
-                fontFamily: 'PublicSans',
-                fontSize: 13.5,
-                color: AppColors.inkMuted,
-              ),
-            ),
-          ],
           const SizedBox(height: 24),
           StatCardRow(
             cards: [
               StatCard(value: '${data.staffCount}', label: 'Staff accounts'),
               StatCard(
-                value: data.hasActiveManager ? 'Active' : 'None',
-                label: 'Manager status',
+                value: data.managerStatus,
+                label: 'Manager account',
               ),
               StatCard(
                 value: '${data.pendingInviteCount}',
@@ -123,8 +127,81 @@ class OverviewScreen extends ConsumerWidget {
               ),
             ],
           ),
+          const SizedBox(height: 24),
+          Card(
+            color: AppColors.card,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: const BorderSide(color: AppColors.hairlineStrong, width: 1.5),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Business profile',
+                    style: TextStyle(
+                      fontFamily: 'RobotoSlab',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                      color: AppColors.ink,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _ProfileRow(label: 'Business name', value: business.name),
+                  const Divider(height: 24, color: AppColors.hairline),
+                  _ProfileRow(label: 'Address', value: business.address ?? '—'),
+                  const Divider(height: 24, color: AppColors.hairline),
+                  _ProfileRow(label: 'Phone', value: business.phone ?? '—'),
+                  const Divider(height: 24, color: AppColors.hairline),
+                  _ProfileRow(label: 'Business type', value: business.businessType ?? '—'),
+                  const Divider(height: 24, color: AppColors.hairline),
+                  _ProfileRow(label: 'Description', value: business.description ?? '—'),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
+    );
+  }
+}
+
+class _ProfileRow extends StatelessWidget {
+  const _ProfileRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 140,
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontFamily: 'PublicSans',
+              fontSize: 13.5,
+              color: AppColors.inkMuted,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontFamily: 'PublicSans',
+              fontWeight: FontWeight.w500,
+              fontSize: 13.5,
+              color: AppColors.ink,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

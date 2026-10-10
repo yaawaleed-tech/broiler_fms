@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:broiler_fms/domain/account/remote_account_domain.dart';
+import 'package:broiler_fms/domain/batch/remote_batch_domain.dart';
 import 'package:broiler_fms/domain/business/business_domain.dart';
 import 'package:broiler_fms/domain/domain_exception.dart';
 import 'package:broiler_fms/domain/models/account.dart';
@@ -10,10 +11,15 @@ import 'package:broiler_fms/presentation/shared/widgets/badge.dart';
 import 'package:broiler_fms/presentation/shared/widgets/confirm_dialog.dart';
 
 class _AccountsData {
-  const _AccountsData({required this.businessId, required this.accounts});
+  const _AccountsData({
+    required this.businessId,
+    required this.accounts,
+    required this.assignedBatchesMap,
+  });
 
   final String businessId;
   final List<Account> accounts;
+  final Map<String, List<String>> assignedBatchesMap;
 }
 
 final _accountsProvider = FutureProvider.autoDispose<_AccountsData>((
@@ -21,15 +27,22 @@ final _accountsProvider = FutureProvider.autoDispose<_AccountsData>((
     ) async {
   final business = await ref.watch(businessDomainProvider).getOwnBusiness();
   if (business == null) {
-    return const _AccountsData(businessId: '', accounts: []);
+    return const _AccountsData(businessId: '', accounts: [], assignedBatchesMap: {});
   }
   final accounts = await ref
       .watch(remoteAccountDomainProvider)
       .getAccountsForBusiness(business.businessId);
-  return _AccountsData(businessId: business.businessId, accounts: accounts);
+  final assignedBatchesMap = await ref
+      .watch(remoteBatchDomainProvider)
+      .getAssignedBatchesMap();
+  return _AccountsData(
+    businessId: business.businessId,
+    accounts: accounts,
+    assignedBatchesMap: assignedBatchesMap,
+  );
 });
 
-/// Admin's Manager + Staff management page: one Manager panel, one
+/// Admin's Manager + Staff management page: one Manager table, one
 /// Staff table, each with add/deactivate/reactivate actions.
 class AccountsScreen extends ConsumerWidget {
   const AccountsScreen({super.key});
@@ -50,6 +63,28 @@ class AccountsScreen extends ConsumerWidget {
       await ref.read(remoteAccountDomainProvider).updateStatus(
         accountId,
         status,
+      );
+      ref.invalidate(_accountsProvider);
+    } on DomainException catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message)),
+        );
+      }
+    }
+  }
+
+  Future<void> _reactivateManager(
+      WidgetRef ref,
+      BuildContext context,
+      Account manager,
+      String businessId,
+      ) async {
+    try {
+      await ref.read(remoteAccountDomainProvider).reactivateManager(
+        accountId: manager.accountId,
+        businessId: businessId,
+        targetStatus: manager.authUserId == null ? 'pending' : 'active',
       );
       ref.invalidate(_accountsProvider);
     } on DomainException catch (e) {
@@ -185,28 +220,52 @@ class AccountsScreen extends ConsumerWidget {
     final dataAsync = ref.watch(_accountsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Accounts')),
       body: dataAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(child: Text('$error')),
         data: (data) {
-          final manager = data.accounts
-              .where((a) => a.role == 'manager' && a.status != 'inactive')
-              .firstOrNull;
+          final managers =
+              data.accounts.where((a) => a.role == 'manager').toList();
+          final hasActiveOrPendingManager =
+              managers.any((m) => m.status != 'inactive');
           final staff = data.accounts.where((a) => a.role == 'staff').toList();
+          final activeOrPendingStaffCount =
+              staff.where((a) => a.status != 'inactive').length;
 
           return ListView(
             padding: const EdgeInsets.all(24),
             children: [
-              _SectionHeader(
-                title: 'Manager',
-                onAdd: manager == null
-                    ? () => _addAccount(ref, context, data.businessId, 'manager')
-                    : null,
-                addLabel: 'Add Manager',
+              const Text(
+                'Accounts',
+                style: TextStyle(
+                  fontFamily: 'RobotoSlab',
+                  fontWeight: FontWeight.w700,
+                  fontSize: 22,
+                  color: AppColors.ink,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Manager',
+                    style: TextStyle(
+                      fontFamily: 'RobotoSlab',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 17,
+                      color: AppColors.ink,
+                    ),
+                  ),
+                  if (!hasActiveOrPendingManager)
+                    OutlinedButton(
+                      onPressed: () => _addAccount(ref, context, data.businessId, 'manager'),
+                      child: const Text('Add Manager'),
+                    ),
+                ],
               ),
               const SizedBox(height: 12),
-              if (manager == null)
+              if (managers.isEmpty)
                 const Text(
                   'This business needs exactly one Manager.',
                   style: TextStyle(
@@ -216,26 +275,104 @@ class AccountsScreen extends ConsumerWidget {
                   ),
                 )
               else
-                _AccountRow(
-                  account: manager,
-                  tone: _toneFor(manager.status),
-                  onDeactivate: manager.status == 'active'
-                      ? () => _confirmDeactivate(ref, context, manager)
-                      : null,
-                  onReactivate: manager.status == 'inactive'
-                      ? () => _updateStatus(
-                    ref,
-                    context,
-                    manager.accountId,
-                    'active',
-                  )
-                      : null,
+                Card(
+                  color: AppColors.card,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    side: const BorderSide(color: AppColors.hairlineStrong, width: 1.5),
+                  ),
+                  child: DataTable(
+                    headingTextStyle: const TextStyle(
+                      fontFamily: 'PublicSans',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                      color: AppColors.inkMuted,
+                    ),
+                    columns: const [
+                      DataColumn(label: Text('Name')),
+                      DataColumn(label: Text('Email')),
+                      DataColumn(label: Text('Status')),
+                      DataColumn(label: Text('Actions')),
+                    ],
+                    rows: managers.map((manager) {
+                      return DataRow(
+                        cells: [
+                          DataCell(
+                            Text(
+                              manager.name,
+                              style: const TextStyle(
+                                fontFamily: 'PublicSans',
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                                color: AppColors.ink,
+                              ),
+                            ),
+                          ),
+                          DataCell(
+                            Text(
+                              manager.email,
+                              style: const TextStyle(
+                                fontFamily: 'PublicSans',
+                                fontSize: 13,
+                                color: AppColors.inkMuted,
+                              ),
+                            ),
+                          ),
+                          DataCell(
+                            AppBadge(label: manager.status, tone: _toneFor(manager.status)),
+                          ),
+                          DataCell(
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (manager.status != 'inactive')
+                                  TextButton(
+                                    onPressed: () => _confirmDeactivate(ref, context, manager),
+                                    child: const Text('Deactivate'),
+                                  ),
+                                if (manager.status == 'inactive')
+                                  TextButton(
+                                    onPressed: () => _reactivateManager(
+                                      ref,
+                                      context,
+                                      manager,
+                                      data.businessId,
+                                    ),
+                                    child: const Text('Reactivate'),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                    }).toList(),
+                  ),
                 ),
               const SizedBox(height: 32),
-              _SectionHeader(
-                title: 'Staff',
-                onAdd: () => _addAccount(ref, context, data.businessId, 'staff'),
-                addLabel: 'Add Staff',
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Staff ($activeOrPendingStaffCount/18)',
+                    style: const TextStyle(
+                      fontFamily: 'RobotoSlab',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 17,
+                      color: AppColors.ink,
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => _addAccount(ref, context, data.businessId, 'staff'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.rust,
+                      foregroundColor: AppColors.card,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    child: const Text('+ Add staff'),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               if (staff.isEmpty)
@@ -248,119 +385,102 @@ class AccountsScreen extends ConsumerWidget {
                   ),
                 )
               else
-                for (final account in staff) ...[
-                  _AccountRow(
-                    account: account,
-                    tone: _toneFor(account.status),
-                    onDeactivate: account.status != 'inactive'
-                        ? () => _confirmDeactivate(ref, context, account)
-                        : null,
-                    onReactivate: account.status == 'inactive'
-                        ? () => _updateStatus(
-                      ref,
-                      context,
-                      account.accountId,
-                      'active',
-                    )
-                        : null,
+                Card(
+                  color: AppColors.card,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    side: const BorderSide(color: AppColors.hairlineStrong, width: 1.5),
                   ),
-                  const SizedBox(height: 8),
-                ],
+                  child: DataTable(
+                    headingTextStyle: const TextStyle(
+                      fontFamily: 'PublicSans',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                      color: AppColors.inkMuted,
+                    ),
+                    columns: const [
+                      DataColumn(label: Text('Name')),
+                      DataColumn(label: Text('Email')),
+                      DataColumn(label: Text('Status')),
+                      DataColumn(label: Text('Assigned batches')),
+                      DataColumn(label: Text('Actions')),
+                    ],
+                    rows: staff.map((account) {
+                      final assignedBatches = data.assignedBatchesMap[account.accountId];
+                      final assignedStr = (assignedBatches == null || assignedBatches.isEmpty)
+                          ? 'None'
+                          : assignedBatches.join(', ');
+                      return DataRow(
+                        cells: [
+                          DataCell(
+                            Text(
+                              account.name,
+                              style: const TextStyle(
+                                fontFamily: 'PublicSans',
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                                color: AppColors.ink,
+                              ),
+                            ),
+                          ),
+                          DataCell(
+                            Text(
+                              account.email,
+                              style: const TextStyle(
+                                fontFamily: 'PublicSans',
+                                fontSize: 13,
+                                color: AppColors.inkMuted,
+                              ),
+                            ),
+                          ),
+                          DataCell(
+                            AppBadge(label: account.status, tone: _toneFor(account.status)),
+                          ),
+                          DataCell(
+                            Text(
+                              assignedStr,
+                              style: const TextStyle(
+                                fontFamily: 'PublicSans',
+                                fontSize: 13,
+                                color: AppColors.ink,
+                              ),
+                            ),
+                          ),
+                          DataCell(
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (account.status != 'inactive')
+                                  TextButton(
+                                    onPressed: () => _confirmDeactivate(ref, context, account),
+                                    child: const Text('Deactivate'),
+                                  ),
+                                if (account.status == 'inactive')
+                                  TextButton(
+                                    onPressed: () => _updateStatus(
+                                      ref,
+                                      context,
+                                      account.accountId,
+                                      account.authUserId == null
+                                          ? 'pending'
+                                          : 'active',
+                                    ),
+                                    child: const Text(
+                                      'Reactivate',
+                                      style: TextStyle(color: AppColors.rust),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                    }).toList(),
+                  ),
+                ),
             ],
           );
         },
-      ),
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({
-    required this.title,
-    required this.onAdd,
-    required this.addLabel,
-  });
-
-  final String title;
-  final VoidCallback? onAdd;
-  final String addLabel;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontFamily: 'RobotoSlab',
-            fontWeight: FontWeight.w700,
-            fontSize: 17,
-            color: AppColors.ink,
-          ),
-        ),
-        if (onAdd != null)
-          OutlinedButton(onPressed: onAdd, child: Text(addLabel)),
-      ],
-    );
-  }
-}
-
-class _AccountRow extends StatelessWidget {
-  const _AccountRow({
-    required this.account,
-    required this.tone,
-    required this.onDeactivate,
-    required this.onReactivate,
-  });
-
-  final Account account;
-  final BadgeTone tone;
-  final VoidCallback? onDeactivate;
-  final VoidCallback? onReactivate;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.hairlineStrong, width: 1.5),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  account.name,
-                  style: const TextStyle(
-                    fontFamily: 'PublicSans',
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                    color: AppColors.ink,
-                  ),
-                ),
-                Text(
-                  account.email,
-                  style: const TextStyle(
-                    fontFamily: 'PublicSans',
-                    fontSize: 12,
-                    color: AppColors.inkMuted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          AppBadge(label: account.status, tone: tone),
-          const SizedBox(width: 12),
-          if (onDeactivate != null)
-            TextButton(onPressed: onDeactivate, child: const Text('Deactivate')),
-          if (onReactivate != null)
-            TextButton(onPressed: onReactivate, child: const Text('Reactivate')),
-        ],
       ),
     );
   }

@@ -52,7 +52,10 @@ final webRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(
         path: '/login',
-        builder: (context, state) => const EmailScreen(),
+        builder: (context, state) {
+          final message = state.extra as String?;
+          return EmailScreen(message: message);
+        },
       ),
       GoRoute(
         path: '/login/code',

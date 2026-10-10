@@ -85,6 +85,29 @@ class LogoutDomain {
     return (total: total, blocking: blocking);
   }
 
+  /// Ends the Supabase session. Returns a warning when only the
+  /// local half succeeded. Throws [DomainException] when even the
+  /// local session could not be ended.
+  Future<String?> _signOut() async {
+    try {
+      await _supabase.auth.signOut();
+    } catch (e) {
+      // The local session is removed before the network call, so
+      // check it really is gone before deciding this is survivable.
+      if (_supabase.auth.currentSession != null) {
+        throw DomainException('Could not sign out on this device: $e');
+      }
+      return e is AuthRetryableFetchException
+          ? 'You are signed out on this device, but the phone looks '
+              'offline, so the server was never told. The online session '
+              'may stay active until it expires.'
+          : 'You are signed out on this device, but ending the online '
+              'session failed (${e is AuthException ? e.message : e}). '
+              'It may stay active until it expires.';
+    }
+    return null;
+  }
+
   /// Runs the whole logout.
   ///
   /// Returns null when the server half succeeded too, or a message for
@@ -95,23 +118,7 @@ class LogoutDomain {
   /// [DomainException.message] and stop, leaving the app signed in and
   /// the data intact so the person can retry.
   Future<String?> logOut() async {
-    String? serverWarning;
-    try {
-      await _supabase.auth.signOut();
-    } catch (e) {
-      // The local session is removed before the network call, so
-      // check it really is gone before deciding this is survivable.
-      if (_supabase.auth.currentSession != null) {
-        throw DomainException('Could not sign out on this device: $e');
-      }
-      serverWarning = e is AuthRetryableFetchException
-          ? 'You are signed out on this device, but the phone looks '
-              'offline, so the server was never told. The online session '
-              'may stay active until it expires.'
-          : 'You are signed out on this device, but ending the online '
-              'session failed (${e is AuthException ? e.message : e}). '
-              'It may stay active until it expires.';
-    }
+    final serverWarning = await _signOut();
 
     try {
       await _localLogoutRepo.clearAll();
@@ -120,6 +127,42 @@ class LogoutDomain {
         'Signed out, but the data stored on this phone could not be '
         'cleared ($e). Please try logging out again.',
       );
+    }
+    return serverWarning;
+  }
+
+  /// Forced logout when the session poll reports this account lost
+  /// access. Unlike [logOut], this is never blocked: the lockout
+  /// always happens, only the fate of unsynced local rows differs.
+  ///
+  /// After one last bounded drain, no blocking rows left means a full
+  /// logout (same wipe as voluntary, rejected rows included); anything
+  /// still pending — or a drain that could not complete — means sign
+  /// out but keep the local database, so a later reactivation plus
+  /// login can still push those rows through the normal
+  /// sync-after-login path. Sign-out trouble never throws here; the
+  /// caller locks the UI out regardless.
+  Future<String?> forcedLogOut() async {
+    var drained = false;
+    try {
+      final counts = await drainAndCountUnsyncedRows();
+      drained = counts.blocking == 0;
+    } catch (_) {
+      drained = false;
+    }
+    String? serverWarning;
+    try {
+      serverWarning = await _signOut();
+    } on DomainException catch (e) {
+      serverWarning = e.message;
+    }
+    if (drained) {
+      try {
+        await _localLogoutRepo.clearAll();
+      } catch (_) {
+        // Wipe failed: the data stays queued, same end state as the
+        // keep-data path below.
+      }
     }
     return serverWarning;
   }

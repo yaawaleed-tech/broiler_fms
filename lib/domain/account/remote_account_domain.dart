@@ -69,6 +69,28 @@ class RemoteAccountDomain {
     return _accountRepo.updateStatus(accountId, status);
   }
 
+  /// Reactivates a deactivated Manager, restoring [targetStatus]
+  /// ('active' if they logged in before, 'pending' if not). Refuses
+  /// when a *different* Manager is already active or pending, so a
+  /// business can never hold two at once through this path either.
+  Future<void> reactivateManager({
+    required String accountId,
+    required String businessId,
+    required String targetStatus,
+  }) async {
+    final blocked = await _accountRepo.hasActiveManager(
+      businessId,
+      excludingAccountId: accountId,
+    );
+    if (blocked) {
+      throw const DomainException(
+        'This business already has an active or pending Manager. '
+        'Deactivate them first before reactivating another.',
+      );
+    }
+    await _accountRepo.updateStatus(accountId, targetStatus);
+  }
+
   /// All Admin accounts. Super Admin's own account management screen.
   Future<List<Account>> getAdmins() {
     return _accountRepo.getAdmins();

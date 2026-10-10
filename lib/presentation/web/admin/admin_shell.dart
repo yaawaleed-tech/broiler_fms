@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:broiler_fms/domain/session_poll_trigger.dart';
 import 'package:broiler_fms/domain/web_auth_domain_provider.dart';
+import 'package:broiler_fms/domain/web_current_account_domain.dart';
+import 'package:broiler_fms/domain/domain_exception.dart';
 import 'package:broiler_fms/presentation/shared/theme/app_theme.dart';
 import 'package:broiler_fms/presentation/shared/widgets/confirm_dialog.dart';
+import 'package:broiler_fms/presentation/shared/widgets/session_poller.dart';
 
 /// The persistent sidebar shared by every Admin page. go_router's
 /// ShellRoute keeps this on screen while [child] swaps underneath it,
@@ -23,9 +27,48 @@ class AdminShell extends ConsumerWidget {
       confirmLabel: 'Log out',
     );
     if (confirmed != true) return;
+    if (!context.mounted) return;
 
-    await ref.read(authDomainProvider).logOut();
-    if (context.mounted) context.go('/login');
+    try {
+      await ref.read(authDomainProvider).logOut();
+      ref.invalidate(webCurrentAccountProvider);
+      if (context.mounted) context.go('/login');
+    } on DomainException catch (e) {
+      ref.invalidate(webCurrentAccountProvider);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message)),
+        );
+        context.go('/login');
+      }
+    } catch (e) {
+      // signOut can throw a raw AuthException/AuthRetryableFetchException,
+      // not just DomainException — surface it instead of swallowing it.
+      ref.invalidate(webCurrentAccountProvider);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not log out: $e')),
+        );
+        context.go('/login');
+      }
+    }
+  }
+
+  /// Forced logout from the session poller: the same core as [_logOut]
+  /// (end the session, drop the cached account, go to login with an
+  /// explanation) but no confirm dialog — losing access is not
+  /// voluntary, and the message travels on the route, not a snackbar.
+  Future<void> _forceLogOut(BuildContext context, WidgetRef ref) async {
+    try {
+      await ref.read(authDomainProvider).logOut();
+    } catch (_) {
+      // Forced means forced: the session is unusable either way, so a
+      // failing sign-out must not stop the lockout.
+    }
+    ref.invalidate(webCurrentAccountProvider);
+    if (context.mounted) {
+      context.go('/login', extra: forcedLogoutMessage);
+    }
   }
 
   @override
@@ -80,7 +123,12 @@ class AdminShell extends ConsumerWidget {
               ],
             ),
           ),
-          Expanded(child: child),
+          Expanded(
+            child: SessionPoller(
+              onAccessLost: () => _forceLogOut(context, ref),
+              child: child,
+            ),
+          ),
         ],
       ),
     );

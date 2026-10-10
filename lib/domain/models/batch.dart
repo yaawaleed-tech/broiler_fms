@@ -20,6 +20,8 @@ class Batch {
     this.breed,
     this.description,
     this.closedAt,
+    this.assignedStaffName,
+    this.closedByName,
   });
 
   /// Unique id, generated on the device when the batch is created.
@@ -54,8 +56,17 @@ class Batch {
   /// When the batch was closed. Null until it's actually closed.
   final DateTime? closedAt;
 
+  final String? assignedStaffName;
+
+  final String? closedByName;
+
   /// Builds a [Batch] from a Supabase row (snake_case keys).
+  ///
+  /// The repositories join the assigned-staff and closed-by account
+  /// names under `assigned_staff` and `closed_by_account`; rows without
+  /// those joins still parse, leaving both name fields null.
   factory Batch.fromJson(Map<String, dynamic> json) {
+    final closedByValue = json['closed_by'];
     return Batch(
       batchId: json['batch_id'] as String,
       businessId: json['business_id'] as String,
@@ -65,12 +76,18 @@ class Batch {
       isClosed: json['is_closed'] as bool,
       createdAt: DateTime.parse(json['created_at'] as String),
       assignedStaffId: json['assigned_staff_id'] as String?,
-      closedBy: json['closed_by'] as String?,
+      closedBy: closedByValue is String ? closedByValue : null,
       breed: json['breed'] as String?,
       description: json['description'] as String?,
       closedAt: json['closed_at'] == null
           ? null
           : DateTime.parse(json['closed_at'] as String),
+      assignedStaffName: _embeddedName(json['assigned_staff']),
+      closedByName: _embeddedName(json['closed_by_account']) ??
+          _embeddedName(closedByValue),
     );
   }
+
+  static String? _embeddedName(Object? value) =>
+      value is Map ? value['name'] as String? : null;
 }

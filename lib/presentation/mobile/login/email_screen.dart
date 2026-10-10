@@ -5,12 +5,18 @@ import 'package:go_router/go_router.dart';
 import 'package:broiler_fms/domain/mobile_auth_domain_provider.dart';
 import 'package:broiler_fms/domain/domain_exception.dart';
 import 'package:broiler_fms/presentation/shared/theme/app_theme.dart';
+import 'package:broiler_fms/presentation/shared/widgets/notice_banner.dart';
 
 /// First login screen: the person enters their email, and a 6-digit
 /// code is sent to it. No password anywhere in this app, matching the
 /// OTP-only login decided at the very start of the project.
+///
+/// [message] is shown when present — set when arriving here from a
+/// forced logout, so the person knows why they are signing in again.
 class EmailScreen extends ConsumerStatefulWidget {
-  const EmailScreen({super.key});
+  const EmailScreen({super.key, this.message});
+
+  final String? message;
 
   @override
   ConsumerState<EmailScreen> createState() => _EmailScreenState();
@@ -55,6 +61,10 @@ class _EmailScreenState extends ConsumerState<EmailScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              if (widget.message != null) ...[
+                NoticeBanner(message: widget.message!),
+                const SizedBox(height: 16),
+              ],
               const Text(
                 'Sign in',
                 style: TextStyle(

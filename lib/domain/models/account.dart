@@ -19,6 +19,7 @@ class Account {
     required this.status,
     required this.createdAt,
     this.businessId,
+    this.businessName,
     this.authUserId,
   });
 
@@ -27,6 +28,11 @@ class Account {
   /// The business is null for Super Admin, and null for a fresh Admin
   /// until they register one.
   final String? businessId;
+
+  /// The name of the Admin's business, resolved by an embedded-resource
+  /// join in the query that lists Admins. Null whenever [businessId] is
+  /// null, and also null if that join ever comes back empty.
+  final String? businessName;
 
   /// Links this account to its Supabase Auth user. Null until the
   /// person this account belongs to has actually logged in once.
@@ -49,6 +55,7 @@ class Account {
     return Account(
       accountId: json['account_id'] as String,
       businessId: json['business_id'] as String?,
+      businessName: (json['business'] as Map<String, dynamic>?)?['name'] as String?,
       authUserId: json['auth_user_id'] as String?,
       role: json['role'] as String,
       name: json['name'] as String,
