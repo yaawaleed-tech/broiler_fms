@@ -55,41 +55,73 @@ class _EmailScreenState extends ConsumerState<EmailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 48, 24, 24),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (widget.message != null) ...[
                 NoticeBanner(message: widget.message!),
                 const SizedBox(height: 16),
               ],
+              Center(
+                child: Container(
+                  width: 64,
+                  height: 64,
+                  alignment: Alignment.center,
+                  decoration: const BoxDecoration(
+                    color: AppColors.rust,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Text(
+                    'BF',
+                    style: TextStyle(
+                      fontFamily: 'RobotoSlab',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 22,
+                      color: AppColors.card,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
               const Text(
-                'Sign in',
+                'Broiler farm management',
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'RobotoSlab',
                   fontWeight: FontWeight.w700,
-                  fontSize: 22,
+                  fontSize: 20,
+                  color: AppColors.ink,
+                ),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Staff sign in',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'PublicSans',
+                  fontSize: 13,
+                  color: AppColors.inkMuted,
+                ),
+              ),
+              const SizedBox(height: 32),
+              const Text(
+                'Email address',
+                style: TextStyle(
+                  fontFamily: 'PublicSans',
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
                   color: AppColors.ink,
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Enter your email and we will send you a 6-digit code.',
-                style: TextStyle(
-                  fontFamily: 'PublicSans',
-                  fontSize: 13.5,
-                  color: AppColors.inkMuted,
-                ),
-              ),
-              const SizedBox(height: 24),
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 autofillHints: const [AutofillHints.email],
                 decoration: const InputDecoration(
-                  labelText: 'Email',
+                  hintText: 'name@example.com',
                   border: OutlineInputBorder(),
                 ),
                 onSubmitted: (_) => _sendCode(),
@@ -110,11 +142,23 @@ class _EmailScreenState extends ConsumerState<EmailScreen> {
                 onPressed: _isSending ? null : _sendCode,
                 child: _isSending
                     ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-                    : const Text('Send code'),
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Send login code'),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                "We'll email you a one-time code to sign in. No password "
+                    'needed.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'PublicSans',
+                  fontSize: 12.5,
+                  color: AppColors.inkMuted,
+                  height: 1.4,
+                ),
               ),
             ],
           ),

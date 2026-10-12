@@ -3,11 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:broiler_fms/domain/batch/batch_domain.dart';
 import 'package:broiler_fms/domain/models/financial_summary.dart';
+import 'package:broiler_fms/presentation/shared/formatting.dart';
 import 'package:broiler_fms/presentation/shared/theme/app_theme.dart';
 import 'package:broiler_fms/presentation/shared/widgets/stat_card.dart';
 
-final _financialSummaryProvider =
-FutureProvider.autoDispose.family<FinancialSummary, String>(
+/// Public so the "Sync now" button can invalidate it after a Manager's
+/// pull, exactly as batchDetailProvider is public for the same reason.
+/// Without this, a pull landing while this screen is open would change
+/// the data underneath it and the figures would stay stale until the
+/// screen was rebuilt.
+final financialSummaryProvider =
+    FutureProvider.autoDispose.family<FinancialSummary, String>(
       (ref, batchId) =>
       ref.watch(batchDomainProvider).getFinancialSummary(batchId),
 );
@@ -23,7 +29,7 @@ class FinancialSummaryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final summaryAsync = ref.watch(_financialSummaryProvider(batchId));
+    final summaryAsync = ref.watch(financialSummaryProvider(batchId));
 
     return Scaffold(
       appBar: AppBar(title: const Text('Financial summary')),
@@ -44,11 +50,11 @@ class FinancialSummaryScreen extends ConsumerWidget {
         StatCardRow(
           cards: [
             StatCard(
-              value: '₦${summary.totalExpenses.toStringAsFixed(0)}',
+              value: AppFormat.money(summary.totalExpenses),
               label: 'Total expenses',
             ),
             StatCard(
-              value: '₦${summary.totalRevenue.toStringAsFixed(0)}',
+              value: AppFormat.money(summary.totalRevenue),
               label: 'Total revenue',
             ),
           ],
@@ -78,7 +84,7 @@ class FinancialSummaryScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                '₦${summary.profitLoss.abs().toStringAsFixed(0)}',
+                AppFormat.money(summary.profitLoss.abs()),
                 style: TextStyle(
                   fontFamily: 'RobotoSlab',
                   fontWeight: FontWeight.w700,
@@ -93,13 +99,18 @@ class FinancialSummaryScreen extends ConsumerWidget {
         StatCardRow(
           cards: [
             StatCard(
-              value: '₦${summary.breakevenPricePerBird.toStringAsFixed(2)}',
-              label: 'Breakeven price / bird',
+              value: summary.breakevenPricePerBird == null
+                  ? '—'
+                  : AppFormat.money(
+                      summary.breakevenPricePerBird!,
+                      decimals: 2,
+                    ),
+              label: 'Breakeven / bird to sell',
             ),
             StatCard(
               value: summary.approximateFcr == null
                   ? '—'
-                  : summary.approximateFcr!.toStringAsFixed(2),
+                  : AppFormat.twoDecimals(summary.approximateFcr!),
               label: 'FCR (approx.)',
             ),
           ],

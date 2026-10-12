@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import 'package:broiler_fms/domain/domain_exception.dart';
 import 'package:broiler_fms/domain/vaccination/vaccination_domain.dart';
+import 'package:broiler_fms/presentation/mobile/batch/batch_detail_screen.dart';
 import 'package:broiler_fms/presentation/shared/theme/app_theme.dart';
 import 'package:broiler_fms/presentation/shared/widgets/review_step.dart';
 
@@ -59,6 +60,9 @@ class _VaccinationFormScreenState
         vaccineName: vaccineName,
       );
       if (!mounted) return;
+      // Refresh batch detail so the stat cards behind this screen
+      // reflect the entry that was just saved.
+      ref.invalidate(batchDetailProvider(widget.batchId));
       context.pop();
     } on DomainException catch (e) {
       setState(() {

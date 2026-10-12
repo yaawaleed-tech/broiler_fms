@@ -17,18 +17,34 @@ double profitLoss({
   return totalRevenue - totalExpenses;
 }
 
-/// The price per bird that would exactly cover total expenses, based
-/// on birds actually harvested. Birds that died or remain
-/// un-harvested generate no revenue, so they are not divided into.
+/// The price per bird that would exactly cover what the batch still
+/// owes, spread over the birds that are still available to sell.
 ///
-/// Returns 0 if nothing has been harvested yet, since there is no
-/// meaningful price to compute against zero birds.
-double breakevenPricePerBird({
+/// Money already earned comes off the top first: revenue collected so
+/// far (paid and pending alike, the same figure [profitLoss] uses) is
+/// subtracted from total expenses, and what is left is divided by the
+/// birds not yet harvested. So this answers "what do I still need per
+/// bird to break even on the ones I have left?", not "what did the
+/// birds I already sold cost me?" — a batch already in profit prices
+/// its remaining birds at zero, because everything after that is
+/// margin.
+///
+/// Returns null, not zero, when no birds are left to price (the batch
+/// is fully harvested or closed): there is no per-bird price to
+/// recover at that point, and showing ₦0 would read as "free" rather
+/// than "nothing left to sell". Presentation shows a placeholder
+/// instead, exactly as [approximateFcr] does for its own empty case.
+double? breakevenPricePerBird({
   required double totalExpenses,
-  required int totalHarvestedBirds,
+  required double totalRevenue,
+  required int birdsNotYetHarvested,
 }) {
-  if (totalHarvestedBirds == 0) return 0;
-  return totalExpenses / totalHarvestedBirds;
+  if (birdsNotYetHarvested <= 0) return null;
+  final outstanding = totalExpenses - totalRevenue;
+  // Already covered: everything further is profit, and a negative
+  // "price you must charge" would be meaningless to read.
+  if (outstanding <= 0) return 0;
+  return outstanding / birdsNotYetHarvested;
 }
 
 /// Approximate feed conversion ratio: feed consumed divided by an

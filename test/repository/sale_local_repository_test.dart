@@ -91,10 +91,9 @@ void main() {
     });
 
     test(
-      'overwrites a cached sale with every field the server returned',
+      'keeps the local row while its id is still queued for push',
       () async {
         await seed();
-        // The local-origin path: record() writes the row and queues it.
         final created = await repo.record(
           harvestId: 'har-1',
           recordedBy: 'acc-1',
@@ -106,8 +105,6 @@ void main() {
         );
         expect(await queue.pendingCount(), 1);
 
-        // The same row arrives from the server carrying changed values —
-        // exactly what a second device recording first looks like.
         await repo.upsertAll([
           Sale(
             saleId: created.saleId,
@@ -125,7 +122,55 @@ void main() {
         ]);
 
         final stored = await repo.getById(created.saleId);
-        expect(stored, isNotNull);
+        expect(stored!.amount, 100,
+            reason: 'a queued row must not be overwritten by the pull');
+        expect(stored.buyerName, 'Local Buyer');
+        expect(stored.pricingMethod, 'flat_total');
+        expect(stored.weightSold, null);
+        expect(stored.paymentStatus, 'pending');
+        expect(
+          await queue.pendingCount(),
+          1,
+          reason: 'the pull neither cleared nor added queue rows',
+        );
+      },
+    );
+
+    test(
+      'applies the server copy once the id is no longer queued',
+      () async {
+        await seed();
+        final created = await repo.record(
+          harvestId: 'har-1',
+          recordedBy: 'acc-1',
+          disposition: 'sale',
+          amount: 100,
+          buyerName: 'Local Buyer',
+          pricingMethod: 'flat_total',
+          paymentStatus: 'pending',
+        );
+
+        final pending = await queue.pendingRows();
+        await queue.markSynced(pending.single.id);
+        expect(await queue.pendingCount(), 0);
+
+        final written = await repo.upsertAll([
+          Sale(
+            saleId: created.saleId,
+            harvestId: 'har-1',
+            recordedBy: 'acc-1',
+            disposition: 'sale',
+            amount: 250,
+            createdAt: DateTime(2026, 3, 2),
+            buyerName: 'Server Buyer',
+            pricingMethod: 'per_kg',
+            weightSold: 125,
+            pricePerUnit: 2,
+            paymentStatus: 'paid',
+          ),
+        ]);
+
+        final stored = await repo.getById(created.saleId);
         expect(stored!.harvestId, 'har-1');
         expect(stored.recordedBy, 'acc-1');
         expect(stored.disposition, 'sale');
@@ -136,11 +181,8 @@ void main() {
         expect(stored.weightSold, 125);
         expect(stored.pricePerUnit, 2);
         expect(stored.paymentStatus, 'paid');
-        expect(
-          await queue.pendingCount(),
-          1,
-          reason: 'the pull added no queue rows; record()s row is the only one',
-        );
+        expect(written, 1, reason: 'one row handed to the cache write');
+        expect(await queue.pendingCount(), 0);
       },
     );
   });

@@ -4,6 +4,7 @@ import 'package:broiler_fms/domain/current_account_domain.dart';
 import 'package:broiler_fms/domain/domain_exception.dart';
 import 'package:broiler_fms/domain/models/account.dart';
 import 'package:broiler_fms/domain/models/feed.dart';
+import 'package:broiler_fms/domain/rules/staff_assignment_rule.dart';
 import 'package:broiler_fms/repository/batch/local_batch_repository.dart';
 import 'package:broiler_fms/repository/feed/local_feed_repository.dart';
 import 'package:broiler_fms/repository/feed/remote_feed_repository.dart';
@@ -59,12 +60,16 @@ class FeedDomain {
   /// needs connectivity, RLS scopes the rows to this account's own
   /// business (Staff: only assigned batches), and nothing enqueues
   /// because this data already lives on the server.
-  Future<void> refreshFeedEntries() async {
+  ///
+  /// Returns how many rows were written into the cache.
+  Future<int> refreshFeedEntries() async {
     final feeds = await _remoteFeedRepo.getAll();
-    await _feedRepo.upsertAll(feeds);
+    return _feedRepo.upsertAll(feeds);
   }
 
-  /// Throws if the batch is missing or already closed.
+  /// Throws if the batch is missing, already closed, or assigned to a
+  /// Staff member (a Manager must not write entries into someone else's
+  /// batch).
   Future<void> _checkBatchOpen(String batchId) async {
     final batch = await _batchRepo.getById(batchId);
     if (batch == null) {
@@ -73,6 +78,14 @@ class FeedDomain {
     if (batch.isClosed) {
       throw const DomainException(
         'This batch is closed, so no more feed can be recorded.',
+      );
+    }
+    if (!canRecordEntryForBatch(
+      role: _currentAccount.role,
+      assignedStaffId: batch.assignedStaffId,
+    )) {
+      throw const DomainException(
+        'This batch is assigned to a staff member. Only they can record entries.',
       );
     }
   }

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import 'package:broiler_fms/domain/batch/batch_domain.dart';
 import 'package:broiler_fms/domain/domain_exception.dart';
+import 'package:broiler_fms/presentation/shared/formatting.dart';
 import 'package:broiler_fms/presentation/shared/theme/app_theme.dart';
 import 'package:broiler_fms/presentation/shared/widgets/confirm_dialog.dart';
 import 'package:broiler_fms/presentation/shared/widgets/review_step.dart';
@@ -182,7 +183,7 @@ class _RegisterBatchScreenState extends ConsumerState<RegisterBatchScreen> {
       title: 'Review new batch',
       entries: [
         ReviewEntry('Name', _nameController.text.trim()),
-        ReviewEntry('Starting count', '${_parsedCount ?? 0}'),
+        ReviewEntry('Starting count', AppFormat.count(_parsedCount ?? 0)),
         ReviewEntry('Start date', DateFormat.yMMMd().format(_startDate)),
         if (breed.isNotEmpty) ReviewEntry('Breed', breed),
         if (description.isNotEmpty) ReviewEntry('Description', description),

@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 
 import 'package:broiler_fms/domain/domain_exception.dart';
 import 'package:broiler_fms/domain/feed/feed_domain.dart';
+import 'package:broiler_fms/presentation/mobile/batch/batch_detail_screen.dart';
+import 'package:broiler_fms/presentation/shared/formatting.dart';
 import 'package:broiler_fms/presentation/shared/theme/app_theme.dart';
 import 'package:broiler_fms/presentation/shared/widgets/review_step.dart';
 
@@ -59,6 +61,9 @@ class _FeedFormScreenState extends ConsumerState<FeedFormScreen> {
         quantity: quantity,
       );
       if (!mounted) return;
+      // Refresh batch detail so the stat cards behind this screen
+      // reflect the entry that was just saved.
+      ref.invalidate(batchDetailProvider(widget.batchId));
       context.pop();
     } on DomainException catch (e) {
       setState(() {
@@ -130,7 +135,7 @@ class _FeedFormScreenState extends ConsumerState<FeedFormScreen> {
       title: 'Review feed entry',
       entries: [
         ReviewEntry('Date', DateFormat.yMMMd().format(_date)),
-        ReviewEntry('Quantity', '$quantity kg'),
+        ReviewEntry('Quantity', '${AppFormat.quantity(quantity)} kg'),
       ],
       onEdit: () => setState(() => _showingReview = false),
       onConfirm: _isSaving ? () {} : _confirm,

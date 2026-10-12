@@ -94,9 +94,11 @@ class SaleDomain {
   /// connectivity, RLS scopes the rows (Staff gets none back, financial
   /// data is Manager-only by design), and nothing enqueues because this
   /// data already lives on the server.
-  Future<void> refreshSales() async {
+  ///
+  /// Returns how many rows were written into the cache.
+  Future<int> refreshSales() async {
     final sales = await _remoteSaleRepo.getAll();
-    await _saleRepo.upsertAll(sales);
+    return _saleRepo.upsertAll(sales);
   }
 
   /// Throws if the harvest being priced does not exist locally.

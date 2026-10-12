@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 
 import 'package:broiler_fms/domain/domain_exception.dart';
 import 'package:broiler_fms/domain/weight/weight_domain.dart';
+import 'package:broiler_fms/presentation/mobile/batch/batch_detail_screen.dart';
+import 'package:broiler_fms/presentation/shared/formatting.dart';
 import 'package:broiler_fms/presentation/shared/theme/app_theme.dart';
 import 'package:broiler_fms/presentation/shared/widgets/review_step.dart';
 
@@ -71,6 +73,9 @@ class _WeightFormScreenState extends ConsumerState<WeightFormScreen> {
         sampleCount: count,
       );
       if (!mounted) return;
+      // Refresh batch detail so the stat cards behind this screen
+      // reflect the entry that was just saved.
+      ref.invalidate(batchDetailProvider(widget.batchId));
       context.pop();
     } on DomainException catch (e) {
       setState(() {
@@ -150,11 +155,11 @@ class _WeightFormScreenState extends ConsumerState<WeightFormScreen> {
       title: 'Review weight sample',
       entries: [
         ReviewEntry('Date', DateFormat.yMMMd().format(_date)),
-        ReviewEntry('Sample weight', '$weight kg'),
-        ReviewEntry('Birds weighed', '$count'),
+        ReviewEntry('Sample weight', '${AppFormat.quantity(weight)} kg'),
+        ReviewEntry('Birds weighed', AppFormat.count(count)),
         ReviewEntry(
           'Average per bird',
-          '${(weight / count).toStringAsFixed(2)} kg',
+          '${AppFormat.twoDecimals(weight / count)} kg',
         ),
       ],
       onEdit: () => setState(() => _showingReview = false),

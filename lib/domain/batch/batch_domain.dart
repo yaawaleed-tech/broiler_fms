@@ -79,7 +79,9 @@ class BatchDomain {
   }
 
   /// Assigns a Staff account to a batch, or replaces the current one.
-  Future<void> assignStaff(String batchId, String staffId) {
+  /// Passing a null [staffId] clears the assignment and leaves the
+  /// batch running with nobody on it.
+  Future<void> assignStaff(String batchId, String? staffId) {
     return _batchRepo.assignStaff(batchId, staffId);
   }
 
@@ -89,6 +91,21 @@ class BatchDomain {
     final batch = await _loadBatch(batchId);
     await _checkFullyAccountedFor(batch);
     return _batchRepo.close(batchId, _currentAccount.accountId);
+  }
+
+  /// Reopens a closed batch, after checking it is actually closed.
+  /// Clears the close stamp (closedBy / closedAt) along with the flag.
+  ///
+  /// Manager-only by convention, not by a check here: same as
+  /// [closeBatch] and [assignStaff], the role lives in Presentation
+  /// (the button only shows for Manager) and RLS is the server-side
+  /// backstop.
+  Future<void> reopenBatch(String batchId) async {
+    final batch = await _loadBatch(batchId);
+    if (!batch.isClosed) {
+      throw const DomainException('This batch is not closed, so there is nothing to reopen.');
+    }
+    return _batchRepo.reopen(batchId);
   }
 
   /// All batches in the business. For Manager, who sees everything.
@@ -122,9 +139,13 @@ class BatchDomain {
   /// account is allowed to see, for every role, so nothing is filtered
   /// by hand here, and nothing enqueues: this data already lives on
   /// the server and must never be pushed back up.
-  Future<void> refreshBatches() async {
+  ///
+  /// Returns how many rows were written into the cache, after
+  /// [LocalBatchRepository.upsertAll] skips any batch still queued for
+  /// push.
+  Future<int> refreshBatches() async {
     final batches = await _remoteBatchRepo.getAll();
-    await _batchRepo.upsertAll(batches);
+    return _batchRepo.upsertAll(batches);
   }
 
 
@@ -161,6 +182,16 @@ class BatchDomain {
     final totalHarvestedBirds = await _totalHarvested(batchId);
     final totalFeedKg = await _totalFeedKg(batchId);
     final latestAverageWeight = await _latestAverageSampleWeight(batchId);
+    // Birds still available to sell: the same remaining count the batch
+    // detail screen shows. Reuses the total harvested already fetched
+    // above; a missing batch counts as zero rather than throwing, which
+    // is how this whole method has always behaved for an unknown id.
+    final batch = await _batchRepo.getById(batchId);
+    final birdsNotYetHarvested = remainingBirdCount(
+      startingBirdCount: batch?.startingBirdCount ?? 0,
+      currentMortalityTotal: await _totalMortality(batchId),
+      currentHarvestTotal: totalHarvestedBirds,
+    );
 
     return FinancialSummary(
       totalExpenses: totalExpenses,
@@ -171,7 +202,8 @@ class BatchDomain {
       ),
       breakevenPricePerBird: breakevenPricePerBird(
         totalExpenses: totalExpenses,
-        totalHarvestedBirds: totalHarvestedBirds,
+        totalRevenue: totalRevenue,
+        birdsNotYetHarvested: birdsNotYetHarvested,
       ),
       approximateFcr: latestAverageWeight == null
           ? null

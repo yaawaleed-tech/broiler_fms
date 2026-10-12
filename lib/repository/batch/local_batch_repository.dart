@@ -31,13 +31,27 @@ class LocalBatchRepository {
   /// data that is already on the server — and queuing it would loop
   /// pointless pushes, which for Staff would fail forever anyway: they
   /// have no RLS UPDATE on batch.
-  Future<void> upsertAll(List<Batch> batches) {
-    return _db.batch((batch) {
+  ///
+  /// Any batch whose id is still queued is skipped entirely. A batch
+  /// created offline, or one whose assignment or close is still waiting
+  /// to be pushed, must not be overwritten by the server's older copy of
+  /// the same row, or the pending edit would be silently lost and then
+  /// pushed back up in its stale form.
+  ///
+  /// Returns how many rows were actually written into the cache.
+  Future<int> upsertAll(List<Batch> batches) async {
+    final pending =
+        await _syncQueueRepo.pendingRecordIds(entityTable: 'batches');
+    final safe =
+        batches.where((item) => !pending.contains(item.batchId)).toList();
+    if (safe.isEmpty) return 0;
+    await _db.batch((batch) {
       batch.insertAllOnConflictUpdate(
         _db.batches,
-        batches.map(_toCompanion).toList(),
+        safe.map(_toCompanion).toList(),
       );
     });
+    return safe.length;
   }
 
   /// Registers a new batch. Starts unassigned and open.
@@ -70,7 +84,8 @@ class LocalBatchRepository {
   }
 
   /// Assigns a Staff account to a batch, or replaces the current one.
-  Future<void> assignStaff(String batchId, String staffId) {
+  /// A null [staffId] clears the assignment.
+  Future<void> assignStaff(String batchId, String? staffId) {
     final result = (_db.update(_db.batches)..where((b) => b.batchId.equals(batchId)))
         .write(local.BatchesCompanion(
       assignedStaffId: Value(staffId),
@@ -91,6 +106,25 @@ class LocalBatchRepository {
       isClosed: const Value(true),
       closedBy: Value(closedBy),
       closedAt: Value(DateTime.now()),
+    ));
+    return result.then((_) async {
+      await _syncQueueRepo.enqueue(
+        entityTable: 'batches',
+        recordId: batchId,
+        operation: 'update',
+      );
+    });
+  }
+
+  /// Reopens a closed batch, clearing the close stamp. The mirror image
+  /// of [close]: entries can be recorded against it again, and the
+  /// record of who closed it and when is gone with the stamp.
+  Future<void> reopen(String batchId) {
+    final result = (_db.update(_db.batches)..where((b) => b.batchId.equals(batchId)))
+        .write(local.BatchesCompanion(
+      isClosed: const Value(false),
+      closedBy: const Value(null),
+      closedAt: const Value(null),
     ));
     return result.then((_) async {
       await _syncQueueRepo.enqueue(

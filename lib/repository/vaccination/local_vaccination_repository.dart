@@ -25,13 +25,26 @@ class LocalVaccinationRepository {
   /// lives inside the local-origin write below (record), which has to
   /// travel up. This is the opposite direction — data that is already
   /// on the server — and queuing it would loop pointless pushes.
-  Future<void> upsertAll(List<Vaccination> vaccinations) {
-    return _db.batch((batch) {
+  ///
+  /// Any entry whose id is still queued is skipped entirely, so a local
+  /// record the server has not accepted yet is never replaced by the
+  /// server's older copy of the same row. Returns how many rows were
+  /// actually written into the cache.
+  Future<int> upsertAll(List<Vaccination> vaccinations) async {
+    final pending = await _syncQueueRepo.pendingRecordIds(
+      entityTable: 'vaccination_entries',
+    );
+    final safe = vaccinations
+        .where((item) => !pending.contains(item.vaccinationId))
+        .toList();
+    if (safe.isEmpty) return 0;
+    await _db.batch((batch) {
       batch.insertAllOnConflictUpdate(
         _db.vaccinationEntries,
-        vaccinations.map(_toCompanion).toList(),
+        safe.map(_toCompanion).toList(),
       );
     });
+    return safe.length;
   }
 
   /// Saves a new vaccination entry on the device and returns it.

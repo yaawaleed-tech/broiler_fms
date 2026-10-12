@@ -91,6 +91,20 @@ class RemoteAccountDomain {
     await _accountRepo.updateStatus(accountId, targetStatus);
   }
 
+  /// Checks whether an email is already registered among accounts.
+  /// If [excludingAccountId] is provided, that account is excluded
+  /// from the check — this prevents flagging an account's own current
+  /// email when the validation is reused in an edit flow.
+  Future<bool> emailExists({
+    required String email,
+    String? excludingAccountId,
+  }) {
+    return _accountRepo.emailExists(
+      email: email,
+      excludingAccountId: excludingAccountId,
+    );
+  }
+
   /// All Admin accounts. Super Admin's own account management screen.
   Future<List<Account>> getAdmins() {
     return _accountRepo.getAdmins();
@@ -101,9 +115,7 @@ class RemoteAccountDomain {
   Future<List<Account>> getAccountsForBusiness(String businessId) {
     return _accountRepo.getAccountsForBusiness(businessId);
   }
-}
-
-/// Builds a [RemoteAccountDomain] wired to the shared Supabase client.
+} /// Builds a [RemoteAccountDomain] wired to the shared Supabase client.
 /// Web only, used by Super Admin and Admin.
 final remoteAccountDomainProvider = Provider<RemoteAccountDomain>(
       (ref) => RemoteAccountDomain(ref.watch(remoteAccountRepositoryProvider)),

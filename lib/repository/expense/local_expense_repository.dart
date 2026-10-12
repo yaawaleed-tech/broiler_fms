@@ -28,13 +28,24 @@ class LocalExpenseRepository {
   /// lives inside the local-origin write below (record), which has to
   /// travel up. This is the opposite direction — data that is already
   /// on the server — and queuing it would loop pointless pushes.
-  Future<void> upsertAll(List<Expense> expenses) {
-    return _db.batch((batch) {
+  ///
+  /// Any expense whose id is still queued is skipped entirely, so a
+  /// local record the server has not accepted yet is never replaced by
+  /// the server's older copy of the same row. Returns how many rows
+  /// were actually written into the cache.
+  Future<int> upsertAll(List<Expense> expenses) async {
+    final pending =
+        await _syncQueueRepo.pendingRecordIds(entityTable: 'expenses');
+    final safe =
+        expenses.where((item) => !pending.contains(item.expenseId)).toList();
+    if (safe.isEmpty) return 0;
+    await _db.batch((batch) {
       batch.insertAllOnConflictUpdate(
         _db.expenses,
-        expenses.map(_toCompanion).toList(),
+        safe.map(_toCompanion).toList(),
       );
     });
+    return safe.length;
   }
 
   /// Saves a new expense on the device and returns it.

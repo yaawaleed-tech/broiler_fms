@@ -89,7 +89,7 @@ void main() {
       );
     });
 
-    test('overwrites a cached batch with every field the server returned',
+    test('keeps the local row while its id is still queued for push',
         () async {
       await seed();
       // The local-origin path: create() writes the row and queues it.
@@ -101,10 +101,49 @@ void main() {
       );
       expect(await queue.pendingCount(), 1);
 
-      // The same batch arrives from the server carrying Manager's
-      // assignment and the closing fields — the exact data this fix
-      // exists to deliver.
+      // The server sends back the same batch without the assignment this
+      // device has queued but not yet sent. Applying it would destroy
+      // the pending edit, which then gets pushed back up stale.
       await repo.upsertAll([
+        Batch(
+          batchId: created.batchId,
+          businessId: 'biz-1',
+          batchName: 'House 1',
+          startingBirdCount: 100,
+          startDate: created.startDate,
+          isClosed: false,
+          createdAt: created.createdAt,
+          assignedStaffId: 'acc-1',
+        ),
+      ]);
+
+      final stored = await repo.getById(created.batchId);
+      expect(stored!.assignedStaffId, isNull,
+          reason: 'a queued row must not be overwritten by the pull');
+      expect(stored.isClosed, isFalse);
+      expect(
+        await queue.pendingCount(),
+        1,
+        reason: 'the pull neither cleared nor added queue rows',
+      );
+    });
+
+    test('applies the server copy once the id is no longer queued', () async {
+      await seed();
+      final created = await repo.create(
+        businessId: 'biz-1',
+        batchName: 'House 1',
+        startingBirdCount: 100,
+        startDate: DateTime(2026, 1, 1),
+      );
+
+      // The push went through, so the queue row is gone and this row is
+      // no longer local intent — it is just a cache entry now.
+      final pending = await queue.pendingRows();
+      await queue.markSynced(pending.single.id);
+      expect(await queue.pendingCount(), 0);
+
+      final written = await repo.upsertAll([
         Batch(
           batchId: created.batchId,
           businessId: 'biz-1',
@@ -120,16 +159,52 @@ void main() {
       ]);
 
       final stored = await repo.getById(created.batchId);
-      expect(stored!.assignedStaffId, 'acc-1',
-          reason: 'the assignment is the whole point of this fix');
+      expect(stored!.assignedStaffId, 'acc-1');
       expect(stored.isClosed, isTrue);
       expect(stored.closedBy, 'acc-1');
       expect(stored.closedAt, DateTime(2026, 3, 1));
+      expect(written, 1, reason: 'one row handed to the cache write');
       expect(
         await queue.pendingCount(),
-        1,
-        reason: 'the pull added no queue rows; create()s row is the only one',
+        0,
+        reason: 'the pull added no queue rows',
       );
+    });
+
+    test('applies other rows in the same pull while one is protected',
+        () async {
+      await seed();
+      final created = await repo.create(
+        businessId: 'biz-1',
+        batchName: 'House 1',
+        startingBirdCount: 100,
+        startDate: DateTime(2026, 1, 1),
+      );
+
+      final written = await repo.upsertAll([
+        Batch(
+          batchId: created.batchId,
+          businessId: 'biz-1',
+          batchName: 'House 1',
+          startingBirdCount: 100,
+          startDate: created.startDate,
+          isClosed: true,
+          createdAt: created.createdAt,
+        ),
+        Batch(
+          batchId: 'batch-other',
+          businessId: 'biz-1',
+          batchName: 'House 2',
+          startingBirdCount: 200,
+          startDate: DateTime(2026, 2, 1),
+          isClosed: true,
+          createdAt: DateTime(2026, 2, 1),
+        ),
+      ]);
+
+      expect(written, 1, reason: 'the protected row is skipped, not the whole pull');
+      expect((await repo.getById('batch-other'))!.batchName, 'House 2');
+      expect((await repo.getById(created.batchId))!.isClosed, isFalse);
     });
   });
 }

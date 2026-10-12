@@ -123,6 +123,25 @@ class RemoteAccountRepository {
   }
 
 
+/// True if an account with this email already exists in the
+  /// Supabase [account] table. If [excludingAccountId] is provided,
+  /// that specific account is skipped — useful for edit flows so the
+  /// account's own current email is not flagged as a duplicate.
+  Future<bool> emailExists({
+    required String email,
+    String? excludingAccountId,
+  }) async {
+    var query = _client
+        .from('account')
+        .select('account_id')
+        .eq('email', email);
+    if (excludingAccountId != null) {
+      query = query.neq('account_id', excludingAccountId);
+    }
+    final rows = await query;
+    return rows.isNotEmpty;
+  }
+
   /// The account matching the currently signed-in session. Called once
   /// at login, and again whenever the cache is refreshed, so its
   /// result can be written into the local cache for offline use.
@@ -134,14 +153,9 @@ class RemoteAccountRepository {
         .maybeSingle();
     return row == null ? null : Account.fromJson(row);
   }
-}
-
-
-
-/// Builds a [RemoteAccountRepository] wired to the shared Supabase
+} /// Builds a [RemoteAccountRepository] wired to the shared Supabase
 /// client. Used by anything that needs to read or write accounts over
 /// the network: the web app directly, and mobile's one-time account
-/// pull at login.
-final remoteAccountRepositoryProvider = Provider<RemoteAccountRepository>(
-      (ref) => RemoteAccountRepository(ref.watch(supabaseClientProvider)),
-);
+
+/// Builds a [RemoteAccountRepository] wired to the shared Supabase client. Used by anything that needs to read or write accounts over the network: the web app directly, and mobile's one-time account pull at login.
+final remoteAccountRepositoryProvider = Provider<RemoteAccountRepository>((ref) => RemoteAccountRepository(ref.watch(supabaseClientProvider)));

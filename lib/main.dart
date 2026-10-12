@@ -74,6 +74,7 @@ class BroilerFmsApp extends ConsumerWidget {
     return SessionPoller(
       onAccessLost: () => _forceLogOut(context, ref),
       child: MaterialApp.router(
+        debugShowCheckedModeBanner: false,
         title: 'Broiler FMS',
         theme: buildAppTheme(),
         routerConfig: router,

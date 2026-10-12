@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import 'package:broiler_fms/domain/domain_exception.dart';
 import 'package:broiler_fms/domain/expense/expense_domain.dart';
+import 'package:broiler_fms/presentation/shared/formatting.dart';
 import 'package:broiler_fms/presentation/shared/theme/app_theme.dart';
 import 'package:broiler_fms/presentation/shared/widgets/review_step.dart';
 
@@ -237,7 +238,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
         if (feedType.isNotEmpty) ReviewEntry('Feed type', feedType),
         if (medicationName.isNotEmpty)
           ReviewEntry('Medication', medicationName),
-        ReviewEntry('Amount', '${_parsedAmount ?? 0}'),
+        ReviewEntry('Amount', AppFormat.money(_parsedAmount ?? 0)),
         if (description.isNotEmpty) ReviewEntry('Note', description),
       ],
       onEdit: () => setState(() => _showingReview = false),

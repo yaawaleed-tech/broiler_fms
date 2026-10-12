@@ -6,6 +6,8 @@ import 'package:broiler_fms/domain/domain_exception.dart';
 import 'package:broiler_fms/domain/harvest/harvest_domain.dart';
 import 'package:broiler_fms/domain/models/harvest.dart';
 import 'package:broiler_fms/domain/sale/sale_domain.dart';
+import 'package:broiler_fms/presentation/mobile/sale/harvest_list_screen.dart';
+import 'package:broiler_fms/presentation/shared/formatting.dart';
 import 'package:broiler_fms/presentation/shared/theme/app_theme.dart';
 import 'package:broiler_fms/presentation/shared/widgets/review_step.dart';
 
@@ -36,7 +38,6 @@ class _PriceHarvestScreenState extends ConsumerState<PriceHarvestScreen> {
 
   String _disposition = 'sale';
   String _pricingMethod = 'per_kg';
-  String? _paymentStatus;
   bool _showingReview = false;
   bool _isSaving = false;
   String? _errorMessage;
@@ -110,9 +111,12 @@ class _PriceHarvestScreenState extends ConsumerState<PriceHarvestScreen> {
             ? null
             : _numOrNull(_weightController),
         pricePerUnit: isGift ? null : _numOrNull(_pricePerUnitController),
-        paymentStatus: isGift ? null : _paymentStatus,
+        paymentStatus: null,
       );
       if (!mounted) return;
+      // The harvest list pops back into view showing this sale, so
+      // refresh it — otherwise it would keep rendering as unpriced.
+      ref.invalidate(salesProvider(widget.harvestId));
       context.pop();
     } on DomainException catch (e) {
       setState(() {
@@ -252,21 +256,18 @@ class _PriceHarvestScreenState extends ConsumerState<PriceHarvestScreen> {
               });
             },
           ),
-          const SizedBox(height: 16),
-          SegmentedButton<String>(
-            segments: const [
-              ButtonSegment(value: 'paid', label: Text('Paid')),
-              ButtonSegment(value: 'pending', label: Text('Pending')),
-            ],
-            selected: _paymentStatus == null ? {} : {_paymentStatus!},
-            emptySelectionAllowed: true,
-            onSelectionChanged: (selection) {
-              setState(() {
-                _paymentStatus = selection.isEmpty ? null : selection.first;
-              });
-            },
-          ),
         ],
+        const SizedBox(height: 16),
+        const Text(
+          'Payment status is no longer collected.',
+          style: TextStyle(
+            fontFamily: 'PublicSans',
+            fontSize: 12,
+            color: AppColors.ink,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+        const SizedBox(height: 8),
         if (_errorMessage != null) ...[
           const SizedBox(height: 10),
           Text(
@@ -304,14 +305,19 @@ class _PriceHarvestScreenState extends ConsumerState<PriceHarvestScreen> {
             _pricingMethod == 'per_kg' ? 'Per Kg' : 'Flat Total',
           ),
           if (_pricingMethod == 'per_kg')
-            ReviewEntry('Weight sold', '${_numOrNull(_weightController) ?? 0} kg'),
-          ReviewEntry(
-            'Price',
-            '${_numOrNull(_pricePerUnitController) ?? 0}',
-          ),
-          ReviewEntry('Amount', '${_numOrNull(_amountController) ?? 0}'),
-          ReviewEntry('Payment', _paymentStatus ?? 'Not set'),
-        ] else
+            ReviewEntry(
+              'Weight sold',
+              '${AppFormat.quantity(_numOrNull(_weightController) ?? 0)} kg',
+            ),
+ReviewEntry(
+              'Price',
+              AppFormat.money(_numOrNull(_pricePerUnitController) ?? 0),
+            ),
+            ReviewEntry(
+              'Amount',
+              AppFormat.money(_numOrNull(_amountController) ?? 0),
+            ),
+          ] else
           const ReviewEntry('Amount', '0'),
       ],
       onEdit: () => setState(() => _showingReview = false),

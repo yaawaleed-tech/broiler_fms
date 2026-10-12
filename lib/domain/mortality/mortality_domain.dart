@@ -6,6 +6,7 @@ import 'package:broiler_fms/domain/models/account.dart';
 import 'package:broiler_fms/domain/models/batch.dart';
 import 'package:broiler_fms/domain/models/mortality.dart';
 import 'package:broiler_fms/domain/rules/bird_count_rule.dart';
+import 'package:broiler_fms/domain/rules/staff_assignment_rule.dart';
 import 'package:broiler_fms/repository/batch/local_batch_repository.dart';
 import 'package:broiler_fms/repository/harvest/local_harvest_repository.dart';
 import 'package:broiler_fms/repository/mortality/local_mortality_repository.dart';
@@ -70,12 +71,16 @@ class MortalityDomain {
   /// needs connectivity, RLS scopes the rows to this account's own
   /// business (Staff: only assigned batches), and nothing enqueues
   /// because this data already lives on the server.
-  Future<void> refreshMortalityEntries() async {
+  ///
+  /// Returns how many rows were written into the cache.
+  Future<int> refreshMortalityEntries() async {
     final mortalities = await _remoteMortalityRepo.getAll();
-    await _mortalityRepo.upsertAll(mortalities);
+    return _mortalityRepo.upsertAll(mortalities);
   }
 
-  /// Loads the batch, and throws if it is missing or already closed.
+  /// Loads the batch, and throws if it is missing, already closed, or
+  /// assigned to a Staff member (a Manager must not write entries into
+  /// someone else's batch).
   Future<Batch> _loadOpenBatch(String batchId) async {
     final batch = await _batchRepo.getById(batchId);
     if (batch == null) {
@@ -84,6 +89,14 @@ class MortalityDomain {
     if (batch.isClosed) {
       throw const DomainException(
         'This batch is closed, so no more mortality can be recorded.',
+      );
+    }
+    if (!canRecordEntryForBatch(
+      role: _currentAccount.role,
+      assignedStaffId: batch.assignedStaffId,
+    )) {
+      throw const DomainException(
+        'This batch is assigned to a staff member. Only they can record entries.',
       );
     }
     return batch;

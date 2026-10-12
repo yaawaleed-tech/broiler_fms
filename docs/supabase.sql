@@ -528,12 +528,15 @@ with check (
 -- self-edit at all; only Manager corrects, which in V1 means
 -- guiding Staff to log a follow-up entry, not editing the old one).
 --
--- FIX applied to every entry table below: previously "assigned
--- staff and above" let Manager, Admin, and Super Admin log entries
--- too. Manager-acting-as-Staff is explicitly deferred to a Later
--- Version and was never in V1 scope, so only the specifically
--- assigned Staff member may insert. Admin and Super Admin never
--- touch field data at any version.
+-- Entry INSERT is open to two independent roles, one policy each:
+-- "assigned staff logs X" lets Staff record on the batches assigned to
+-- them, and "manager logs X" lets Manager record directly on any batch
+-- in their own business. Postgres combines multiple permissive policies
+-- on the same command with OR, so the two coexist rather than override
+-- each other, and neither disturbs the other. This matches the mobile
+-- UI, which shows a Manager the entry actions on any batch that has
+-- nobody assigned to it. Admin and Super Admin still never touch field
+-- data.
 --
 -- FIX applied to every SELECT below: previously scoped only by
 -- business_id, letting Staff see every batch's entries, not just
@@ -557,6 +560,14 @@ with check (
   and batch_id in (select batch_id from public.batch where assigned_staff_id = public.current_account_id())
 );
 
+create policy "manager logs mortality"
+on public.mortality_entry for insert
+with check (
+  recorded_by = public.current_account_id()
+  and public.current_role() = 'manager'
+  and batch_id in (select batch_id from public.batch where business_id = public.current_business_id())
+);
+
 create policy "view feed entries"
 on public.feed_entry for select
 using (
@@ -573,6 +584,14 @@ with check (
   recorded_by = public.current_account_id()
   and public.current_role() = 'staff'
   and batch_id in (select batch_id from public.batch where assigned_staff_id = public.current_account_id())
+);
+
+create policy "manager logs feed"
+on public.feed_entry for insert
+with check (
+  recorded_by = public.current_account_id()
+  and public.current_role() = 'manager'
+  and batch_id in (select batch_id from public.batch where business_id = public.current_business_id())
 );
 
 create policy "view weight samples"
@@ -593,6 +612,14 @@ with check (
   and batch_id in (select batch_id from public.batch where assigned_staff_id = public.current_account_id())
 );
 
+create policy "manager logs weight"
+on public.weight_sample for insert
+with check (
+  recorded_by = public.current_account_id()
+  and public.current_role() = 'manager'
+  and batch_id in (select batch_id from public.batch where business_id = public.current_business_id())
+);
+
 create policy "view vaccinations"
 on public.vaccination_entry for select
 using (
@@ -611,6 +638,14 @@ with check (
   and batch_id in (select batch_id from public.batch where assigned_staff_id = public.current_account_id())
 );
 
+create policy "manager logs vaccinations"
+on public.vaccination_entry for insert
+with check (
+  recorded_by = public.current_account_id()
+  and public.current_role() = 'manager'
+  and batch_id in (select batch_id from public.batch where business_id = public.current_business_id())
+);
+
 create policy "view harvest entries"
 on public.harvest_entry for select
 using (
@@ -627,6 +662,14 @@ with check (
   recorded_by = public.current_account_id()
   and public.current_role() = 'staff'
   and batch_id in (select batch_id from public.batch where assigned_staff_id = public.current_account_id())
+);
+
+create policy "manager logs harvest"
+on public.harvest_entry for insert
+with check (
+  recorded_by = public.current_account_id()
+  and public.current_role() = 'manager'
+  and batch_id in (select batch_id from public.batch where business_id = public.current_business_id())
 );
 
 -- ---------- expense ----------

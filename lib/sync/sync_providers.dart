@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:drift/drift.dart' show TableUpdateQuery, UpdateKind;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -99,3 +102,118 @@ final connectivitySyncTriggerProvider =
   ref.onDispose(trigger.dispose);
   return trigger;
 });
+
+/// Display-only snapshot of what the sync-status pill needs: whether
+/// the device currently has any network, and how many rows are still
+/// waiting in the local sync queue. Both sources are local (the OS
+/// connectivity API and the Drift queue table) — nothing here talks
+/// to the server.
+class SyncStatus {
+  const SyncStatus({required this.isOnline, required this.pendingCount});
+
+  final bool isOnline;
+  final int pendingCount;
+}
+
+/// Emits the current pending count and every later change to it, on its
+/// own. This is a real Drift watch, not a poll and not a one-shot read:
+/// it re-runs on any insert, update, or delete on sync_queue, so a
+/// drain emptying the queue, a failed push bumping a row's attempts,
+/// and a rejection flagging a row all surface here without the code
+/// that did them having to announce anything.
+Stream<int> _watchPendingCount(Ref ref) {
+  return ref
+      .watch(localSyncQueueRepositoryProvider)
+      .watchPendingCount()
+      // The first count arrives a beat after the stream is subscribed,
+      // and while we wait the pill shows a loading placeholder anyway,
+      // so no seed value is needed.
+      .distinct();
+}
+
+/// Emits the current connectivity state and every later change to it.
+Stream<bool> _watchIsOnline() async* {
+  final connectivity = Connectivity();
+  final initial = await connectivity.checkConnectivity();
+  yield !initial.contains(ConnectivityResult.none);
+  yield* connectivity.onConnectivityChanged
+      .map((results) => !results.contains(ConnectivityResult.none));
+}
+
+/// The pill's data, combining two independent live sources.
+///
+/// Both halves are watched for their own sake and merged here, rather
+/// than one being read inside the other's loop: that is the whole fix.
+/// The old shape re-read the count only when connectivity changed, so
+/// a drain that emptied the queue on a stable wifi connection left
+/// the pill showing the old number indefinitely — nothing about the
+/// queue touched the connectivity stream, so nothing re-read it.
+///
+/// Now either source moving produces a fresh pair: a reconnect drains
+/// the queue, the queue's deletes emit, the pill re-counts. A local
+/// write enqueues a row, the insert emits, the count goes up; three
+/// seconds later the debounced drain deletes it and the count comes
+/// back down. No invalidation call is involved in either, and none has
+/// to be remembered at the next trigger site that gets added.
+final syncStatusProvider = StreamProvider.autoDispose<SyncStatus>((ref) {
+  return _combineLatest(
+    _watchIsOnline(),
+    _watchPendingCount(ref),
+    (isOnline, pendingCount) =>
+        SyncStatus(isOnline: isOnline, pendingCount: pendingCount),
+  );
+});
+
+/// Combines two streams into one that emits whenever either side emits,
+/// pairing each new value with the latest value from the other side.
+///
+/// The small hand-rolled equivalent of rxdart's `combineLatest`, which
+/// this project does not depend on. It exists because the pill needs
+/// exactly this and nothing more general: hold the most recent value
+/// from each stream, and re-emit the pair whenever one of them
+/// changes. Kept here rather than pulled in as a dependency for four
+/// lines of bookkeeping.
+Stream<R> _combineLatest<A, B, R>(
+  Stream<A> a,
+  Stream<B> b,
+  R Function(A, B) combine,
+) {
+  late final StreamController<R> controller;
+  StreamSubscription<A>? subA;
+  StreamSubscription<B>? subB;
+
+  // Null until each side has produced its first value: a pair needs
+  // both halves, so nothing is emitted before that.
+  A? latestA;
+  B? latestB;
+  var hasA = false;
+  var hasB = false;
+
+  void emitIfReady() {
+    if (!hasA || !hasB) return;
+    controller.add(combine(latestA as A, latestB as B));
+  }
+
+  controller = StreamController<R>(
+    onListen: () {
+      subA = a.listen((value) {
+        latestA = value;
+        hasA = true;
+        emitIfReady();
+      });
+      subB = b.listen((value) {
+        latestB = value;
+        hasB = true;
+        emitIfReady();
+      });
+    },
+    // Both sides are cancelled together, so neither outlives the
+    // provider and a disposed pill stops touching Drift entirely.
+    onCancel: () async {
+      await subA?.cancel();
+      await subB?.cancel();
+    },
+  );
+  return controller.stream;
+}
+

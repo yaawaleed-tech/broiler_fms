@@ -37,6 +37,7 @@ class BroilerFmsWebApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(webRouterProvider);
     return MaterialApp.router(
+      debugShowCheckedModeBanner: false,
       title: 'Broiler FMS — Web',
       theme: buildAppTheme(),
       routerConfig: router,

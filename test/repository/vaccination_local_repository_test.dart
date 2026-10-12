@@ -94,10 +94,9 @@ void main() {
     );
 
     test(
-      'overwrites a cached vaccination entry with every field the server returned',
+      'keeps the local row while its id is still queued for push',
       () async {
         await seed();
-        // The local-origin path: record() writes the row and queues it.
         final created = await repo.record(
           batchId: 'batch-1',
           recordedBy: 'acc-1',
@@ -106,8 +105,6 @@ void main() {
         );
         expect(await queue.pendingCount(), 1);
 
-        // The same row arrives from the server carrying changed values —
-        // exactly what a second device recording first looks like.
         await repo.upsertAll([
           Vaccination(
             vaccinationId: created.vaccinationId,
@@ -120,17 +117,51 @@ void main() {
         ]);
 
         final stored = await repo.getById(created.vaccinationId);
-        expect(stored, isNotNull);
+        expect(stored!.date, DateTime(2026, 1, 1),
+            reason: 'a queued row must not be overwritten by the pull');
+        expect(stored.vaccineName, 'Gumboro');
+        expect(
+          await queue.pendingCount(),
+          1,
+          reason: 'the pull neither cleared nor added queue rows',
+        );
+      },
+    );
+
+    test(
+      'applies the server copy once the id is no longer queued',
+      () async {
+        await seed();
+        final created = await repo.record(
+          batchId: 'batch-1',
+          recordedBy: 'acc-1',
+          date: DateTime(2026, 1, 1),
+          vaccineName: 'Gumboro',
+        );
+
+        final pending = await queue.pendingRows();
+        await queue.markSynced(pending.single.id);
+        expect(await queue.pendingCount(), 0);
+
+        final written = await repo.upsertAll([
+          Vaccination(
+            vaccinationId: created.vaccinationId,
+            batchId: 'batch-1',
+            recordedBy: 'acc-1',
+            date: DateTime(2026, 3, 1),
+            vaccineName: 'Newcastle',
+            recordedAt: DateTime(2026, 3, 2),
+          ),
+        ]);
+
+        final stored = await repo.getById(created.vaccinationId);
         expect(stored!.batchId, 'batch-1');
         expect(stored.recordedBy, 'acc-1');
         expect(stored.date, DateTime(2026, 3, 1));
         expect(stored.vaccineName, 'Newcastle');
         expect(stored.recordedAt, DateTime(2026, 3, 2));
-        expect(
-          await queue.pendingCount(),
-          1,
-          reason: 'the pull added no queue rows; record()s row is the only one',
-        );
+        expect(written, 1, reason: 'one row handed to the cache write');
+        expect(await queue.pendingCount(), 0);
       },
     );
   });

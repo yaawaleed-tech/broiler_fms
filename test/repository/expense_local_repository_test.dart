@@ -92,10 +92,9 @@ void main() {
     });
 
     test(
-      'overwrites a cached expense with every field the server returned',
+      'keeps the local row while its id is still queued for push',
       () async {
         await seed();
-        // The local-origin path: record() writes the row and queues it.
         final created = await repo.record(
           batchId: 'batch-1',
           recordedBy: 'acc-1',
@@ -109,8 +108,6 @@ void main() {
         );
         expect(await queue.pendingCount(), 1);
 
-        // The same row arrives from the server carrying changed values —
-        // exactly what a second device recording first looks like.
         await repo.upsertAll([
           Expense(
             expenseId: created.expenseId,
@@ -129,7 +126,58 @@ void main() {
         ]);
 
         final stored = await repo.getById(created.expenseId);
-        expect(stored, isNotNull);
+        expect(stored!.date, DateTime(2026, 1, 1),
+            reason: 'a queued row must not be overwritten by the pull');
+        expect(stored.amount, 10);
+        expect(stored.category, 'feed');
+        expect(stored.feedType, 'starter');
+        expect(stored.medicationName, null);
+        expect(
+          await queue.pendingCount(),
+          1,
+          reason: 'the pull neither cleared nor added queue rows',
+        );
+      },
+    );
+
+    test(
+      'applies the server copy once the id is no longer queued',
+      () async {
+        await seed();
+        final created = await repo.record(
+          batchId: 'batch-1',
+          recordedBy: 'acc-1',
+          category: 'feed',
+          date: DateTime(2026, 1, 1),
+          amount: 10,
+          quantity: 2,
+          unitPrice: 5,
+          feedType: 'starter',
+          description: 'local row',
+        );
+
+        final pending = await queue.pendingRows();
+        await queue.markSynced(pending.single.id);
+        expect(await queue.pendingCount(), 0);
+
+        final written = await repo.upsertAll([
+          Expense(
+            expenseId: created.expenseId,
+            batchId: 'batch-1',
+            recordedBy: 'acc-1',
+            category: 'vet_medication',
+            date: DateTime(2026, 3, 1),
+            amount: 42.5,
+            recordedAt: DateTime(2026, 3, 2),
+            quantity: 1.5,
+            unitPrice: 3.0,
+            feedType: null,
+            medicationName: 'Albex',
+            description: null,
+          ),
+        ]);
+
+        final stored = await repo.getById(created.expenseId);
         expect(stored!.batchId, 'batch-1');
         expect(stored.recordedBy, 'acc-1');
         expect(stored.category, 'vet_medication');
@@ -141,11 +189,8 @@ void main() {
         expect(stored.feedType, null);
         expect(stored.medicationName, 'Albex');
         expect(stored.description, null);
-        expect(
-          await queue.pendingCount(),
-          1,
-          reason: 'the pull added no queue rows; record()s row is the only one',
-        );
+        expect(written, 1, reason: 'one row handed to the cache write');
+        expect(await queue.pendingCount(), 0);
       },
     );
   });

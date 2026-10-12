@@ -91,6 +91,16 @@ class RemoteBatchDomain {
     final totalHarvestedBirds = await _totalHarvested(batchId);
     final totalFeedKg = await _totalFeedKg(batchId);
     final latestAverageWeight = await _latestAverageSampleWeight(batchId);
+    // Birds still available to sell: the same remaining count the batch
+    // detail screen shows. Reuses the total harvested already fetched
+    // above; a missing batch counts as zero rather than throwing, which
+    // is how this whole method has always behaved for an unknown id.
+    final batch = await _batchRepo.getById(batchId);
+    final birdsNotYetHarvested = remainingBirdCount(
+      startingBirdCount: batch?.startingBirdCount ?? 0,
+      currentMortalityTotal: await _totalMortality(batchId),
+      currentHarvestTotal: totalHarvestedBirds,
+    );
 
     return FinancialSummary(
       totalExpenses: totalExpenses,
@@ -101,7 +111,8 @@ class RemoteBatchDomain {
       ),
       breakevenPricePerBird: breakevenPricePerBird(
         totalExpenses: totalExpenses,
-        totalHarvestedBirds: totalHarvestedBirds,
+        totalRevenue: totalRevenue,
+        birdsNotYetHarvested: birdsNotYetHarvested,
       ),
       approximateFcr: latestAverageWeight == null
           ? null
@@ -111,6 +122,12 @@ class RemoteBatchDomain {
         totalHarvestedBirds: totalHarvestedBirds,
       ),
     );
+  }
+
+  /// Total birds recorded as dead in the batch so far.
+  Future<int> _totalMortality(String batchId) async {
+    final entries = await _mortalityRepo.getByBatch(batchId);
+    return entries.fold<int>(0, (sum, entry) => sum + entry.count);
   }
 
   /// Total birds already harvested from the batch so far.

@@ -17,7 +17,9 @@ class FinancialSummary {
   final double totalExpenses;
   final double totalRevenue;
   final double profitLoss;
-  final double breakevenPricePerBird;
+  /// Null when no birds are left to price, so there is no meaningful
+  /// per-bird figure to show.
+  final double? breakevenPricePerBird;
 
   /// Null when there is no weight sample yet to estimate from.
   final double? approximateFcr;

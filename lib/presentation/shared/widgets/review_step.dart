@@ -49,16 +49,18 @@ class ReviewStep extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontFamily: 'RobotoSlab',
-            fontWeight: FontWeight.w700,
-            fontSize: 16,
-            color: AppColors.ink,
+        if (title.isNotEmpty) ...[
+          Text(
+            title,
+            style: const TextStyle(
+              fontFamily: 'RobotoSlab',
+              fontWeight: FontWeight.w700,
+              fontSize: 16,
+              color: AppColors.ink,
+            ),
           ),
-        ),
-        const SizedBox(height: 14),
+          const SizedBox(height: 14),
+        ],
         _ReviewRows(entries: entries),
         if (note != null) ...[
           const SizedBox(height: 12),
@@ -78,6 +80,11 @@ class ReviewStep extends StatelessWidget {
             Expanded(
               child: OutlinedButton(
                 onPressed: onEdit,
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: AppColors.card,
+                  foregroundColor: AppColors.ink,
+                  side: const BorderSide(color: AppColors.ink, width: 1.5),
+                ),
                 child: Text(editLabel),
               ),
             ),

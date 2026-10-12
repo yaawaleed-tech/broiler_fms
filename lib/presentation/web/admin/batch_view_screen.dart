@@ -10,6 +10,7 @@ import 'package:broiler_fms/domain/models/financial_summary.dart';
 import 'package:broiler_fms/domain/models/harvest.dart';
 import 'package:broiler_fms/domain/models/sale.dart';
 import 'package:broiler_fms/domain/sale/remote_sale_domain.dart';
+import 'package:broiler_fms/presentation/shared/formatting.dart';
 import 'package:broiler_fms/presentation/shared/theme/app_theme.dart';
 import 'package:broiler_fms/presentation/shared/widgets/badge.dart';
 import 'package:broiler_fms/presentation/shared/widgets/stat_card.dart';
@@ -226,25 +227,30 @@ class BatchViewScreen extends ConsumerWidget {
               const SizedBox(height: 4),
               _summaryRow(
                 'Total expenses',
-                '₦${summary.totalExpenses.toStringAsFixed(0)}',
+                AppFormat.money(summary.totalExpenses),
               ),
               const Divider(height: 1),
               _summaryRow(
                 'Total revenue',
-                '₦${summary.totalRevenue.toStringAsFixed(0)}',
+                AppFormat.money(summary.totalRevenue),
               ),
               const Divider(height: 1),
               _summaryRow(
                 'Profit/Loss',
                 '${summary.profitLoss >= 0 ? '+' : '-'}'
-                '₦${summary.profitLoss.abs().toStringAsFixed(0)}',
+                '${AppFormat.money(summary.profitLoss.abs())}',
                 color: isProfit ? AppColors.olive : AppColors.brick,
                 emphasize: true,
               ),
               const Divider(height: 1),
               _summaryRow(
-                'Breakeven price / bird',
-                '₦${summary.breakevenPricePerBird.toStringAsFixed(2)}',
+                'Breakeven / bird to sell',
+                summary.breakevenPricePerBird == null
+                    ? '—'
+                    : AppFormat.money(
+                        summary.breakevenPricePerBird!,
+                        decimals: 2,
+                      ),
               ),
               const Divider(height: 1),
               _summaryRow(

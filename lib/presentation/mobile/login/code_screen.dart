@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -8,9 +9,12 @@ import 'package:broiler_fms/domain/domain_exception.dart';
 import 'package:broiler_fms/presentation/shared/theme/app_theme.dart';
 
 /// Second login screen: the 6-digit code sent to [email] is entered
-/// here. On success, AuthDomain has already resolved and cached this
-/// device's own Account, so the app can go straight to the home
-/// screen with no extra step.
+/// here in six separate boxes — typing auto-advances, backspace steps
+/// back, and a pasted code spreads itself across the boxes and
+/// verifies on its own once all six digits are in. On success,
+/// AuthDomain has already resolved and cached this device's own
+/// Account, so the app can go straight to the home screen with no
+/// extra step.
 class CodeScreen extends ConsumerStatefulWidget {
   const CodeScreen({super.key, required this.email});
 
@@ -21,18 +25,78 @@ class CodeScreen extends ConsumerStatefulWidget {
 }
 
 class _CodeScreenState extends ConsumerState<CodeScreen> {
-  final _codeController = TextEditingController();
+  final List<TextEditingController> _controllers =
+      List.generate(6, (_) => TextEditingController());
+  final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
   bool _isVerifying = false;
   String? _errorMessage;
 
   @override
   void dispose() {
-    _codeController.dispose();
+    for (final controller in _controllers) {
+      controller.dispose();
+    }
+    for (final node in _focusNodes) {
+      node.dispose();
+    }
     super.dispose();
   }
 
+  void _onChanged(String value, int index) {
+    // A multi-character value means a paste landed in this box (typing
+    // can only ever produce one character at a time): spread the digits
+    // across this box and the ones after it instead of cramming them
+    // into one.
+    if (value.length > 1) {
+      _distributePaste(value, index);
+      return;
+    }
+    if (value.length == 1) {
+      if (index < 5) {
+        _focusNodes[index + 1].requestFocus();
+      } else {
+        _focusNodes[index].unfocus();
+      }
+    } else if (value.isEmpty && index > 0) {
+      _focusNodes[index - 1].requestFocus();
+    }
+
+    if (_controllers.every((c) => c.text.isNotEmpty)) {
+      _verifyCode();
+    }
+  }
+
+  void _onBackspace(KeyEvent event, int index) {
+    if (event is KeyDownEvent &&
+        event.logicalKey == LogicalKeyboardKey.backspace) {
+      if (_controllers[index].text.isEmpty && index > 0) {
+        _focusNodes[index - 1].requestFocus();
+        _controllers[index - 1].clear();
+      }
+    }
+  }
+
+  /// Spreads a pasted string across the boxes starting at [startIndex],
+  /// one digit per box. Afterwards focus sits on the last filled box;
+  /// if every box ended up full, verification starts immediately, the
+  /// same as when the sixth digit is typed by hand. Assigning
+  /// controller text programmatically does not re-trigger onChanged,
+  /// so this cannot recurse back into itself.
+  void _distributePaste(String pasted, int startIndex) {
+    var target = startIndex;
+    for (var j = 0; j < pasted.length && target < 6; j++, target++) {
+      _controllers[target].text = pasted[j];
+    }
+    _focusNodes[target - 1].requestFocus();
+    if (_controllers.every((c) => c.text.isNotEmpty)) {
+      _verifyCode();
+    }
+  }
+
   Future<void> _verifyCode() async {
-    final code = _codeController.text.trim();
+    final code = _controllers.map((c) => c.text).join();
+    if (code.length != 6) return;
+
     setState(() {
       _isVerifying = true;
       _errorMessage = null;
@@ -47,7 +111,13 @@ class _CodeScreenState extends ConsumerState<CodeScreen> {
       if (!mounted) return;
       context.go('/');
     } on DomainException catch (e) {
-      setState(() => _errorMessage = e.message);
+      setState(() {
+        _errorMessage = e.message;
+        for (final controller in _controllers) {
+          controller.clear();
+        }
+        _focusNodes[0].requestFocus();
+      });
     } finally {
       if (mounted) setState(() => _isVerifying = false);
     }
@@ -57,10 +127,9 @@ class _CodeScreenState extends ConsumerState<CodeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 48, 24, 24),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Text(
@@ -74,46 +143,100 @@ class _CodeScreenState extends ConsumerState<CodeScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'We sent a 6-digit code to ${widget.email}.',
+                'Sent to ${widget.email}',
                 style: const TextStyle(
                   fontFamily: 'PublicSans',
-                  fontSize: 13.5,
+                  fontSize: 14,
                   color: AppColors.inkMuted,
                 ),
               ),
-              const SizedBox(height: 24),
-              TextField(
-                controller: _codeController,
-                keyboardType: TextInputType.number,
-                maxLength: 6,
-                decoration: const InputDecoration(
-                  labelText: '6-digit code',
-                  border: OutlineInputBorder(),
-                  counterText: '',
-                ),
-                onSubmitted: (_) => _verifyCode(),
+              const SizedBox(height: 28),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: List.generate(6, (index) {
+                  return SizedBox(
+                    width: 50,
+                    height: 56,
+                    child: KeyboardListener(
+                      focusNode: FocusNode(),
+                      onKeyEvent: (event) => _onBackspace(event, index),
+                      child: TextField(
+                        controller: _controllers[index],
+                        focusNode: _focusNodes[index],
+                        textAlign: TextAlign.center,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        style: const TextStyle(
+                          fontFamily: 'RobotoSlab',
+                          fontWeight: FontWeight.w700,
+                          fontSize: 20,
+                          color: AppColors.ink,
+                        ),
+                        decoration: InputDecoration(
+                          counterText: '',
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(
+                              color: _errorMessage != null
+                                  ? AppColors.brick
+                                  : AppColors.hairlineStrong,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(
+                              color: AppColors.rust,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                        onChanged: (value) => _onChanged(value, index),
+                      ),
+                    ),
+                  );
+                }),
               ),
               if (_errorMessage != null) ...[
-                const SizedBox(height: 10),
+                const SizedBox(height: 14),
                 Text(
                   _errorMessage!,
+                  textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontFamily: 'PublicSans',
-                    fontSize: 12.5,
+                    fontSize: 13,
                     color: AppColors.brick,
                   ),
                 ),
               ],
-              const SizedBox(height: 20),
+              const SizedBox(height: 28),
               ElevatedButton(
                 onPressed: _isVerifying ? null : _verifyCode,
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(50),
+                ),
                 child: _isVerifying
                     ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-                    : const Text('Verify'),
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Verify and sign in'),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () {
+                  // Handle resend code
+                },
+                child: const Text(
+                  'Resend code',
+                  style: TextStyle(
+                    fontFamily: 'PublicSans',
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.rust,
+                  ),
+                ),
               ),
             ],
           ),

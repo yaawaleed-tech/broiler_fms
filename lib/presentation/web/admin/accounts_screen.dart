@@ -137,6 +137,22 @@ class AccountsScreen extends ConsumerWidget {
               final email = emailController.text.trim();
               if (name.isEmpty || email.isEmpty) return;
 
+              // New: check email doesn't already exist among accounts
+              final alreadyExists = await ref
+                  .read(remoteAccountDomainProvider)
+                  .emailExists(
+                    email: email,
+                    // excludingAccountId: null for create; future edit
+                    // flows can pass the existing account's accountId
+                  );
+              if (alreadyExists) {
+                setDialogState(() {
+                  errorMessage = 'An account with this email already exists';
+                  isSaving = false;
+                });
+                return;
+              }
+
               setDialogState(() {
                 isSaving = true;
                 errorMessage = null;

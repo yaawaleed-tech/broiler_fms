@@ -24,9 +24,6 @@ String? saleShapeError({
   }
 
   // disposition == 'sale' from here on.
-  if (paymentStatus == null) {
-    return 'Choose whether this sale is paid or pending.';
-  }
   if (amount <= 0) {
     return 'The amount must be greater than zero.';
   }

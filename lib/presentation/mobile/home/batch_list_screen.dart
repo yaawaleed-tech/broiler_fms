@@ -7,9 +7,12 @@ import 'package:broiler_fms/domain/current_account_domain.dart';
 import 'package:broiler_fms/domain/domain_exception.dart';
 import 'package:broiler_fms/domain/logout_domain.dart';
 import 'package:broiler_fms/domain/models/batch.dart';
+import 'package:broiler_fms/presentation/shared/formatting.dart';
 import 'package:broiler_fms/presentation/shared/theme/app_theme.dart';
 import 'package:broiler_fms/presentation/shared/widgets/badge.dart';
 import 'package:broiler_fms/presentation/shared/widgets/confirm_dialog.dart';
+import 'package:broiler_fms/presentation/mobile/widgets/sync_now_button.dart';
+import 'package:broiler_fms/sync/sync_providers.dart';
 
 /// Signs this device out: run one last sync attempt, then — depending
 /// on what is still in the queue — hard-block with an explanation,
@@ -132,6 +135,11 @@ final _visibleBatchesProvider = StreamProvider.autoDispose<List<Batch>>((
   yield* batchDomain.watchAllForBusiness(businessId);
 });
 
+/// Display-only snapshot of what the sync-status pill needs: whether
+/// the device currently has any network, and how many rows are still
+/// waiting in the local sync queue. Both sources are local (the OS
+/// connectivity API and the Drift queue table) — nothing here talks
+/// to the server.
 /// Home screen: a list of batches, filtered by role. Manager also sees
 /// a button to register a new batch, Staff does not.
 class BatchListScreen extends ConsumerWidget {
@@ -145,11 +153,49 @@ class BatchListScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Batches'),
+        backgroundColor: AppColors.rust,
+        foregroundColor: AppColors.card,
+        title: const Text(
+          'My batches',
+          style: TextStyle(
+            fontFamily: 'RobotoSlab',
+            fontWeight: FontWeight.w700,
+            fontSize: 18,
+            color: AppColors.card,
+          ),
+        ),
         actions: [
-          TextButton(
-            onPressed: () => _logOut(context, ref),
-            child: const Text('Log out'),
+          const SyncNowButton(),
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                const _SyncStatusPill(),
+                TextButton(
+                  onPressed: () => _logOut(context, ref),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.card,
+                    minimumSize: Size.zero,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: const Text(
+                    'Log out',
+                    style: TextStyle(
+                      fontFamily: 'PublicSans',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12.5,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -171,24 +217,118 @@ class BatchListScreen extends ConsumerWidget {
         },
       ),
       floatingActionButton: isManager
-          ? FloatingActionButton(
+          ? FloatingActionButton.extended(
         onPressed: () => context.push('/register-batch'),
-        child: const Icon(Icons.add),
+        // No floatingActionButtonTheme exists in app_theme.dart, so
+        // the colours are set explicitly to match the app's primary
+        // action styling — the same rust fill and cream text the
+        // ElevatedButton theme uses.
+        backgroundColor: AppColors.rust,
+        foregroundColor: AppColors.card,
+        icon: const Icon(Icons.add),
+        label: const Text(
+          'New batch',
+          style: TextStyle(
+            fontFamily: 'PublicSans',
+            fontWeight: FontWeight.w600,
+            color: AppColors.card,
+          ),
+        ),
       )
           : null,
     );
   }
 }
 
-/// One row in the batch list: name, breed, and a remaining-bird count,
-/// tapping it opens batch detail.
+/// The dark pill in the AppBar showing whether this device is online
+/// and whether everything recorded so far has reached the server.
+class _SyncStatusPill extends ConsumerWidget {
+  const _SyncStatusPill();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final statusAsync = ref.watch(syncStatusProvider);
+    return statusAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (status) {
+        final Color dotColor;
+        final String label;
+        if (!status.isOnline) {
+          dotColor = AppColors.brick;
+          label = 'Offline';
+        } else if (status.pendingCount == 0) {
+          dotColor = AppColors.olive;
+          label = 'Online · synced';
+        } else {
+          dotColor = AppColors.amber;
+          label = 'Online · ${status.pendingCount} pending';
+        }
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: AppColors.ink,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: dotColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontFamily: 'PublicSans',
+                  fontWeight: FontWeight.w600,
+                  fontSize: 11,
+                  color: AppColors.card,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// One row in the batch list: name · breed, day and week of the batch,
+/// a status badge, and the remaining-bird count on the right. Tapping
+/// the row opens batch detail.
 class _BatchRow extends ConsumerWidget {
   const _BatchRow({required this.batch});
 
   final Batch batch;
 
+  /// The batch's current day number, counting the start date as day 1.
+  /// Week is derived from it, both shown on the list mockup.
+  int get _dayNumber {
+    final today = DateTime.now();
+    final start = DateTime(
+      batch.startDate.year,
+      batch.startDate.month,
+      batch.startDate.day,
+    );
+    final days = DateTime(today.year, today.month, today.day)
+            .difference(start)
+            .inDays +
+        1;
+    return days < 1 ? 1 : days;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final remainingAsync = ref.watch(_remainingProvider(batch.batchId));
+    final day = _dayNumber;
+    final week = ((day - 1) ~/ 7) + 1;
+
     return InkWell(
       onTap: () => context.push('/batches/${batch.batchId}'),
       child: Container(
@@ -204,30 +344,75 @@ class _BatchRow extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    batch.batchName,
-                    style: const TextStyle(
-                      fontFamily: 'RobotoSlab',
-                      fontWeight: FontWeight.w700,
-                      fontSize: 15,
-                      color: AppColors.ink,
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: batch.batchName,
+                          style: const TextStyle(
+                            fontFamily: 'RobotoSlab',
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                            color: AppColors.ink,
+                          ),
+                        ),
+                        if (batch.breed != null)
+                          TextSpan(
+                            text: ' · ${batch.breed}',
+                            style: const TextStyle(
+                              fontFamily: 'PublicSans',
+                              fontSize: 13.5,
+                              color: AppColors.inkMuted,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-                  if (batch.breed != null) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      batch.breed!,
-                      style: const TextStyle(
-                        fontFamily: 'PublicSans',
-                        fontSize: 12.5,
-                        color: AppColors.inkMuted,
-                      ),
+                  const SizedBox(height: 3),
+                  Text(
+                    'Day $day · Week $week',
+                    style: const TextStyle(
+                      fontFamily: 'PublicSans',
+                      fontSize: 12.5,
+                      color: AppColors.inkMuted,
                     ),
-                  ],
+                  ),
+                  const SizedBox(height: 8),
+                  _StatusBadge(batch: batch, remainingAsync: remainingAsync),
                 ],
               ),
             ),
-            _RemainingBadge(batch: batch),
+            const SizedBox(width: 12),
+            remainingAsync.when(
+              loading: () => const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              error: (_, _) => const SizedBox.shrink(),
+              data: (remaining) => Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    AppFormat.count(remaining),
+                    style: const TextStyle(
+                      fontFamily: 'RobotoSlab',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 22,
+                      color: AppColors.ink,
+                    ),
+                  ),
+                  Text(
+                    'remaining',
+                    style: const TextStyle(
+                      fontFamily: 'PublicSans',
+                      fontSize: 11,
+                      color: AppColors.inkMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -235,30 +420,27 @@ class _BatchRow extends ConsumerWidget {
   }
 }
 
-/// Fetches and shows this one batch's remaining-bird count, or a
-/// closed badge if the batch is already closed.
-class _RemainingBadge extends ConsumerWidget {
-  const _RemainingBadge({required this.batch});
+/// The status pill for one batch row: Closed once closed, Ready to
+/// close when nothing is left alive, Active otherwise.
+class _StatusBadge extends ConsumerWidget {
+  const _StatusBadge({required this.batch, required this.remainingAsync});
 
   final Batch batch;
+  final AsyncValue<int> remainingAsync;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (batch.isClosed) {
       return const AppBadge(label: 'Closed', tone: BadgeTone.neutral);
     }
-    final remainingAsync = ref.watch(_remainingProvider(batch.batchId));
     return remainingAsync.when(
-      loading: () => const SizedBox(
-        width: 16,
-        height: 16,
-        child: CircularProgressIndicator(strokeWidth: 2),
-      ),
+      loading: () => const SizedBox.shrink(),
       error: (_, _) => const SizedBox.shrink(),
       data: (remaining) {
-        final tone = remaining <= 0 ? BadgeTone.warning : BadgeTone.positive;
-        final label = remaining <= 0 ? 'Ready to close' : '$remaining left';
-        return AppBadge(label: label, tone: tone);
+        if (remaining <= 0) {
+          return const AppBadge(label: 'Ready to close', tone: BadgeTone.warning);
+        }
+        return const AppBadge(label: 'Active', tone: BadgeTone.positive);
       },
     );
   }

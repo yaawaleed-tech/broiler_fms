@@ -32,8 +32,10 @@ class ExpenseDomain {
   final LocalBatchRepository _batchRepo;
   final Account _currentAccount;
 
-  /// Records an expense, after checking the batch is open and the
+  /// Records an expense, after checking the batch exists and the
   /// category is one the database allows.
+  ///
+  /// Works on a closed batch too — see [_checkBatchExists].
   Future<Expense> recordExpense({
     required String batchId,
     required String category,
@@ -45,7 +47,7 @@ class ExpenseDomain {
     String? medicationName,
     String? description,
   }) async {
-    await _checkBatchOpen(batchId);
+    await _checkBatchExists(batchId);
 
     final categoryError = expenseCategoryError(category);
     if (categoryError != null) {
@@ -82,21 +84,23 @@ class ExpenseDomain {
   /// connectivity, RLS scopes the rows (Staff gets none back, financial
   /// data is Manager-only by design), and nothing enqueues because this
   /// data already lives on the server.
-  Future<void> refreshExpenses() async {
+  ///
+  /// Returns how many rows were written into the cache.
+  Future<int> refreshExpenses() async {
     final expenses = await _remoteExpenseRepo.getAll();
-    await _expenseRepo.upsertAll(expenses);
+    return _expenseRepo.upsertAll(expenses);
   }
 
-  /// Throws if the batch is missing or already closed.
-  Future<void> _checkBatchOpen(String batchId) async {
+  /// Throws if the batch is missing.
+  ///
+  /// Deliberately no closed-batch check: expenses are Manager-only
+  /// financial records and stay writable after a batch is closed, since
+  /// bills for a finished batch still arrive (and get priced into the
+  /// batch's financial summary) after the birds are gone.
+  Future<void> _checkBatchExists(String batchId) async {
     final batch = await _batchRepo.getById(batchId);
     if (batch == null) {
       throw const DomainException('This batch could not be found.');
-    }
-    if (batch.isClosed) {
-      throw const DomainException(
-        'This batch is closed, so no more expenses can be recorded.',
-      );
     }
   }
 }

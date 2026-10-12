@@ -40,6 +40,28 @@ class LocalSyncQueueRepository {
         .get();
   }
 
+  /// The record ids of every row still sitting in the queue, optionally
+  /// narrowed to a single entity table.
+  ///
+  /// This is what protects local intent from being clobbered by a pull:
+  /// a row whose id is in here has a local change the server has not
+  /// seen yet, so a server copy of the same record must not overwrite
+  /// it. See [LocalBatchRepository.upsertAll] for the one place that
+  /// consumes this.
+  ///
+  /// Rejected rows are included on purpose. They will never be pushed
+  /// again, but they are still local records, and this set answers
+  /// "leave these alone", not "these will be pushed".
+  Future<Set<String>> pendingRecordIds({String? entityTable}) async {
+    final query = _db.selectOnly(_db.syncQueue)
+      ..addColumns([_db.syncQueue.recordId]);
+    if (entityTable != null) {
+      query.where(_db.syncQueue.entityTable.equals(entityTable));
+    }
+    final rows = await query.get();
+    return rows.map((row) => row.read(_db.syncQueue.recordId)!).toSet();
+  }
+
   /// Total unsynced count — used by countUnsyncedRows() (Phase 4).
   ///
   /// Deliberately *not* filtered by rejected: a rejected row is still
@@ -50,6 +72,25 @@ class LocalSyncQueueRepository {
     final query = _db.selectOnly(_db.syncQueue)..addColumns([count]);
     final row = await query.getSingle();
     return row.read(count) ?? 0;
+  }
+
+  /// The same count as [pendingCount], but as a live Drift query
+  /// rather than a one-shot read.
+  ///
+  /// Drift re-runs this whenever the sync queue table changes in any
+  /// way, so it emits on the enqueue insert that starts a batch of
+  /// pending work, on the delete [markSynced] does when a row reaches
+  /// Supabase, and on the update [markFailed] / [markRejected] write.
+  /// That is the whole reason it exists: every code path that changes
+  /// how much work is outstanding shows up here without that path
+  /// having to tell anyone about it.
+  ///
+  /// Same deliberate absence of a rejected filter as [pendingCount] —
+  /// this is the same number, watched instead of polled.
+  Stream<int> watchPendingCount() {
+    final count = _db.syncQueue.id.count();
+    final query = _db.selectOnly(_db.syncQueue)..addColumns([count]);
+    return query.watchSingle().map((row) => row.read(count) ?? 0);
   }
 
   /// How many of those rows still have a chance of reaching Supabase:
