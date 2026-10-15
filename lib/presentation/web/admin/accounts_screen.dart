@@ -294,6 +294,13 @@ class AccountsScreen extends ConsumerWidget {
                       onPressed: () => _addAccount(ref, context, data.businessId, 'manager'),
                       child: const Text('Add Manager'),
                     ),
+                  // Reloads this screen's data from Supabase.
+                  IconButton(
+                    onPressed: () => ref.invalidate(_accountsProvider),
+                    tooltip: 'Refresh',
+                    icon: const Icon(Icons.refresh),
+                    color: AppColors.ink,
+                  ),
                 ],
               ),
               const SizedBox(height: 12),

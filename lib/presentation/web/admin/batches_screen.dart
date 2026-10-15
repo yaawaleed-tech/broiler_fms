@@ -178,6 +178,16 @@ class BatchesScreen extends ConsumerWidget {
                   color: AppColors.inkMuted,
                 ),
               ),
+              // Reloads this screen's data from Supabase.
+              Align(
+                alignment: Alignment.centerRight,
+                child: IconButton(
+                  onPressed: () => ref.invalidate(_batchesProvider),
+                  tooltip: 'Refresh',
+                  icon: const Icon(Icons.refresh),
+                  color: AppColors.ink,
+                ),
+              ),
               const SizedBox(height: 24),
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,

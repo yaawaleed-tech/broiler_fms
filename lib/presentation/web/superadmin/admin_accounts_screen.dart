@@ -243,6 +243,13 @@ class AdminAccountsScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Admin accounts'),
         actions: [
+          // Reloads this screen's data from Supabase.
+          IconButton(
+            onPressed: () => ref.invalidate(_adminsProvider),
+            tooltip: 'Refresh',
+            icon: const Icon(Icons.refresh),
+            color: AppColors.ink,
+          ),
           TextButton(
             onPressed: () => _logOut(context, ref),
             child: const Text('Log out'),

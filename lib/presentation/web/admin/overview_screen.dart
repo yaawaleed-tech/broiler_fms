@@ -73,12 +73,12 @@ class OverviewScreen extends ConsumerWidget {
       body: dataAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(child: Text('$error')),
-        data: (data) => _buildBody(context, data),
+        data: (data) => _buildBody(context, ref, data),
       ),
     );
   }
 
-  Widget _buildBody(BuildContext context, _OverviewData data) {
+  Widget _buildBody(BuildContext context, WidgetRef ref, _OverviewData data) {
     final business = data.business;
     if (business == null) {
       return const Center(child: Text('No business found.'));
@@ -110,6 +110,13 @@ class OverviewScreen extends ConsumerWidget {
                   ),
                 ),
                 child: const Text('Edit business profile'),
+              ),
+              // Reloads this screen's data from Supabase.
+              IconButton(
+                onPressed: () => ref.invalidate(_overviewProvider),
+                tooltip: 'Refresh',
+                icon: const Icon(Icons.refresh),
+                color: AppColors.ink,
               ),
             ],
           ),

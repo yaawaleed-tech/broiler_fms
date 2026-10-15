@@ -138,7 +138,7 @@ class BatchViewScreen extends ConsumerWidget {
           if (batch == null || data.summary == null) {
             return const Center(child: Text('Batch not found.'));
           }
-          return _buildBody(context, data, batch, data.summary!);
+          return _buildBody(context, ref, data, batch, data.summary!);
         },
       ),
     );
@@ -146,6 +146,7 @@ class BatchViewScreen extends ConsumerWidget {
 
   Widget _buildBody(
     BuildContext context,
+    WidgetRef ref,
     _BatchViewData data,
     Batch batch,
     FinancialSummary summary,
@@ -165,6 +166,16 @@ class BatchViewScreen extends ConsumerWidget {
               foregroundColor: AppColors.rust,
             ),
             child: const Text('← Back to batches'),
+          ),
+        ),
+        // Reloads this screen's data from Supabase.
+        Align(
+          alignment: Alignment.centerRight,
+          child: IconButton(
+            onPressed: () => ref.invalidate(_batchViewProvider(batchId)),
+            tooltip: 'Refresh',
+            icon: const Icon(Icons.refresh),
+            color: AppColors.ink,
           ),
         ),
         const SizedBox(height: 8),
