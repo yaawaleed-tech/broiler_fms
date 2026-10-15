@@ -38,6 +38,8 @@ class _PriceHarvestScreenState extends ConsumerState<PriceHarvestScreen> {
 
   String _disposition = 'sale';
   String _pricingMethod = 'per_kg';
+  // Paid or pending: kept for reference only and fixed once saved.
+  String _paymentStatus = 'paid';
   bool _showingReview = false;
   bool _isSaving = false;
   String? _errorMessage;
@@ -111,7 +113,7 @@ class _PriceHarvestScreenState extends ConsumerState<PriceHarvestScreen> {
             ? null
             : _numOrNull(_weightController),
         pricePerUnit: isGift ? null : _numOrNull(_pricePerUnitController),
-        paymentStatus: null,
+        paymentStatus: isGift ? null : _paymentStatus,
       );
       if (!mounted) return;
       // The harvest list pops back into view showing this sale, so
@@ -256,18 +258,19 @@ class _PriceHarvestScreenState extends ConsumerState<PriceHarvestScreen> {
               });
             },
           ),
-        ],
-        const SizedBox(height: 16),
-        const Text(
-          'Payment status is no longer collected.',
-          style: TextStyle(
-            fontFamily: 'PublicSans',
-            fontSize: 12,
-            color: AppColors.ink,
-            fontStyle: FontStyle.italic,
+          const SizedBox(height: 16),
+          // Payment status: required for a sale, kept for reference only.
+          SegmentedButton<String>(
+            segments: const [
+              ButtonSegment(value: 'paid', label: Text('Paid')),
+              ButtonSegment(value: 'pending', label: Text('Pending')),
+            ],
+            selected: {_paymentStatus},
+            onSelectionChanged: (selection) {
+              setState(() => _paymentStatus = selection.first);
+            },
           ),
-        ),
-        const SizedBox(height: 8),
+        ],
         if (_errorMessage != null) ...[
           const SizedBox(height: 10),
           Text(
@@ -316,6 +319,11 @@ ReviewEntry(
             ReviewEntry(
               'Amount',
               AppFormat.money(_numOrNull(_amountController) ?? 0),
+            ),
+            // Payment status, shown so the Manager can check it before saving.
+            ReviewEntry(
+              'Payment',
+              _paymentStatus == 'paid' ? 'Paid' : 'Pending',
             ),
           ] else
           const ReviewEntry('Amount', '0'),

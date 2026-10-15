@@ -33,8 +33,13 @@ class AuthDomain {
           'This account has been deactivated. Contact your Admin for help.',
         );
       }
-      // 'active', 'pending', and null (unknown email) all fall through
-      // to the OTP request exactly as before.
+      // An email with no account never gets a code.
+      if (status == null) {
+        throw const DomainException(
+          'No account was found for this email. Contact your Admin for help.',
+        );
+      }
+      // 'active' and 'pending' accounts continue to the code request.
       await _supabase.auth.signInWithOtp(email: email);
     } on AuthException catch (e) {
       throw DomainException(e.message);

@@ -34,7 +34,12 @@ class _EmailScreenState extends ConsumerState<EmailScreen> {
   }
 
   Future<void> _sendCode() async {
-    final email = _emailController.text.trim();
+    final email = _emailController.text.trim().toLowerCase();
+    // Same simple rule as the web login screen.
+    if (email.isEmpty || !email.contains('@')) {
+      setState(() => _errorMessage = 'Enter a valid email address.');
+      return;
+    }
     setState(() {
       _isSending = true;
       _errorMessage = null;

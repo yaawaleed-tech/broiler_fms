@@ -71,8 +71,21 @@ class AdminAccountsScreen extends ConsumerWidget {
           builder: (dialogContext, setDialogState) {
             Future<void> submit() async {
               final name = nameController.text.trim();
-              final email = emailController.text.trim();
-              if (name.isEmpty || email.isEmpty) return;
+              final email = emailController.text.trim().toLowerCase();
+              // Both fields are required; say so instead of doing nothing.
+              if (name.isEmpty || email.isEmpty) {
+                setDialogState(() {
+                  errorMessage = 'Enter a name and an email address.';
+                });
+                return;
+              }
+              // Same simple rule as the login screen.
+              if (!email.contains('@')) {
+                setDialogState(() {
+                  errorMessage = 'Enter a valid email address.';
+                });
+                return;
+              }
 
               // New: check email doesn't already exist among accounts
               final alreadyExists = await ref
@@ -101,9 +114,12 @@ class AdminAccountsScreen extends ConsumerWidget {
                     .createAdmin(name: name, email: email);
                 ref.invalidate(_adminsProvider);
                 if (dialogContext.mounted) Navigator.of(dialogContext).pop();
-              } on DomainException catch (e) {
+              } catch (e) {
+                // Show business rules as written; hide raw database text.
                 setDialogState(() {
-                  errorMessage = e.message;
+                  errorMessage = e is DomainException
+                      ? e.message
+                      : 'Could not add the account. Try again.';
                   isSaving = false;
                 });
               }

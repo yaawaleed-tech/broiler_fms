@@ -38,7 +38,7 @@ class _EmailScreenState extends ConsumerState<EmailScreen> {
   Future<void> _sendCode() async {
     if (!_formKey.currentState!.validate()) return;
     
-    final email = _emailController.text.trim();
+    final email = _emailController.text.trim().toLowerCase();
     setState(() {
       _isSending = true;
       _errorMessage = null;

@@ -30,6 +30,7 @@ class _CodeScreenState extends ConsumerState<CodeScreen> {
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
   bool _isVerifying = false;
   String? _errorMessage;
+  bool _isResending = false;
 
   @override
   void dispose() {
@@ -120,6 +121,30 @@ class _CodeScreenState extends ConsumerState<CodeScreen> {
       });
     } finally {
       if (mounted) setState(() => _isVerifying = false);
+    }
+  }
+
+
+  /// Sends a fresh code to the same email and resets the code boxes.
+  Future<void> _resendCode() async {
+    setState(() {
+      _isResending = true;
+      _errorMessage = null;
+    });
+    try {
+      await ref.read(authDomainProvider).sendLoginCode(widget.email);
+      if (!mounted) return;
+      for (final controller in _controllers) {
+        controller.clear();
+      }
+      _focusNodes[0].requestFocus();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('A new code has been sent.')),
+      );
+    } on DomainException catch (e) {
+      setState(() => _errorMessage = e.message);
+    } finally {
+      if (mounted) setState(() => _isResending = false);
     }
   }
 
@@ -226,9 +251,7 @@ class _CodeScreenState extends ConsumerState<CodeScreen> {
               ),
               const SizedBox(height: 8),
               TextButton(
-                onPressed: () {
-                  // Handle resend code
-                },
+                onPressed: _isResending ? null : _resendCode,
                 child: const Text(
                   'Resend code',
                   style: TextStyle(

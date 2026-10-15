@@ -28,6 +28,12 @@ String? saleShapeError({
     return 'The amount must be greater than zero.';
   }
 
+
+  // A sale always carries a payment status, paid or pending.
+  if (paymentStatus != 'paid' && paymentStatus != 'pending') {
+    return 'Choose whether the sale is paid or pending.';
+  }
+
   if (pricingMethod == 'per_kg') {
     if (weightSold == null || weightSold <= 0) {
       return 'Enter the weight sold.';

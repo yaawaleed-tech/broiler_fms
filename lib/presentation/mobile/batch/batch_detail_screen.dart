@@ -182,9 +182,9 @@ class _BatchDetailBody extends ConsumerWidget {
       data.batch.isClosed || data.remaining <= 0;
 
   /// The close button only exists while the batch is fully accounted
-  /// for but not yet closed.
+  /// for but not yet closed, and only a Manager ever sees it.
   bool get _showCloseButton =>
-      !data.batch.isClosed && data.remaining <= 0;
+      !data.batch.isClosed && data.remaining <= 0 && isManager;
 
   /// The five key entry actions lock on close, and also lock for a
   /// Manager the moment a batch has a Staff member assigned — that
@@ -219,7 +219,7 @@ class _BatchDetailBody extends ConsumerWidget {
       context,
       title: 'Close this batch?',
       body: 'No more entries can be logged against this batch once it '
-          'is closed. This cannot be undone.',
+          'is closed.',
       confirmLabel: 'Close batch',
     );
     if (confirmed != true) return;
