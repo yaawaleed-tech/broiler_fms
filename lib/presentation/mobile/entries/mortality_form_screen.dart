@@ -213,8 +213,8 @@ class _MortalityFormScreenState extends ConsumerState<MortalityFormScreen> {
       onEdit: () => setState(() => _showingReview = false),
       onConfirm: _isSaving ? () {} : _confirm,
       confirmLabel: _isSaving ? 'Saving...' : 'Confirm and save',
-      note: 'Check this looks right before saving. Entries can\'t be edited '
-          'afterward, if something\'s wrong, a Manager can help correct it.',
+      note: 'Check this looks right before saving. Entries cannot be edited '
+          'once saved.',
     );
   }
 }
