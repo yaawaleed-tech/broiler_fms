@@ -102,7 +102,7 @@ class _EmailScreenState extends ConsumerState<EmailScreen> {
               ),
               const SizedBox(height: 6),
               const Text(
-                'Staff sign in',
+                'Manager/Staff sign in',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'PublicSans',

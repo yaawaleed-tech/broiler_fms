@@ -155,8 +155,15 @@ class BatchListScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: AppColors.rust,
         foregroundColor: AppColors.card,
+        // Everything shares this one row: title, sync, pill, divider,
+        // log out. The title is the only part allowed to give way, so it
+        // takes an ellipsis on a narrow phone and the controls never move
+        // off screen.
+        titleSpacing: 16,
         title: const Text(
           'My batches',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: TextStyle(
             fontFamily: 'RobotoSlab',
             fontWeight: FontWeight.w700,
@@ -165,56 +172,83 @@ class BatchListScreen extends ConsumerWidget {
           ),
         ),
         actions: [
-          const SyncNowButton(),
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                const _SyncStatusPill(),
-                TextButton(
-                  onPressed: () => _logOut(context, ref),
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.card,
-                    minimumSize: Size.zero,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  child: const Text(
-                    'Log out',
-                    style: TextStyle(
-                      fontFamily: 'PublicSans',
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12.5,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
-                ),
-              ],
+          // Round outlined sync button. The outline is this screen's
+          // styling only, wrapped around SyncNowButton so the button
+          // keeps its own plain look on the batch screens.
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.card, width: 1.5),
+            ),
+            child: const SizedBox(
+              width: 40,
+              height: 40,
+              child: SyncNowButton(),
+            ),
+          ),
+          const SizedBox(width: 8),
+          const _SyncStatusPill(),
+          const SizedBox(width: 8),
+          // Hairline rule separating status from the log out action.
+          Container(
+            width: 1,
+            height: 28,
+            color: AppColors.card.withValues(alpha: 0.4),
+          ),
+          const SizedBox(width: 4),
+          TextButton(
+            onPressed: () => _logOut(context, ref),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.card,
+              minimumSize: Size.zero,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 8,
+              ),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: const Text(
+              'Log out',
+              style: TextStyle(
+                fontFamily: 'PublicSans',
+                fontWeight: FontWeight.w600,
+                fontSize: 12.5,
+                decoration: TextDecoration.underline,
+              ),
             ),
           ),
         ],
       ),
-      body: batchesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('Could not load batches: $error')),
-        data: (batches) {
-          if (batches.isEmpty) {
-            return const Center(child: Text('No batches yet.'));
-          }
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: batches.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 10),
-            itemBuilder: (context, index) {
-              return _BatchRow(batch: batches[index]);
-            },
-          );
-        },
+      // The strip is a sibling of the list, not part of it, so it stays
+      // put while the cards scroll. It counts the batches this screen has
+      // already loaded and stays hidden until they have arrived.
+      body: Column(
+        children: [
+          if (batchesAsync.hasValue)
+            _FlockSummaryStrip(count: batchesAsync.value!.length),
+          Expanded(
+            child: batchesAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, _) =>
+                  Center(child: Text('Could not load batches: $error')),
+              data: (batches) {
+                if (batches.isEmpty) {
+                  return const Center(child: Text('No batches yet.'));
+                }
+                return ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: batches.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 10),
+                  itemBuilder: (context, index) {
+                    return _BatchRow(batch: batches[index]);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: isManager
           ? FloatingActionButton.extended(
@@ -252,22 +286,24 @@ class _SyncStatusPill extends ConsumerWidget {
       loading: () => const SizedBox.shrink(),
       error: (_, _) => const SizedBox.shrink(),
       data: (status) {
-        final Color dotColor;
+        final Color stateColor;
         final String label;
         if (!status.isOnline) {
-          dotColor = AppColors.brick;
+          stateColor = AppColors.brick;
           label = 'Offline';
         } else if (status.pendingCount == 0) {
-          dotColor = AppColors.olive;
+          stateColor = AppColors.olive;
           label = 'Online · synced';
         } else {
-          dotColor = AppColors.amber;
+          stateColor = AppColors.amber;
           label = 'Online · ${status.pendingCount} pending';
         }
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
-            color: AppColors.ink,
+            // Filled in the state colour, so the three states stay as
+            // telling as they were; the dot is a lighter shade of it.
+            color: stateColor,
             borderRadius: BorderRadius.circular(999),
           ),
           child: Row(
@@ -277,16 +313,18 @@ class _SyncStatusPill extends ConsumerWidget {
                 width: 8,
                 height: 8,
                 decoration: BoxDecoration(
-                  color: dotColor,
+                  color: Color.lerp(stateColor, Colors.white, 0.5),
                   shape: BoxShape.circle,
                 ),
               ),
               const SizedBox(width: 6),
               Text(
                 label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontFamily: 'PublicSans',
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                   fontSize: 11,
                   color: AppColors.card,
                 ),
@@ -295,6 +333,58 @@ class _SyncStatusPill extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// Fixed strip between the app bar and the list: an egg icon and how
+/// many batches this screen is showing. Purely a count of the list
+/// already on screen, so it asks nothing of its own.
+class _FlockSummaryStrip extends StatelessWidget {
+  const _FlockSummaryStrip({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: const BoxDecoration(
+        color: AppColors.bgPage,
+        border: Border(bottom: BorderSide(color: AppColors.hairline)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.egg_alt_outlined, size: 40, color: AppColors.rust),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'YOUR FLOCK',
+                style: TextStyle(
+                  fontFamily: 'PublicSans',
+                  fontSize: 13,
+                  letterSpacing: 1.2,
+                  color: AppColors.inkMuted,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                count == 1 ? '1 batch' : '$count batches',
+                style: const TextStyle(
+                  fontFamily: 'RobotoSlab',
+                  fontWeight: FontWeight.w700,
+                  fontSize: 24,
+                  color: AppColors.ink,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
