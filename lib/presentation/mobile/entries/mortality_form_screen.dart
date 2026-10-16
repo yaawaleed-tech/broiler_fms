@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import 'package:broiler_fms/domain/batch/batch_domain.dart';
-import 'package:broiler_fms/presentation/mobile/batch/batch_detail_screen.dart';
+import 'package:broiler_fms/presentation/mobile/financial/financial_refresh.dart';
 import 'package:broiler_fms/presentation/shared/formatting.dart';
 import 'package:broiler_fms/domain/domain_exception.dart';
 import 'package:broiler_fms/domain/mortality/mortality_domain.dart';
@@ -81,9 +81,9 @@ class _MortalityFormScreenState extends ConsumerState<MortalityFormScreen> {
             : _descriptionController.text.trim(),
       );
       if (!mounted) return;
-      // Refresh batch detail so the stat cards behind this screen
-      // reflect the entry that was just saved.
-      ref.invalidate(batchDetailProvider(widget.batchId));
+      // Refresh batch detail and the financial summary so the figures
+      // behind this screen reflect the entry that was just saved.
+      invalidateBatchFinancials(ref, widget.batchId);
       context.pop();
     } on DomainException catch (e) {
       setState(() {

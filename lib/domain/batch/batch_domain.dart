@@ -187,10 +187,18 @@ class BatchDomain {
     // above; a missing batch counts as zero rather than throwing, which
     // is how this whole method has always behaved for an unknown id.
     final batch = await _batchRepo.getById(batchId);
-    final birdsNotYetHarvested = remainingBirdCount(
+    final birdsInStock = remainingBirdCount(
       startingBirdCount: batch?.startingBirdCount ?? 0,
       currentMortalityTotal: await _totalMortality(batchId),
       currentHarvestTotal: totalHarvestedBirds,
+    );
+    // Harvested birds with no sale recorded yet still have to earn
+    // their share, so they stay in the break-even denominator. A
+    // gift_cull (amount 0) counts as priced and leaves the count.
+    final birdsAwaitingPrice = await _totalAwaitingPrice(batchId);
+    final stillToPrice = birdsStillToPrice(
+      birdsInStock: birdsInStock,
+      birdsAwaitingPrice: birdsAwaitingPrice,
     );
 
     return FinancialSummary(
@@ -203,7 +211,7 @@ class BatchDomain {
       breakevenPricePerBird: breakevenPricePerBird(
         totalExpenses: totalExpenses,
         totalRevenue: totalRevenue,
-        birdsNotYetHarvested: birdsNotYetHarvested,
+        birdsStillToPrice: stillToPrice,
       ),
       approximateFcr: latestAverageWeight == null
           ? null
@@ -212,6 +220,9 @@ class BatchDomain {
         latestAverageSampleWeight: latestAverageWeight,
         totalHarvestedBirds: totalHarvestedBirds,
       ),
+      birdsInStock: birdsInStock,
+      birdsAwaitingPrice: birdsAwaitingPrice,
+      birdsStillToPrice: stillToPrice,
     );
   }
 
@@ -254,6 +265,20 @@ class BatchDomain {
   Future<int> _totalHarvested(String batchId) async {
     final entries = await _harvestRepo.getByBatch(batchId);
     return entries.fold<int>(0, (sum, entry) => sum + entry.birdCount);
+  }
+
+  /// Total birds in harvest entries that have no sale recorded yet.
+  /// These still have to earn their share, so the break-even keeps
+  /// them in its denominator. A harvest with any sale — including a
+  /// gift_cull at ₦0 — counts as priced.
+  Future<int> _totalAwaitingPrice(String batchId) async {
+    final harvests = await _harvestRepo.getByBatch(batchId);
+    var awaiting = 0;
+    for (final harvest in harvests) {
+      final sales = await _saleRepo.getByHarvest(harvest.harvestId);
+      if (sales.isEmpty) awaiting += harvest.birdCount;
+    }
+    return awaiting;
   }
 
   /// Total money spent on the batch so far, across every expense

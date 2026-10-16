@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import 'package:broiler_fms/domain/domain_exception.dart';
 import 'package:broiler_fms/domain/expense/expense_domain.dart';
+import 'package:broiler_fms/presentation/mobile/financial/financial_refresh.dart';
 import 'package:broiler_fms/presentation/shared/formatting.dart';
 import 'package:broiler_fms/presentation/shared/theme/app_theme.dart';
 import 'package:broiler_fms/presentation/shared/widgets/review_step.dart';
@@ -102,6 +103,9 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
         description: _textOrNull(_descriptionController),
       );
       if (!mounted) return;
+      // Refresh batch detail and the financial summary so the figures
+      // behind this screen reflect the entry that was just saved.
+      invalidateBatchFinancials(ref, widget.batchId);
       context.pop();
     } on DomainException catch (e) {
       setState(() {

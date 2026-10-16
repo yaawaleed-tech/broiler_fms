@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 
 import 'package:broiler_fms/domain/domain_exception.dart';
 import 'package:broiler_fms/domain/feed/feed_domain.dart';
-import 'package:broiler_fms/presentation/mobile/batch/batch_detail_screen.dart';
+import 'package:broiler_fms/presentation/mobile/financial/financial_refresh.dart';
 import 'package:broiler_fms/presentation/shared/formatting.dart';
 import 'package:broiler_fms/presentation/shared/theme/app_theme.dart';
 import 'package:broiler_fms/presentation/shared/widgets/review_step.dart';
@@ -61,9 +61,9 @@ class _FeedFormScreenState extends ConsumerState<FeedFormScreen> {
         quantity: quantity,
       );
       if (!mounted) return;
-      // Refresh batch detail so the stat cards behind this screen
-      // reflect the entry that was just saved.
-      ref.invalidate(batchDetailProvider(widget.batchId));
+      // Refresh batch detail and the financial summary so the figures
+      // behind this screen reflect the entry that was just saved.
+      invalidateBatchFinancials(ref, widget.batchId);
       context.pop();
     } on DomainException catch (e) {
       setState(() {

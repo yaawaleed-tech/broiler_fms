@@ -6,6 +6,7 @@ import 'package:broiler_fms/domain/domain_exception.dart';
 import 'package:broiler_fms/domain/harvest/harvest_domain.dart';
 import 'package:broiler_fms/domain/models/harvest.dart';
 import 'package:broiler_fms/domain/sale/sale_domain.dart';
+import 'package:broiler_fms/presentation/mobile/financial/financial_refresh.dart';
 import 'package:broiler_fms/presentation/mobile/sale/harvest_list_screen.dart';
 import 'package:broiler_fms/presentation/shared/formatting.dart';
 import 'package:broiler_fms/presentation/shared/theme/app_theme.dart';
@@ -119,6 +120,9 @@ class _PriceHarvestScreenState extends ConsumerState<PriceHarvestScreen> {
       // The harvest list pops back into view showing this sale, so
       // refresh it — otherwise it would keep rendering as unpriced.
       ref.invalidate(salesProvider(widget.harvestId));
+      // Refresh batch detail and the financial summary so the figures
+      // behind this screen reflect the sale that was just saved.
+      invalidateBatchFinancials(ref, widget.batchId);
       context.pop();
     } on DomainException catch (e) {
       setState(() {

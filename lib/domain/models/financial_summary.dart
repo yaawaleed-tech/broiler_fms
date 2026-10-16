@@ -12,6 +12,9 @@ class FinancialSummary {
     required this.profitLoss,
     required this.breakevenPricePerBird,
     required this.approximateFcr,
+    required this.birdsInStock,
+    required this.birdsAwaitingPrice,
+    required this.birdsStillToPrice,
   });
 
   final double totalExpenses;
@@ -23,4 +26,7 @@ class FinancialSummary {
 
   /// Null when there is no weight sample yet to estimate from.
   final double? approximateFcr;
+  final int birdsInStock;
+  final int birdsAwaitingPrice;
+  final int birdsStillToPrice;
 }
