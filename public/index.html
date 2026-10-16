@@ -1,283 +1,2093 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Broiler Farm Record Management System</title>
+<meta name="description" content="An offline-first Android app and online web console for poultry farm record keeping: batch lifecycle, mortality, feed, weight, vaccinations, harvest, live break-even price, FCR and profit or loss. Final Year Project, Bayero University Kano.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#faf6ef">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#17120d">
+<meta id="themeColor" name="theme-color" content="#faf6ef">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Broiler Farm Record Management System">
+<meta property="og:title" content="Broiler Farm Record Management System">
+<meta property="og:description" content="An offline-first Android app and online web console that replaces the paper batch book and the spreadsheet with one real-time system, built for a working poultry farm.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Broiler Farm Record Management System">
+<meta name="twitter:description" content="Offline-first field records for a working poultry farm: mortality, feed, weight, vaccinations, harvest and live break-even pricing. Final Year Project, Bayero University Kano.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23a94a2a'/%3E%3Cpath d='M9 23V9h6.6a4.2 4.2 0 0 1 0 8.4h-3.2L17 23' fill='none' stroke='%23fff6f0' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@500;700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>document.documentElement.classList.add('js');</script>
 <style>
-/* layout: single scrolling page — hero, roles, features, lifecycle strip, download/login CTA, FYP footer */
+/* ============================================================================
+   BROILER FMS — landing page
+   1. Tokens   2. Base   3. Layout   4. Utilities
+   5. Components (nav, hero, marquee, roles, bento, demos, lifecycle, cta, footer)
+   6. Motion   7. Reduced motion / print
+   ========================================================================== */
+
+/* ── 1. TOKENS ───────────────────────────────────────────────────────────── */
 :root{
-  --bg:#faf6ef; --surface:#ffffff; --ink:#241b14; --ink-dim:#6e6155;
-  --rule:#e7ddcd; --rust:#a94a2a; --rust-ink:#7a3015;
-  --green:#3c6b3e; --card-shadow: 0 1px 2px rgba(36,27,20,0.06), 0 8px 24px rgba(36,27,20,0.06);
+  /* light palette primitives */
+  --l-bg:#faf6ef; --l-bg-2:#f3ece0; --l-surface:#ffffff; --l-surface-2:#fbf7f1;
+  --l-ink:#241b14; --l-ink-dim:#6e6155; --l-ink-soft:#857768;
+  --l-rule:#e7ddcd; --l-rule-2:#efe6d8;
+  --l-rust:#a94a2a; --l-rust-ink:#7a3015; --l-rust-soft:#f4e3d9;
+  --l-green:#3c6b3e; --l-green-ink:#2c5130; --l-green-soft:#e2eddf;
+  /* dark palette primitives */
+  --d-bg:#17120d; --d-bg-2:#1d1710; --d-surface:#211a13; --d-surface-2:#2a2219;
+  --d-ink:#f3ebe0; --d-ink-dim:#ab9d8c; --d-ink-soft:#918372;
+  --d-rule:#372c20; --d-rule-2:#2b2219;
+  --d-rust:#e0784f; --d-rust-ink:#f2a67f; --d-rust-soft:#3a2419;
+  --d-green:#7fc382; --d-green-ink:#93d195; --d-green-soft:#1e2f1f;
+  --d-on-rust:#1d1109;
+
+  /* active palette — light by default, remapped for dark further down */
+  --bg:var(--l-bg); --bg-2:var(--l-bg-2);
+  --surface:var(--l-surface); --surface-2:var(--l-surface-2);
+  --ink:var(--l-ink); --ink-dim:var(--l-ink-dim); --ink-soft:var(--l-ink-soft);
+  --rule:var(--l-rule); --rule-2:var(--l-rule-2);
+  --rust:var(--l-rust); --rust-ink:var(--l-rust-ink); --rust-soft:var(--l-rust-soft);
+  --green:var(--l-green); --green-ink:var(--l-green-ink); --green-soft:var(--l-green-soft);
+  --on-rust:#fff8f3;
+
+  /* elevation */
+  --sh-1:0 1px 2px rgba(36,27,20,.06), 0 8px 22px -8px rgba(36,27,20,.12);
+  --sh-2:0 2px 4px rgba(36,27,20,.05), 0 20px 44px -18px rgba(36,27,20,.20);
+  --sh-3:0 36px 80px -28px rgba(36,27,20,.32);
+  --sh-rust:0 12px 30px -14px color-mix(in srgb, var(--rust) 70%, transparent);
+
+  /* geometry */
+  --r-xs:8px; --r-sm:11px; --r-md:16px; --r-lg:22px; --r-xl:30px; --r-pill:999px;
+  --wrap:1180px;
+  --pad:clamp(18px, 4.2vw, 40px);
+  --sec-y:clamp(60px, 8.5vw, 118px);
+  --nav-h:70px;
+
+  /* type */
+  --fs-display:clamp(2.35rem, 1.05rem + 5.1vw, 4.6rem);
+  --fs-h2:clamp(1.75rem, 1.15rem + 2.1vw, 2.7rem);
+  --fs-h3:clamp(1.06rem, 1rem + .25vw, 1.2rem);
+  --fs-lede:clamp(1.02rem, .97rem + .35vw, 1.16rem);
+  --fs-sm:.875rem;
+  --fs-xs:.78rem;
+  --ease:cubic-bezier(.22,.61,.36,1);
+  --ease-out:cubic-bezier(.16,1,.3,1);
 }
+/* dark mapping — follows the system preference first, explicit choice second */
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#17120d; --surface:#211a13; --ink:#f3ebe0; --ink-dim:#a89a89;
-    --rule:#352a1f; --rust:#e0784f; --rust-ink:#f0a07a;
-    --green:#7fc382; --card-shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
-    color-scheme: dark;
+    color-scheme:dark;
+    --bg:var(--d-bg); --bg-2:var(--d-bg-2);
+    --surface:var(--d-surface); --surface-2:var(--d-surface-2);
+    --ink:var(--d-ink); --ink-dim:var(--d-ink-dim); --ink-soft:var(--d-ink-soft);
+    --rule:var(--d-rule); --rule-2:var(--d-rule-2);
+    --rust:var(--d-rust); --rust-ink:var(--d-rust-ink); --rust-soft:var(--d-rust-soft);
+    --green:var(--d-green); --green-ink:var(--d-green-ink); --green-soft:var(--d-green-soft);
+    --on-rust:var(--d-on-rust);
+    --sh-1:0 1px 2px rgba(0,0,0,.36), 0 10px 26px -10px rgba(0,0,0,.5);
+    --sh-2:0 2px 6px rgba(0,0,0,.34), 0 24px 50px -20px rgba(0,0,0,.62);
+    --sh-3:0 40px 90px -30px rgba(0,0,0,.78);
+    --sh-rust:0 14px 34px -16px color-mix(in srgb, var(--rust) 55%, transparent);
   }
 }
 :root[data-theme="dark"]{
-  --bg:#17120d; --surface:#211a13; --ink:#f3ebe0; --ink-dim:#a89a89;
-  --rule:#352a1f; --rust:#e0784f; --rust-ink:#f0a07a;
-  --green:#7fc382; --card-shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
-  color-scheme: dark;
+  color-scheme:dark;
+  --bg:var(--d-bg); --bg-2:var(--d-bg-2);
+  --surface:var(--d-surface); --surface-2:var(--d-surface-2);
+  --ink:var(--d-ink); --ink-dim:var(--d-ink-dim); --ink-soft:var(--d-ink-soft);
+  --rule:var(--d-rule); --rule-2:var(--d-rule-2);
+  --rust:var(--d-rust); --rust-ink:var(--d-rust-ink); --rust-soft:var(--d-rust-soft);
+  --green:var(--d-green); --green-ink:var(--d-green-ink); --green-soft:var(--d-green-soft);
+  --on-rust:var(--d-on-rust);
+  --sh-1:0 1px 2px rgba(0,0,0,.36), 0 10px 26px -10px rgba(0,0,0,.5);
+  --sh-2:0 2px 6px rgba(0,0,0,.34), 0 24px 50px -20px rgba(0,0,0,.62);
+  --sh-3:0 40px 90px -30px rgba(0,0,0,.78);
+  --sh-rust:0 14px 34px -16px color-mix(in srgb, var(--rust) 55%, transparent);
 }
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:'Public Sans',system-ui,sans-serif;line-height:1.5;}
-.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;}
-h1,h2,h3{font-family:'Roboto Slab',Georgia,serif;font-weight:700;text-wrap:balance;margin:0;}
+
+/* ── 2. BASE ─────────────────────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none !important}
+html{
+  scroll-behavior:smooth; overflow-x:clip;
+  -webkit-text-size-adjust:100%;
+  scroll-padding-top:calc(var(--nav-h) + 18px);
+}
+body{
+  margin:0; overflow-x:clip;
+  background:var(--bg); color:var(--ink);
+  font-family:'Public Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  font-size:1rem; line-height:1.6;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+}
+body::before{ /* film grain, decorative only */
+  content:''; position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.3;
+  mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+:root[data-theme="dark"] body::before{opacity:.35; mix-blend-mode:screen}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) body::before{opacity:.35; mix-blend-mode:screen}
+}
+h1,h2,h3,h4{font-family:'Roboto Slab',Georgia,'Times New Roman',serif;font-weight:700;margin:0;text-wrap:balance;letter-spacing:-.01em}
+p{margin:0}
 a{color:inherit}
-.tag{display:inline-flex;align-items:center;gap:7px;font-size:0.78rem;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:var(--rust-ink);background:color-mix(in srgb, var(--rust) 14%, transparent);border:1px solid color-mix(in srgb, var(--rust) 30%, transparent);padding:6px 12px;border-radius:999px;}
+img,svg{display:block;max-width:100%}
+button,input,select{font:inherit;color:inherit}
+ul,ol,dl{margin:0;padding:0;list-style:none}
+:focus-visible{outline:2px solid var(--rust); outline-offset:3px; border-radius:5px}
+::selection{background:color-mix(in srgb, var(--rust) 26%, transparent)}
+.sr-only{
+  position:absolute!important; width:1px; height:1px; margin:-1px; padding:0;
+  overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; border:0;
+}
+.skip{
+  position:fixed; top:10px; left:10px; z-index:120;
+  transform:translateY(-180%); transition:transform .2s var(--ease);
+  background:var(--rust); color:var(--on-rust); font-weight:600; font-size:var(--fs-sm);
+  padding:14px 20px; border-radius:var(--r-pill); text-decoration:none;
+}
+.skip:focus{transform:none}
 
-/* nav */
-nav{display:flex;align-items:center;justify-content:space-between;padding-block:18px;border-bottom:1px solid var(--rule);}
-.brand{display:flex;align-items:center;gap:9px;font-family:'Roboto Slab',serif;font-weight:700;font-size:1.02rem;}
-.brand .dot{width:10px;height:10px;border-radius:3px;background:var(--rust);}
-nav .links{display:flex;gap:22px;font-size:0.9rem;font-weight:600;}
-nav .links a{text-decoration:none;color:var(--ink-dim);}
-nav .links a:hover{color:var(--ink);}
+/* ── 3. LAYOUT ───────────────────────────────────────────────────────────── */
+.wrap{width:100%; max-width:var(--wrap); margin-inline:auto; padding-inline:var(--pad)}
+section{position:relative}
+.section{padding-block:var(--sec-y)}
+.section-head{max-width:44rem; margin-bottom:clamp(28px, 4vw, 46px)}
+.section-head .tag{margin-bottom:16px}
+.section-head h2{font-size:var(--fs-h2); line-height:1.12}
+.section-head p{margin-top:16px; color:var(--ink-dim); font-size:var(--fs-lede); max-width:38rem}
+.num{font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1}
 
-/* hero */
-.hero{padding-block:64px 56px;display:grid;gap:18px;max-width:680px;}
-.hero h1{font-size:2.5rem;line-height:1.1;}
-.hero p.lede{font-size:1.08rem;color:var(--ink-dim);max-width:560px;}
-.cta-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;}
-.access-note{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:0.86rem;color:var(--ink-dim);margin-top:2px;}
-.access-note a{color:var(--rust-ink);font-weight:600;text-decoration:none;border-bottom:1px solid currentColor;}
-.copy-btn{display:inline-flex;align-items:center;gap:5px;font-size:0.76rem;font-weight:600;color:var(--ink-dim);background:transparent;border:1px solid var(--rule);border-radius:7px;padding:4px 9px;cursor:pointer;font-family:inherit;}
-.copy-btn:hover{color:var(--ink);border-color:var(--ink-dim);}
-.copy-btn.copied{color:var(--green);border-color:var(--green);}
-.btn{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:0.95rem;padding:12px 20px;border-radius:10px;text-decoration:none;border:1px solid transparent;transition:transform .08s ease;}
-.btn:active{transform:scale(0.98);}
-.btn.primary{background:var(--rust);color:#fff8f3;}
-.btn.ghost{background:transparent;color:var(--ink);border-color:var(--rule);}
-.btn svg{flex:0 0 auto}
+/* ── 4. UTILITIES ────────────────────────────────────────────────────────── */
+.tag{
+  display:inline-flex; align-items:center; gap:8px; width:fit-content;
+  font-size:var(--fs-xs); font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--rust-ink); background:var(--rust-soft);
+  border:1px solid color-mix(in srgb, var(--rust) 26%, transparent);
+  padding:7px 14px; border-radius:var(--r-pill);
+}
+.tag i{width:7px; height:7px; border-radius:50%; background:var(--rust); flex:0 0 auto}
 
-/* role strip */
-.roles{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:14px;overflow:hidden;margin-block:8px 64px;}
-.role{background:var(--surface);padding:22px 20px;min-width:0;}
-.role .k{font-size:0.72rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--rust-ink);margin-bottom:8px;}
-.role h3{font-size:1.02rem;margin-bottom:6px;}
-.role p{font-size:0.86rem;color:var(--ink-dim);margin:0;}
-@media (max-width:760px){.roles{grid-template-columns:1fr 1fr}}
-@media (max-width:480px){.roles{grid-template-columns:1fr}}
+/* ── 5. COMPONENTS ───────────────────────────────────────────────────────── */
 
-/* features */
-.section-head{max-width:560px;margin-bottom:28px;}
-.section-head .tag{margin-bottom:12px;}
-.section-head h2{font-size:1.7rem;}
-.features{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:68px;}
-.feature{background:var(--surface);border:1px solid var(--rule);border-radius:14px;padding:22px;box-shadow:var(--card-shadow);min-width:0;}
-.feature .icon{width:34px;height:34px;border-radius:9px;background:color-mix(in srgb, var(--rust) 14%, transparent);display:flex;align-items:center;justify-content:center;color:var(--rust-ink);margin-bottom:14px;}
-.feature h3{font-size:1rem;margin-bottom:6px;}
-.feature p{font-size:0.88rem;color:var(--ink-dim);margin:0;}
-@media (max-width:760px){.features{grid-template-columns:1fr 1fr}}
-@media (max-width:520px){.features{grid-template-columns:1fr}}
+/* buttons */
+.btn{
+  position:relative; display:inline-flex; align-items:center; justify-content:center; gap:9px;
+  min-height:50px; padding:13px 24px;
+  font-weight:600; font-size:.95rem; line-height:1.2; text-decoration:none;
+  border:1px solid transparent; border-radius:var(--r-pill);
+  cursor:pointer; overflow:hidden; isolation:isolate;
+  transition:transform .18s var(--ease), box-shadow .22s var(--ease), background-color .22s var(--ease), border-color .22s var(--ease), color .22s var(--ease);
+}
+.btn svg{flex:0 0 auto; transition:transform .22s var(--ease)}
+.btn:hover{transform:translateY(-2px)}
+.btn:active{transform:translateY(0) scale(.985)}
+.btn:hover svg{transform:translateY(1px)}
+.btn.primary{background:var(--rust); color:var(--on-rust); box-shadow:var(--sh-rust)}
+.btn.primary::after{ /* sheen sweep */
+  content:''; position:absolute; inset:0; z-index:-1;
+  background:linear-gradient(100deg, transparent 20%, color-mix(in srgb, #fff 32%, transparent) 46%, transparent 72%);
+  transform:translateX(-130%); transition:transform .75s var(--ease-out);
+}
+.btn.primary:hover::after{transform:translateX(130%)}
+.btn.ghost{background:var(--surface); color:var(--ink); border-color:var(--rule); box-shadow:var(--sh-1)}
+.btn.ghost:hover{border-color:var(--ink-soft); transform:translateY(-2px)}
+.btn.small{min-height:46px; padding:11px 18px; font-size:var(--fs-sm)}
+.btn:disabled{opacity:.5; cursor:not-allowed; transform:none}
 
-/* lifecycle */
-.lifecycle{margin-bottom:72px;}
-.steps{display:flex;gap:0;border:1px solid var(--rule);border-radius:14px;overflow:hidden;background:var(--surface);box-shadow:var(--card-shadow);}
-.step{flex:1;padding:20px 18px;border-right:1px solid var(--rule);min-width:0;}
-.step:last-child{border-right:none;}
-.step .n{font-family:'Roboto Slab',serif;font-size:0.78rem;color:var(--rust-ink);font-weight:700;margin-bottom:6px;}
-.step p{font-size:0.85rem;margin:0;color:var(--ink-dim);}
-@media (max-width:760px){.steps{flex-direction:column;}.step{border-right:none;border-bottom:1px solid var(--rule);}.step:last-child{border-bottom:none;}}
+/* inline text link with animated underline */
+.tlink{
+  position:relative; display:inline-block; text-decoration:none; font-weight:600; color:var(--rust-ink);
+  background-image:linear-gradient(currentColor,currentColor);
+  background-size:0% 1.5px; background-position:0 100%; background-repeat:no-repeat;
+  transition:background-size .28s var(--ease), color .2s var(--ease);
+}
+.tlink:hover,.tlink:focus-visible{background-size:100% 1.5px}
 
-/* download CTA */
-.cta-panel{background:var(--surface);border:1px solid var(--rule);border-radius:18px;padding:40px clamp(20px,5vw,48px);display:flex;flex-wrap:wrap;gap:28px;align-items:center;justify-content:space-between;box-shadow:var(--card-shadow);margin-bottom:56px;}
-.cta-panel .copy{max-width:420px;min-width:260px;}
-.cta-panel h2{font-size:1.4rem;margin-bottom:8px;}
-.cta-panel p{color:var(--ink-dim);font-size:0.92rem;margin:0;}
-.cta-panel .actions{display:flex;gap:12px;flex-wrap:wrap;}
+/* copy-email button */
+.copy-btn{
+  display:inline-flex; align-items:center; gap:7px; min-height:44px; padding:9px 15px;
+  font-size:var(--fs-xs); font-weight:600; font-family:inherit; line-height:1;
+  color:var(--ink-dim); background:var(--surface); border:1px solid var(--rule);
+  border-radius:var(--r-pill); cursor:pointer; white-space:nowrap;
+  transition:color .2s var(--ease), border-color .2s var(--ease), background-color .2s var(--ease), transform .18s var(--ease);
+}
+.copy-btn:hover{color:var(--ink); border-color:var(--ink-soft); transform:translateY(-1px)}
+.copy-btn:active{transform:none}
+.copy-btn.copied{color:var(--green-ink); border-color:var(--green); background:var(--green-soft)}
+.copy-btn svg{width:14px; height:14px}
+.card{background:var(--surface); border:1px solid var(--rule); border-radius:var(--r-lg); box-shadow:var(--sh-1)}
 
-footer{border-top:1px solid var(--rule);padding-block:28px 48px;}
-.fyp{display:flex;flex-wrap:wrap;gap:24px;justify-content:space-between;align-items:flex-start;}
-.fyp .block{min-width:220px;}
-.fyp .label{font-size:0.72rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:6px;}
-.fyp .val{font-size:0.92rem;}
-.fyp .val.fill{color:var(--rust-ink);font-style:italic;}
-.copyright{margin-top:26px;font-size:0.8rem;color:var(--ink-dim);}
+/* ── NAV ─────────────────────────────────────────────────────────────────── */
+.progress{position:fixed; inset-block-start:0; inset-inline:0; height:3px; z-index:95; pointer-events:none}
+.progress__bar{height:100%; width:100%; transform:scaleX(0); transform-origin:0 50%;
+  background:linear-gradient(90deg, var(--green), var(--rust))}
+.site-header{
+  position:sticky; top:0; z-index:80;
+  padding-top:env(safe-area-inset-top);
+  background:color-mix(in srgb, var(--bg) 74%, transparent);
+  -webkit-backdrop-filter:blur(16px) saturate(180%);
+  backdrop-filter:blur(16px) saturate(180%);
+  border-bottom:1px solid transparent;
+  transition:border-color .3s var(--ease), background-color .3s var(--ease), box-shadow .3s var(--ease);
+}
+.site-header.is-stuck{border-bottom-color:var(--rule); box-shadow:0 12px 30px -24px rgba(0,0,0,.6)}
+.nav{display:flex; align-items:center; gap:14px; min-height:var(--nav-h)}
+.brand{
+  display:inline-flex; align-items:center; gap:11px; text-decoration:none; margin-right:auto;
+  font-family:'Roboto Slab',serif; font-weight:700; font-size:1.04rem; letter-spacing:-.01em; padding-block:6px;
+}
+.brand__mark{
+  width:34px; height:34px; border-radius:10px; flex:0 0 auto; display:grid; place-items:center;
+  color:#fff6f0; background:linear-gradient(145deg, color-mix(in srgb, var(--rust) 82%, #000), var(--rust));
+  box-shadow:var(--sh-rust);
+}
+.brand__mark svg{width:19px; height:19px}
+.brand small{display:block; font-family:'Public Sans',sans-serif; font-size:.64rem; font-weight:600;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--ink-soft); line-height:1.2}
+.nav__links{display:flex; align-items:center}
+.nav__links a{
+  position:relative; display:inline-flex; align-items:center; min-height:44px; padding:0 13px;
+  font-size:.9rem; font-weight:600; color:var(--ink-dim); text-decoration:none; border-radius:var(--r-pill);
+  transition:color .2s var(--ease), background-color .2s var(--ease);
+}
+.nav__links a::after{
+  content:''; position:absolute; left:13px; right:13px; bottom:5px; height:2px; border-radius:2px;
+  background:var(--rust); transform:scaleX(0); transform-origin:0 50%;
+  transition:transform .3s var(--ease);
+}
+.nav__links a:hover{color:var(--ink); background:color-mix(in srgb, var(--ink) 6%, transparent)}
+.nav__links a.is-active{color:var(--ink)}
+.nav__links a.is-active::after{transform:scaleX(1)}
+.nav__tools{display:flex; align-items:center; gap:10px}
+.icon-btn{
+  width:44px; height:44px; display:grid; place-items:center; cursor:pointer;
+  background:var(--surface); color:var(--ink); border:1px solid var(--rule); border-radius:var(--r-pill);
+  transition:border-color .2s var(--ease), transform .18s var(--ease);
+}
+.icon-btn:hover{border-color:var(--ink-soft); transform:translateY(-1px)}
+.icon-btn:active{transform:none}
+.icon-btn svg{width:19px; height:19px}
+#themeToggle .i-moon{display:none}
+:root[data-theme="dark"] #themeToggle .i-sun{display:none}
+:root[data-theme="dark"] #themeToggle .i-moon{display:block}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) #themeToggle .i-sun{display:none}
+  :root:not([data-theme="light"]) #themeToggle .i-moon{display:block}
+}
+.nav__burger{display:none}
+
+/* mobile menu */
+.menu{
+  position:fixed; inset:0; z-index:100; display:flex; flex-direction:column;
+  padding:calc(env(safe-area-inset-top) + 10px) var(--pad) calc(env(safe-area-inset-bottom) + 26px);
+  background:color-mix(in srgb, var(--bg) 97%, transparent);
+  -webkit-backdrop-filter:blur(22px); backdrop-filter:blur(22px);
+  opacity:0; transform:translateY(-8px); transition:opacity .28s var(--ease), transform .28s var(--ease);
+}
+.menu.is-open{opacity:1; transform:none}
+.menu__top{display:flex; align-items:center; justify-content:space-between; min-height:var(--nav-h); gap:16px}
+.menu__links{display:flex; flex-direction:column; margin-top:10px; overflow-y:auto}
+.menu__links a{
+  display:flex; align-items:center; justify-content:space-between; gap:14px;
+  min-height:58px; padding:6px 4px; text-decoration:none;
+  font-family:'Roboto Slab',serif; font-size:1.3rem; font-weight:700; color:var(--ink);
+  border-bottom:1px solid var(--rule); opacity:0; transform:translateY(10px);
+}
+.menu__links a span{font-family:'Public Sans',sans-serif; font-size:.7rem; font-weight:600;
+  letter-spacing:.13em; text-transform:uppercase; color:var(--ink-soft)}
+.menu.is-open .menu__links a{animation:menuIn .45s var(--ease-out) forwards}
+.menu.is-open .menu__links a:nth-child(1){animation-delay:.05s}
+.menu.is-open .menu__links a:nth-child(2){animation-delay:.1s}
+.menu.is-open .menu__links a:nth-child(3){animation-delay(.15s)}
+.menu.is-open .menu__links a:nth-child(4){animation-delay(.2s)}
+.menu.is-open .menu__links a:nth-child(5){animation-delay(.25s)}
+.menu.is-open .menu__links a:nth-child(6){animation-delay(.3s)}
+.menu__foot{margin-top:auto; padding-top:24px; display:flex; flex-direction:column; gap:11px}
+@keyframes menuIn{to{opacity:1; transform:none}}
+@media (max-width:1000px){
+  .nav__links{display:none}
+  .nav__burger{display:grid}
+  .nav .btn.primary{display:none}
+}
+@media (max-width:520px){
+  .brand small{display:none}
+  :root{--nav-h:64px}
+}
+
+/* ── HERO ────────────────────────────────────────────────────────────────── */
+.hero{position:relative; padding-block:clamp(34px, 5.5vw, 72px) clamp(46px, 7vw, 90px); overflow:hidden}
+.hero__aura{
+  position:absolute; z-index:-1; inset-inline:-25%; top:-32%; height:76vh; pointer-events:none;
+  background:
+    radial-gradient(50% 48% at 22% 26%, color-mix(in srgb, var(--rust) 20%, transparent), transparent 70%),
+    radial-gradient(46% 44% at 80% 10%, color-mix(in srgb, var(--green) 18%, transparent), transparent 72%);
+  filter:blur(10px);
+}
+.hero__grid{display:grid; gap:clamp(36px, 5vw, 54px); align-items:center}
+@media (min-width:1024px){ .hero__grid{grid-template-columns:minmax(0,1.02fr) minmax(0,.98fr)} }
+.hero h1{font-size:var(--fs-display); line-height:1.02; letter-spacing:-.025em; margin:18px 0 0; max-width:16ch}
+.hero h1 em{font-style:normal; background:linear-gradient(96deg, var(--rust), color-mix(in srgb, var(--rust) 52%, var(--green)));
+  -webkit-background-clip:text; background-clip:text; color:transparent}
+.hero__lede{margin-top:22px; max-width:36rem; color:var(--ink-dim); font-size:var(--fs-lede)}
+.hero__cta{display:flex; flex-wrap:wrap; gap:12px; margin-top:30px}
+.hero__note{
+  display:flex; align-items:flex-start; flex-wrap:wrap; gap:10px 12px;
+  margin-top:24px; padding:16px 18px; max-width:39rem;
+  font-size:var(--fs-sm); color:var(--ink-dim); line-height:1.55;
+  background:var(--surface); border:1px solid var(--rule); border-radius:var(--r-md); box-shadow:var(--sh-1);
+}
+.hero__note svg{width:17px; height:17px; flex:0 0 auto; margin-top:3px; color:var(--rust-ink)}
+.hero__note b{color:var(--ink)}
+.hero__note span{flex:1 1 16rem; min-width:0}
+.hero__note a{word-break:break-word}
+.hero__stats{
+  display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1px;
+  margin-top:32px; max-width:38rem; background:var(--rule);
+  border:1px solid var(--rule); border-radius:var(--r-md); overflow:hidden;
+}
+@media (min-width:560px){ .hero__stats{grid-template-columns:repeat(4,minmax(0,1fr))} }
+.stat{background:var(--surface); padding:16px 14px; min-width:0}
+.stat b{display:block; font-family:'Roboto Slab',serif; font-size:clamp(1.4rem,1.2rem + .7vw,1.75rem); line-height:1.1; letter-spacing:-.02em}
+.stat span{display:block; margin-top:4px; font-size:.73rem; line-height:1.35; color:var(--ink-dim)}
+
+/* product showcase — pure HTML/CSS mock-up */
+.showcase{position:relative}
+.stage{
+  position:relative; width:100%; max-width:500px; margin-inline:auto; aspect-ratio:1/1.04;
+  display:grid; place-items:center;
+}
+.stage__halo{
+  position:absolute; inset:4% -6% 2%; border-radius:50%; pointer-events:none;
+  background:
+    radial-gradient(48% 48% at 50% 44%, color-mix(in srgb, var(--rust) 26%, transparent), transparent 70%),
+    radial-gradient(44% 44% at 76% 78%, color-mix(in srgb, var(--green) 22%, transparent), transparent 72%);
+  filter:blur(24px);
+}
+.phone{
+  position:relative; z-index:1; width:min(252px, 74%); aspect-ratio:9/17; border-radius:36px; padding:9px;
+  background:linear-gradient(160deg,#3d2e22,#1b130d 62%);
+  box-shadow:var(--sh-3), 0 0 0 1px rgba(255,255,255,.08) inset;
+}
+.phone::after{
+  content:''; position:absolute; inset:0; border-radius:36px; pointer-events:none;
+  background:linear-gradient(150deg, rgba(255,255,255,.2), transparent 34%); opacity:.5;
+}
+.phone__screen{
+  position:relative; height:100%; border-radius:28px; overflow:hidden;
+  background:linear-gradient(178deg, var(--bg-2), var(--bg) 44%);
+  display:flex; flex-direction:column; padding:10px 12px 12px;
+}
+.phone__status{display:flex; align-items:center; justify-content:space-between; font-size:.6rem; font-weight:600; color:var(--ink-soft)}
+.phone__status svg{width:11px; height:11px}
+.phone__bar{display:flex; align-items:center; gap:8px; margin-top:13px}
+.phone__title{font-family:'Roboto Slab',serif; font-size:.76rem; font-weight:700; line-height:1.2; margin:0; letter-spacing:-.01em}
+.phone__bar small{display:block; font-family:'Public Sans',sans-serif; font-size:.6rem; font-weight:600; color:var(--ink-soft)}
+.pill{
+  display:inline-flex; align-items:center; gap:5px; width:fit-content; white-space:nowrap;
+  font-size:.6rem; font-weight:700; padding:5px 9px; border-radius:var(--r-pill); border:1px solid transparent;
+  transition:background-color .5s var(--ease), color .5s var(--ease), border-color .5s var(--ease);
+}
+.pill.off{background:var(--rust-soft); color:var(--rust-ink); border-color:color-mix(in srgb, var(--rust) 30%, transparent)}
+.pill.on{background:var(--green-soft); color:var(--green-ink); border-color:color-mix(in srgb, var(--green) 34%, transparent)}
+.phone__bar .pill{margin-left:auto}
+.phone__metric{margin-top:14px; padding:13px; border-radius:14px; background:var(--surface); border:1px solid var(--rule); box-shadow:var(--sh-1)}
+.phone__metric .k{font-size:.58rem; font-weight:700; letter-spacing:.11em; text-transform:uppercase; color:var(--ink-soft)}
+.phone__metric .v{font-family:'Roboto Slab',serif; font-size:1.4rem; line-height:1.16; letter-spacing:-.02em; margin-top:3px}
+.phone__metric .v small{font-family:'Public Sans',sans-serif; font-size:.6rem; font-weight:600; color:var(--ink-dim); letter-spacing:0}
+.phone__rows{margin-top:10px; display:grid; gap:7px}
+.prow{display:flex; align-items:center; gap:9px; padding:9px 11px; border-radius:12px; background:var(--surface); border:1px solid var(--rule)}
+.prow .pk{font-size:.62rem; font-weight:600; color:var(--ink-dim); line-height:1.25}
+.prow .pk b{display:block; font-size:.7rem; color:var(--ink); font-weight:700}
+.prow .pv{margin-left:auto; font-size:.72rem; font-weight:700; color:var(--green-ink)}
+.prow__ico{width:24px; height:24px; flex:0 0 auto; border-radius:8px; display:grid; place-items:center; background:var(--rust-soft); color:var(--rust-ink)}
+.prow__ico svg{width:13px; height:13px}
+.prog{height:5px; border-radius:3px; background:var(--rule); overflow:hidden; margin-top:auto}
+.prog i{display:block; height:100%; border-radius:3px; background:linear-gradient(90deg, var(--green), var(--rust))}
+.prog__meta{display:flex; justify-content:space-between; font-size:.57rem; font-weight:600; color:var(--ink-soft); margin-top:6px}
+.phone__nav{display:flex; justify-content:space-around; align-items:center; gap:14px; padding:11px 6px 3px; margin-top:10px; border-top:1px solid var(--rule)}
+.phone__nav i{width:15px; height:15px; border-radius:5px; background:var(--rule)}
+.phone__nav i:first-child{background:var(--rust); box-shadow:0 0 0 3px var(--rust-soft)}
+.showcase__caption{margin-top:18px; font-size:var(--fs-xs); color:var(--ink-soft); text-align:center; max-width:30rem}
+.showcase__caption b{font-weight:700; color:var(--ink-dim)}
+
+/* floating cards */
+.float{
+  position:absolute; z-index:3; width:min(134px, 44%); padding:10px 12px; border-radius:14px; text-align:left;
+  background:color-mix(in srgb, var(--surface) 90%, transparent);
+  -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+  border:1px solid var(--rule); box-shadow:var(--sh-2); will-change:transform;
+  animation:drift 9s var(--ease) infinite alternate;
+}
+.float b{display:block; font-size:.74rem; font-weight:700}
+.float small{display:block; font-size:.62rem; line-height:1.35; color:var(--ink-dim); margin-top:2px}
+.float .fi{width:22px; height:22px; border-radius:7px; display:grid; place-items:center; margin-bottom:7px; background:var(--rust-soft); color:var(--rust-ink)}
+.float .fi svg{width:12px; height:12px}
+/* offsets are capped in px so a card never reaches outside a narrow viewport */
+.float--a{top:-4%; left:max(-12%, -20px)}
+.float--b{bottom:1%; right:max(-11%, -18px); animation-duration:11s}
+.float--c{bottom:-3%; left:max(4%, 10px); animation-duration:13s}
+.is-off .float{animation-play-state:paused}
+@keyframes drift{from{translate:0 -5px} to{translate:0 7px}}
+/* on a phone-sized screen only one card is kept, so no figure is ever covered */
+@media (max-width:560px){
+  .float{width:min(140px, 46%)}
+  .float--a,.float--c{display:none}
+  .float--b{bottom:-1%; right:max(-11%, -12px)}
+}
+
+/* ── MARQUEE ─────────────────────────────────────────────────────────────── */
+.marquee{padding-block:clamp(20px,2.6vw,32px); border-block:1px solid var(--rule); background:var(--bg-2); overflow:hidden}
+.marquee__track{display:flex; width:max-content; animation:slide 46s linear infinite}
+.marquee__group{display:flex; flex:0 0 auto}
+.marquee:hover .marquee__track,.marquee:focus-within .marquee__track{animation-play-state:paused}
+.marquee.is-off .marquee__track{animation-play-state:paused}
+.marquee__item{
+  display:inline-flex; align-items:center; gap:10px; padding:0 24px; white-space:nowrap;
+  font-size:.8rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-dim);
+}
+.marquee__item svg{width:14px; height:14px; color:var(--rust); flex:0 0 auto}
+.marquee__item::after{content:''; width:4px; height:4px; border-radius:50%; background:var(--rule); margin-left:24px}
+@keyframes slide{from{transform:translateX(0)} to{transform:translateX(-50%)}}
+.marquee.is-off .marquee__track{transform:none}
+@media (prefers-reduced-motion: reduce){
+  .marquee{overflow-x:auto}
+  .marquee__track{animation:none; transform:none}
+}
+
+/* ── ROLE EXPLORER ───────────────────────────────────────────────────────── */
+.tabs{
+  display:flex; gap:6px; padding:6px; margin-bottom:22px; max-width:100%;
+  background:var(--surface); border:1px solid var(--rule); border-radius:var(--r-pill);
+  box-shadow:var(--sh-1); overflow-x:auto; scrollbar-width:none;
+}
+.tabs::-webkit-scrollbar{display:none}
+html:not(.js) .tabs{display:none}
+/* without scripting every role panel simply stacks */
+html:not(.js) .panel[hidden]{display:block !important}
+html:not(.js) .panel{margin-bottom:16px}
+.tab{
+  flex:1 0 auto; min-height:48px; padding:10px 20px; cursor:pointer; white-space:nowrap;
+  font-size:.9rem; font-weight:600; color:var(--ink-dim); background:transparent;
+  border:1px solid transparent; border-radius:var(--r-pill);
+  transition:color .22s var(--ease), background-color .22s var(--ease), box-shadow .22s var(--ease);
+}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--on-rust); background:var(--rust); box-shadow:var(--sh-rust)}
+.panel{
+  display:grid; gap:clamp(20px,3vw,34px); align-items:start;
+  padding:clamp(20px,3.2vw,38px); background:var(--surface);
+  border:1px solid var(--rule); border-radius:var(--r-xl); box-shadow:var(--sh-2);
+}
+@media (min-width:860px){ .panel{grid-template-columns:minmax(0,.86fr) minmax(0,1.14fr)} }
+.panel.is-swap{animation:panelIn .45s var(--ease-out) both}
+@keyframes panelIn{from{opacity:0; transform:translateY(10px)}}
+.panel__k{font-size:var(--fs-xs); font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--rust-ink)}
+.panel h3{font-size:clamp(1.5rem,1.2rem + 1.2vw,2.1rem); line-height:1.1; margin-top:12px}
+.panel__who{margin-top:14px; color:var(--ink-dim); font-size:var(--fs-sm)}
+.device{
+  display:inline-flex; align-items:center; gap:9px; margin-top:18px; padding:10px 15px;
+  font-size:var(--fs-xs); font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+  border-radius:var(--r-pill); border:1px solid var(--rule); background:var(--surface-2); color:var(--ink-dim);
+}
+.device svg{width:15px; height:15px}
+.device--mobile{color:var(--green-ink); background:var(--green-soft); border-color:color-mix(in srgb, var(--green) 32%, transparent)}
+.panel__list{display:grid; gap:13px; align-content:start}
+.panel__list li{display:flex; gap:12px; align-items:flex-start; font-size:var(--fs-sm); color:var(--ink-dim); line-height:1.55}
+.panel__list li svg{width:19px; height:19px; flex:0 0 auto; margin-top:2px; color:var(--green)}
+.panel__list li b{color:var(--ink)}
+.panel__note{
+  margin-top:20px; padding:14px 16px; font-size:var(--fs-sm); line-height:1.55; color:var(--ink-dim);
+  background:var(--surface-2); border-left:3px solid var(--rust); border-radius:0 var(--r-sm) var(--r-sm) 0;
+}
+.panel__note b{color:var(--ink)}
+
+/* ── BENTO FEATURES ──────────────────────────────────────────────────────── */
+.bento{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:clamp(12px,1.6vw,18px)}
+@media (min-width:900px){ .bento{grid-template-columns:repeat(6,minmax(0,1fr))} }
+.bento__card{
+  position:relative; overflow:hidden; isolation:isolate;
+  padding:clamp(20px,2.4vw,28px); border-radius:var(--r-xl);
+  background:var(--surface); border:1px solid var(--rule); box-shadow:var(--sh-1);
+  transition:transform .3s var(--ease), box-shadow .3s var(--ease), border-color .3s var(--ease);
+}
+.bento__card h3{font-size:var(--fs-h3); margin-bottom:9px}
+.bento__card p{font-size:var(--fs-sm); color:var(--ink-dim)}
+.bento__card--wide{grid-column:span 2}
+@media (min-width:900px){
+  .bento__card--lead{grid-column:span 4; grid-row:span 2; display:flex; flex-direction:column; justify-content:space-between}
+  .bento__card--half{grid-column:span 3}
+  .bento__card--thirds{grid-column:span 2}
+}
+/* cursor spotlight — fine pointers only, so touch devices keep it off */
+@media (hover:hover) and (pointer:fine){
+  .bento__card::before{
+    content:''; position:absolute; inset:0; z-index:-1; opacity:0; pointer-events:none;
+    background:radial-gradient(320px circle at var(--mx,50%) var(--my,0%), color-mix(in srgb, var(--rust) 16%, transparent), transparent 60%);
+    transition:opacity .3s var(--ease);
+  }
+  .bento__card::after{
+    content:''; position:absolute; inset:0; border-radius:inherit; padding:1px; opacity:0; pointer-events:none;
+    background:radial-gradient(250px circle at var(--mx,50%) var(--my,0%), var(--rust), transparent 58%);
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor; mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite:exclude; transition:opacity .3s var(--ease);
+  }
+  .bento__card:hover::before,.bento__card:hover::after{opacity:1}
+  .bento__card:hover{transform:translateY(-3px); box-shadow:var(--sh-2)}
+}
+/* per-card icon motion: paused at a fully drawn state, plays on hover / focus */
+.fico{
+  width:46px; height:46px; border-radius:14px; display:grid; place-items:center; margin-bottom:18px;
+  background:var(--rust-soft); color:var(--rust-ink); border:1px solid color-mix(in srgb, var(--rust) 18%, transparent);
+}
+.fico svg{width:23px; height:23px}
+.fico--green{background:var(--green-soft); color:var(--green-ink); border-color:color-mix(in srgb, var(--green) 22%, transparent)}
+.fico--lg{width:58px; height:58px; border-radius:18px; margin-bottom:26px}
+.fico--lg svg{width:29px; height:29px}
+.anim-spin{transform-origin:12px 12px; animation:spin 3.4s linear infinite; animation-play-state:paused}
+.anim-spin-r{transform-origin:12px 12px; animation:spin 5s linear infinite reverse; animation-play-state:paused}
+.anim-pulse{transform-origin:12px 12px; animation:pulse 2.4s var(--ease) infinite; animation-play-state:paused}
+.anim-stack{animation:stack 2.6s var(--ease) infinite; animation-play-state:paused}
+.bento__card:hover :is(.anim-spin,.anim-spin-r,.anim-pulse,.anim-stack),
+.bento__card:focus-within :is(.anim-spin,.anim-spin-r,.anim-pulse,.anim-stack){animation-play-state:running}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{transform:scale(.72); opacity:1} 50%{transform:scale(2.2); opacity:0}}
+@keyframes stack{0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)}}
+/* small offline→server diagram inside the lead card */
+.queueflow{display:flex; align-items:center; gap:8px; margin-top:26px}
+.qf-pill{
+  font-size:.68rem; font-weight:600; letter-spacing:.01em; white-space:nowrap;
+  padding:6px 11px; border-radius:9px; background:var(--surface-2);
+  border:1px solid var(--rule); color:var(--ink-dim);
+}
+.qf-line{
+  flex:1 1 24px; min-width:18px; height:2px; position:relative;
+  background:repeating-linear-gradient(90deg, color-mix(in srgb, var(--rust) 45%, transparent) 0 6px, transparent 6px 12px);
+}
+.qf-line::after{
+  content:''; position:absolute; right:0; top:50%; width:0; height:0;
+  border-left:6px solid var(--rust); border-top:4px solid transparent; border-bottom:4px solid transparent;
+  transform:translateY(-50%);
+}
+.qf-server{
+  width:30px; height:30px; flex:0 0 auto; border-radius:9px; display:grid; place-items:center;
+  background:var(--green-soft); color:var(--green-ink); border:1px solid color-mix(in srgb, var(--green) 26%, transparent);
+}
+.qf-server svg{width:16px; height:16px}
+.bento__meta{margin-top:20px; display:flex; flex-wrap:wrap; gap:8px}
+.chip{font-size:var(--fs-xs); font-weight:600; padding:7px 13px; border-radius:var(--r-pill);
+  background:var(--surface-2); border:1px solid var(--rule); color:var(--ink-dim)}
+
+/* ── DEMO: BREAK-EVEN MATH ───────────────────────────────────────────────── */
+.demo{
+  display:grid; gap:clamp(20px,3vw,30px); padding:clamp(20px,3.2vw,38px);
+  background:var(--surface); border:1px solid var(--rule); border-radius:var(--r-xl); box-shadow:var(--sh-2);
+}
+@media (min-width:920px){ .demo{grid-template-columns:minmax(0,1.06fr) minmax(0,.94fr)} }
+.fields{display:grid; gap:20px; align-content:start}
+.field{display:grid; gap:8px}
+.field__top{display:flex; align-items:baseline; justify-content:space-between; gap:12px}
+.field label{font-size:var(--fs-sm); font-weight:600}
+.field output{font-size:var(--fs-sm); font-weight:700; color:var(--rust-ink)}
+input[type="range"]{-webkit-appearance:none; appearance:none; width:100%; height:44px; margin:0; background:transparent; cursor:pointer}
+input[type="range"]::-webkit-slider-runnable-track{height:6px; border-radius:4px; background:var(--rule)}
+input[type="range"]::-moz-range-track{height:6px; border-radius:4px; background:var(--rule)}
+input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance:none; appearance:none; width:24px; height:24px; margin-top:-9px; border-radius:50%;
+  background:var(--rust); border:3px solid var(--surface); box-shadow:0 2px 8px rgba(0,0,0,.3);
+}
+input[type="range"]::-moz-range-thumb{
+  width:18px; height:18px; border-radius:50%; background:var(--rust); border:3px solid var(--surface);
+  box-shadow:0 2px 8px rgba(0,0,0,.3);
+}
+.money{display:flex; align-items:center; gap:10px; min-height:50px; padding:0 14px;
+  background:var(--surface-2); border:1px solid var(--rule); border-radius:var(--r-sm); transition:border-color .2s var(--ease)}
+.money:focus-within{border-color:var(--rust)}
+.money span{font-weight:700; color:var(--ink-soft)}
+.money input{width:100%; min-width:0; border:0; background:transparent; font-size:1rem; font-weight:600; padding:12px 0}
+.money input:focus{outline:none}
+.money input::-webkit-outer-spin-button,.money input::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
+.money input[type=number]{-moz-appearance:textfield}
+.readout{display:grid; gap:16px; align-content:start; padding:clamp(18px,2.4vw,26px);
+  border-radius:var(--r-lg); background:var(--bg-2); border:1px solid var(--rule)}
+.readout__k{font-size:var(--fs-xs); font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft)}
+.readout__v{font-family:'Roboto Slab',serif; font-size:clamp(2.3rem,1.6rem + 2.8vw,3.3rem); line-height:1.04; letter-spacing:-.03em}
+.readout__v.is-zero{color:var(--green-ink)}
+.readout__v small{font-family:'Public Sans',sans-serif; font-size:.86rem; font-weight:600; letter-spacing:0; color:var(--ink-dim); margin-left:8px}
+.readout__note{font-size:var(--fs-sm); color:var(--ink-dim); min-height:3em}
+.readout__facts{display:grid; gap:9px; padding-top:16px; border-top:1px dashed var(--rule)}
+.fact{display:flex; align-items:baseline; justify-content:space-between; gap:14px; font-size:var(--fs-sm)}
+.fact dt{color:var(--ink-dim)}
+.fact dd{margin:0; font-weight:700}
+.equation{margin-top:4px; padding:14px 16px; font-size:var(--fs-xs); line-height:1.65; color:var(--ink-dim);
+  background:var(--surface); border:1px solid var(--rule); border-radius:var(--r-sm)}
+.equation b{color:var(--ink)}
+
+/* ── DEMO: OFFLINE SYNC ──────────────────────────────────────────────────── */
+/* .sync keeps the .demo skin but lays its three blocks out itself */
+.demo.sync{display:block}
+.sync__top{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px}
+.switch{display:inline-flex; align-items:center; gap:12px; cursor:pointer; background:none; border:0; padding:4px}
+.switch__label{font-size:var(--fs-sm); font-weight:600; color:var(--ink-dim)}
+.switch__track{position:relative; width:66px; height:38px; border-radius:var(--r-pill); flex:0 0 auto;
+  background:var(--rule); border:1px solid var(--rule-2); transition:background-color .3s var(--ease), border-color .3s var(--ease)}
+.switch__thumb{position:absolute; top:4px; left:4px; width:28px; height:28px; border-radius:50%;
+  background:var(--surface); box-shadow:0 2px 6px rgba(0,0,0,.3); display:grid; place-items:center; color:var(--ink-soft);
+  transition:transform .32s var(--ease-out), color .3s var(--ease)}
+.switch__thumb svg{width:15px; height:15px}
+.switch__thumb .i-wifi{display:none}
+.switch[aria-checked="true"] .switch__track{background:var(--green); border-color:var(--green)}
+.switch[aria-checked="true"] .switch__thumb{transform:translateX(28px); color:#fff}
+.switch[aria-checked="true"] .switch__label{color:var(--ink)}
+.sync__status{display:flex; align-items:center; gap:16px; padding:18px 20px; border-radius:var(--r-lg);
+  background:var(--bg-2); border:1px solid var(--rule)}
+.sync__count{font-family:'Roboto Slab',serif; font-size:2.3rem; line-height:1; letter-spacing:-.03em; min-width:2.4ch; flex:0 0 auto}
+.sync__count.is-bump{animation:bump .35s var(--ease)}
+@keyframes bump{0%{transform:scale(1)} 45%{transform:scale(1.2)} 100%{transform:scale(1)}}
+.sync__meta b{display:block; font-size:var(--fs-sm)}
+.sync__meta span{font-size:var(--fs-xs); color:var(--ink-dim)}
+.sync__body{display:grid; gap:18px; margin-top:18px}
+@media (min-width:780px){ .sync__body{grid-template-columns:minmax(0,.86fr) minmax(0,1.14fr); align-items:start} }
+.sync__actions{display:flex; flex-wrap:wrap; gap:10px}
+.queue{display:grid; gap:8px; min-height:56px}
+.queue li{display:flex; align-items:center; gap:11px; padding:11px 13px; font-size:var(--fs-sm);
+  border-radius:var(--r-sm); background:var(--surface); border:1px solid var(--rule); animation:qIn .35s var(--ease-out) both}
+@keyframes qIn{from{opacity:0; transform:translateY(-6px)}}
+.queue li .qi{width:26px; height:26px; flex:0 0 auto; border-radius:8px; display:grid; place-items:center;
+  background:var(--rust-soft); color:var(--rust-ink)}
+.queue li .qi svg{width:14px; height:14px}
+.queue li small{margin-left:auto; font-size:var(--fs-xs); color:var(--ink-soft); white-space:nowrap}
+.queue li.is-synced .qi{background:var(--green-soft); color:var(--green-ink)}
+.queue li.is-synced{opacity:.7}
+.queue li.is-leaving{animation:qOut .4s var(--ease) forwards}
+@keyframes qOut{to{opacity:0; transform:translateX(16px)}}
+.queue__empty{display:flex !important; align-items:center; padding:12px 2px !important; font-size:var(--fs-sm);
+  color:var(--ink-soft); background:transparent !important; border:0 !important; animation:none !important}
+.demo__hint{margin-top:18px; font-size:var(--fs-xs); color:var(--ink-soft); display:flex; gap:8px; align-items:flex-start}
+.demo__hint svg{width:14px; height:14px; flex:0 0 auto; margin-top:2px}
+
+/* ── LIFECYCLE ───────────────────────────────────────────────────────────── */
+/* one column; the rail is an absolutely positioned hairline that the step
+   dots sit on, so it can fill as the section scrolls past */
+.life__wrap{position:relative; padding-left:58px}
+.life__rail{position:absolute; left:19px; top:8px; bottom:8px; width:2px; background:var(--rule); border-radius:2px}
+.life__rail i{position:absolute; inset:0 auto 0 0; width:100%; border-radius:2px; transform:scaleY(0); transform-origin:50% 0;
+  background:linear-gradient(180deg, var(--green), var(--rust)); transition:transform .18s linear}
+.lifesteps{display:grid; gap:clamp(30px,4.5vw,52px)}
+.lifestep{position:relative}
+.lifestep__dot{position:absolute; left:-58px; top:0; width:40px; height:40px; border-radius:50%;
+  display:grid; place-items:center; font-family:'Roboto Slab',serif; font-size:.95rem; font-weight:700;
+  color:var(--ink-soft); background:var(--bg); border:2px solid var(--rule);
+  transition:color .35s var(--ease), border-color .35s var(--ease), background-color .35s var(--ease), transform .35s var(--ease)}
+.lifestep.is-active .lifestep__dot{color:var(--on-rust); background:var(--rust); border-color:var(--rust); transform:scale(1.06);
+  box-shadow:0 0 0 6px color-mix(in srgb, var(--rust) 16%, transparent)}
+.lifestep__n{font-size:var(--fs-xs); font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--rust-ink)}
+.lifestep h3{font-size:clamp(1.28rem,1.12rem + .6vw,1.65rem); margin:8px 0 10px}
+.lifestep p{font-size:1rem; color:var(--ink-dim); max-width:44rem}
+.lifestep__tags{display:flex; flex-wrap:wrap; gap:8px; margin-top:16px}
+@media (max-width:560px){
+  .life__wrap{padding-left:48px}
+  .life__rail{left:16px}
+  .lifestep__dot{left:-48px; width:34px; height:34px; font-size:.85rem}
+}
+
+/* ── CLOSING CTA ─────────────────────────────────────────────────────────── */
+.cta{position:relative; overflow:hidden; isolation:isolate; text-align:center;
+  padding:clamp(28px,5vw,62px); border-radius:var(--r-xl);
+  background:var(--surface); border:1px solid var(--rule); box-shadow:var(--sh-2)}
+.cta__bg{position:absolute; inset:-30% -10%; z-index:-1; pointer-events:none; filter:blur(14px);
+  background:
+    radial-gradient(38% 46% at 22% 30%, color-mix(in srgb, var(--rust) 24%, transparent), transparent 68%),
+    radial-gradient(34% 44% at 78% 32%, color-mix(in srgb, var(--green) 22%, transparent), transparent 70%),
+    radial-gradient(40% 40% at 50% 96%, color-mix(in srgb, var(--rust) 16%, transparent), transparent 70%);
+  animation:driftSlow 18s var(--ease) infinite alternate}
+.cta.is-off .cta__bg{animation-play-state:paused}
+@keyframes driftSlow{from{transform:translate3d(-2%,-1%,0) scale(1)} to{transform:translate3d(3%,2%,0) scale(1.08)}}
+.cta__inner{max-width:44rem; margin-inline:auto}
+.cta h2{font-size:clamp(1.9rem,1.25rem + 3vw,3.2rem); line-height:1.06; letter-spacing:-.03em}
+.cta p{margin-top:18px; color:var(--ink-dim); font-size:var(--fs-lede)}
+.cta__actions{display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin-top:30px}
+.cta__foot{margin-top:26px; font-size:var(--fs-xs); color:var(--ink-soft)}
+
+/* ── FOOTER ──────────────────────────────────────────────────────────────── */
+.site-footer{border-top:1px solid var(--rule); background:var(--bg-2);
+  padding-block:clamp(34px,4.5vw,54px) calc(clamp(30px,4vw,44px) + env(safe-area-inset-bottom))}
+.fyp{display:grid; gap:22px; grid-template-columns:repeat(auto-fit,minmax(155px,1fr))}
+.fyp .label{font-size:.7rem; font-weight:700; letter-spacing:.13em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:6px}
+.fyp .val{font-size:.92rem; line-height:1.45}
+.fyp .val.fill{color:var(--rust-ink); font-weight:600}
+.footer__base{margin-top:clamp(26px,3vw,36px); padding-top:22px; border-top:1px solid var(--rule);
+  display:flex; flex-wrap:wrap; gap:18px; align-items:center; justify-content:space-between}
+.footer__base p{font-size:var(--fs-xs); color:var(--ink-dim); max-width:44rem; line-height:1.65}
+.to-top{display:inline-flex; align-items:center; gap:9px; min-height:44px; padding:10px 18px;
+  font-size:var(--fs-sm); font-weight:600; text-decoration:none; color:var(--ink);
+  background:var(--surface); border:1px solid var(--rule); border-radius:var(--r-pill);
+  transition:transform .2s var(--ease), border-color .2s var(--ease)}
+.to-top:hover{transform:translateY(-2px); border-color:var(--ink-soft)}
+.to-top svg{width:15px; height:15px}
+
+/* ── 6. MOTION ───────────────────────────────────────────────────────────── */
+/* scroll reveal — without JS nothing is ever hidden */
+.js .reveal{opacity:0; transform:translateY(22px); transition:opacity .7s var(--ease-out), transform .7s var(--ease-out); transition-delay:var(--d,0ms)}
+.js .reveal.is-in{opacity:1; transform:none}
+.js .reveal-scale{opacity:0; transform:translateY(26px) scale(.975); transition:opacity .8s var(--ease-out), transform .8s var(--ease-out); transition-delay:var(--d,0ms)}
+.js .reveal-scale.is-in{opacity:1; transform:none}
+/* hero headline: per-line rise */
+.js .hero h1 .w{display:inline-block; overflow:hidden; vertical-align:bottom; padding-bottom:.06em}
+.js .hero h1 .w > span{display:inline-block; transform:translateY(108%); transition:transform .9s var(--ease-out); transition-delay:var(--d,0ms)}
+.js .hero h1.is-in .w > span{transform:none}
+
+/* ── 7. REDUCED MOTION / PRINT ───────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{
+    animation-duration:.001ms !important; animation-iteration-count:1 !important;
+    transition-duration:.001ms !important; scroll-behavior:auto !important;
+  }
+  .js .reveal,.js .reveal-scale{opacity:1 !important; transform:none !important}
+  .js .hero h1 .w > span{transform:none !important}
+  .float,.cta__bg{animation:none}
+  .life__rail i{transition:none; transform:scaleY(1)}
+  .menu__links a{opacity:1; transform:none}
+}
+@media print{
+  .site-header,.menu,.progress,.to-top,.btn,.skip{display:none}
+  body::before{display:none}
+}
 </style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" aria-hidden="true"><div class="progress__bar" id="progressBar"></div></div>
 
-<div class="wrap">
-  <nav>
-    <div class="brand"><span class="dot"></span>Broiler FMS</div>
-    <div class="links">
-      <a href="#roles">Who it's for</a>
+<!-- ══ HEADER ══════════════════════════════════════════════════════════════ -->
+<header class="site-header" id="siteHeader">
+  <nav class="nav wrap" aria-label="Primary">
+    <a class="brand" href="#top">
+      <span class="brand__mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M8 20V4h6.4a4.3 4.3 0 0 1 0 8.6H10.6L16 20" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      <span>Broiler FMS<small>Farm records</small></span>
+    </a>
+
+    <div class="nav__links" id="navLinks">
+      <a href="#roles">Roles</a>
       <a href="#features">Features</a>
-      <a href="#download">Get the app</a>
+      <a href="#break-even">The math</a>
+      <a href="#sync">Sync</a>
+      <a href="#lifecycle">Batch life</a>
+    </div>
+
+    <div class="nav__tools">
+      <button class="icon-btn" id="themeToggle" type="button" aria-label="Switch to dark theme">
+        <svg class="i-sun" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="2"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <svg class="i-moon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 14.2A8.2 8.2 0 0 1 9.8 4a8.4 8.4 0 1 0 10.2 10.2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      </button>
+      <a class="btn primary small" href="https://github.com/yaawaleed-tech/broiler_fms/releases/download/v1.0.0/app-release.apk">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v12m0 0l-4.2-4.2M12 15l4.2-4.2M5 21h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="lbl">Download</span>
+      </a>
+      <button class="icon-btn nav__burger" id="navToggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
     </div>
   </nav>
+</header>
 
-  <div class="hero">
-    <span class="tag">Final Year Project &middot; Bayero University Kano</span>
-    <h1>Broiler Farm Record Management System</h1>
-    <p class="lede">An offline-first mobile app and web console that replaces the paper batch book and the spreadsheet with one real-time system — built for a working poultry farm, not a classroom mockup.</p>
-    <div class="cta-row">
-      <a class="btn primary" href="#download">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Download for Android
-      </a>
-      <a class="btn ghost" href="/admin">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z" stroke="currentColor" stroke-width="2"/><path d="M3 12a9 9 0 1018 0 9 9 0 00-18 0z" stroke="currentColor" stroke-width="2"/></svg>
-        Admin &amp; Super Admin login
-      </a>
+<!-- mobile menu -->
+<div class="menu" id="mobileMenu" hidden>
+  <div class="menu__top">
+    <a class="brand" href="#top" data-close>
+      <span class="brand__mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M8 20V4h6.4a4.3 4.3 0 0 1 0 8.6H10.6L16 20" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      <span>Broiler FMS<small>Farm records</small></span>
+    </a>
+    <button class="icon-btn" id="menuClose" type="button" aria-label="Close menu">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <div class="menu__links">
+    <a href="#roles">Roles <span>Who uses it</span></a>
+    <a href="#features">Features <span>What it does</span></a>
+    <a href="#break-even">The math <span>Try it</span></a>
+    <a href="#sync">Sync <span>Offline demo</span></a>
+    <a href="#lifecycle">Batch life <span>Register to close</span></a>
+    <a href="#download">Download <span>Get the app</span></a>
+  </div>
+  <div class="menu__foot">
+    <a class="btn primary" href="https://github.com/yaawaleed-tech/broiler_fms/releases/download/v1.0.0/app-release.apk">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v12m0 0l-4.2-4.2M12 15l4.2-4.2M5 21h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="lbl">Download for Android</span>
+    </a>
+    <a class="btn ghost" href="/admin">Admin &amp; Super Admin login</a>
+  </div>
+</div>
+
+<main id="main">
+<span id="top"></span>
+
+<!-- ══ HERO ════════════════════════════════════════════════════════════════ -->
+<section class="hero" aria-labelledby="heroTitle">
+  <div class="hero__aura" aria-hidden="true"></div>
+  <div class="wrap hero__grid">
+    <div class="hero__copy">
+      <span class="tag reveal" style="--d:0ms"><i aria-hidden="true"></i>Final Year Project &middot; Bayero University Kano</span>
+
+      <h1 id="heroTitle" class="reveal" style="--d:90ms" data-split>Broiler Farm <em>Record</em> Management System</h1>
+
+      <p class="hero__lede reveal" style="--d:180ms">
+        An offline-first Android app and web console that replaces the paper batch book and the
+        spreadsheet with one real-time system — built for a working poultry farm, not a classroom mockup.
+      </p>
+
+      <div class="hero__cta reveal" style="--d:260ms">
+        <a class="btn primary" href="#download">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v12m0 0l-4.2-4.2M12 15l4.2-4.2M5 21h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="lbl">Download for Android</span>
+        </a>
+        <a class="btn ghost" href="/admin">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z" stroke="currentColor" stroke-width="2"/><path d="M3 12a9 9 0 1018 0 9 9 0 00-18 0z" stroke="currentColor" stroke-width="2"/></svg>
+          <span class="lbl">Admin &amp; Super Admin login</span>
+        </a>
+      </div>
+
+      <p class="hero__note reveal" style="--d:330ms">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3" stroke="currentColor" stroke-width="2"/><path d="M4 7l8 6 8-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Setting up a new business? Access is <b>invite only</b> — email
+          <a class="tlink" href="mailto:aah2200819.swe@buk.edu.ng">aah2200819.swe@buk.edu.ng</a>
+          to request Admin access, and you'll be added by the Super Admin.</span>
+        <button class="copy-btn" id="copyEmailBtn" type="button" aria-label="Copy the access-request email address">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.5" stroke="currentColor" stroke-width="2"/><path d="M15 6.5A2.5 2.5 0 0 0 12.5 4H6.5A2.5 2.5 0 0 0 4 6.5v6A2.5 2.5 0 0 0 6.5 15" stroke="currentColor" stroke-width="2"/></svg>
+          <span>Copy email</span>
+        </button>
+      </p>
+
+      <dl class="hero__stats reveal" style="--d:400ms">
+        <div class="stat"><b class="num" data-count="4">4</b><span>Roles, each scoped</span></div>
+        <div class="stat"><b class="num" data-count="6">6</b><span>Record types</span></div>
+        <div class="stat"><b class="num" data-count="18" data-prefix="up to ">up to 18</b><span>Staff per business</span></div>
+        <div class="stat"><b class="num" data-count="1">1</b><span>Active Manager per business</span></div>
+      </dl>
     </div>
-    <p class="access-note">
-      Setting up a new business? Access is by invite only — email
-      <a href="mailto:aah2200819.swe@buk.edu.ng">aah2200819.swe@buk.edu.ng</a> to request Admin access, and you'll be added by the Super Admin.
-      <button class="copy-btn" id="copyEmailBtn" type="button">Copy email</button>
+
+    <!-- product showcase: pure HTML/CSS mock-up -->
+    <div class="showcase reveal-scale" id="showcase" aria-label="Illustration of the Android batch dashboard">
+      <div class="stage" id="stage">
+        <div class="stage__halo" aria-hidden="true"></div>
+
+        <div class="float float--a" data-depth="26">
+          <span class="fi" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 19V9m5 10V5m5 14v-7m5 7V7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></span>
+          <b>FCR 1.62</b>
+          <small>Feed conversion, updating as feed is logged</small>
+        </div>
+
+        <div class="float float--b" data-depth="34">
+          <span class="fi" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3v6c0 4.4-3 7.4-7 8.8C8 19.4 5 16.4 5 12V6l7-3z" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"/></svg></span>
+          <b>Every bird accounted for</b>
+          <small>Mortality + harvest can never pass the starting flock</small>
+        </div>
+
+        <div class="float float--c" data-depth="18">
+          <b>Batch 3 &middot; Day 24</b>
+          <small>Register, record, harvest, close</small>
+        </div>
+
+        <div class="phone" aria-hidden="true">
+          <div class="phone__screen">
+            <div class="phone__status">
+              <span>9:41</span>
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="2" y="14" width="3" height="6" rx="1"/><rect x="7" y="10" width="3" height="10" rx="1"/><rect x="12" y="6" width="3" height="14" rx="1"/><rect x="17" y="3" width="3" height="17" rx="1"/></svg>
+            </div>
+
+            <div class="phone__bar">
+              <span>
+                <p class="phone__title">Batch 3</p>
+                <small>Day 24 &middot; 500 birds</small>
+              </span>
+              <span class="pill off" id="mockPill">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 4v9m0 0l-3.2-3.2M12 13l3.2-3.2" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 19h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+                <span id="mockPillText">3 pending &middot; Offline</span>
+              </span>
+            </div>
+
+            <div class="phone__metric">
+              <div class="k">Break-even price</div>
+              <div class="v num">&#8358;3,008 <small>/ bird to harvest</small></div>
+            </div>
+
+            <div class="phone__rows">
+              <div class="prow">
+                <span class="prow__ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 4.5v9m0 0l-3.4-3.4M12 13.5l3.4-3.4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 19h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></span>
+                <span class="pk">Mortality<b>18 of 500 &middot; 3.6%</b></span>
+                <span class="pv num">18</span>
+              </div>
+              <div class="prow">
+                <span class="prow__ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 8h16l-1.7 11.1a2 2 0 0 1-2 1.9H7.7a2 2 0 0 1-2-1.9L4 8z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 8V6a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></span>
+                <span class="pk">Feed<b>12 bags logged</b></span>
+                <span class="pv num">1.62</span>
+              </div>
+              <div class="prow">
+                <span class="prow__ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5v17M16.5 7.5H10a2.5 2.5 0 0 0 0 5h4a2.5 2.5 0 0 1 0 5H7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+                <span class="pk">Expenses<b>Logged by Manager</b></span>
+                <span class="pv num" style="color:var(--ink)">&#8358;1.45M</span>
+              </div>
+            </div>
+
+            <div class="prog"><i style="width:96.4%"></i></div>
+            <div class="prog__meta"><span>482 birds left</span><span>96.4% of flock</span></div>
+            <div class="phone__nav" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+          </div>
+        </div>
+      </div>
+
+      <p class="showcase__caption">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 11v5.4M12 7.6v.9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <span>Illustrative mock-up of the Android app &middot; <b>sample data</b>, not real farm results</span>
+      </p>
+    </div>
+  </div>
+</section>
+<!-- ══ CAPABILITY MARQUEE ══════════════════════════════════════════════════ -->
+<section class="marquee" id="capabilities" aria-labelledby="capTitle">
+  <h2 class="sr-only" id="capTitle">System capabilities</h2>
+  <div class="marquee__track" id="marqueeTrack">
+    <ul class="marquee__group" aria-hidden="true">
+      <li class="marquee__item"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12l4 4 8-9 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Offline-first</li>
+      <li class="marquee__item"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l7 3v6c0 4.4-3 7.4-7 8.8C8 19.4 5 16.4 5 12V6l7-3z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg>Role-based access</li>
+      <li class="marquee__item"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 19V5m0 14h16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>Live break-even</li>
+      <li class="marquee__item"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 19V9m5 10V5m5 14v-7m5 7V7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>FCR tracking</li>
+      <li class="marquee__item"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="2.2"/><path d="M12 7.6V12l3.2 2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>Batch lifecycle</li>
+      <li class="marquee__item"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4" stroke="currentColor" stroke-width="2.2"/><path d="M9.2 12.2l2.2 2.2 4.2-4.6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Supabase RLS</li>
+      <li class="marquee__item"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M13 3L5 13h5l-1 8 8-10h-5l1-8z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>Built with Flutter</li>
+      <li class="marquee__item"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M18 4v4h-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Manual sync</li>
+    </ul>
+    <ul class="marquee__group">
+      <li class="marquee__item"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12l4 4 8-9 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Offline-first</li>
+      <li class="marquee__item"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l7 3v6c0 4.4-3 7.4-7 8.8C8 19.4 5 16.4 5 12V6l7-3z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg>Role-based access</li>
+      <li class="marquee__item"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 19V5m0 14h16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>Live break-even</li>
+      <li class="marquee__item"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 19V9m5 10V5m5 14v-7m5 7V7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>FCR tracking</li>
+      <li class="marquee__item"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="2.2"/><path d="M12 7.6V12l3.2 2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>Batch lifecycle</li>
+      <li class="marquee__item"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4" stroke="currentColor" stroke-width="2.2"/><path d="M9.2 12.2l2.2 2.2 4.2-4.6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Supabase RLS</li>
+      <li class="marquee__item"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M13 3L5 13h5l-1 8 8-10h-5l1-8z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>Built with Flutter</li>
+      <li class="marquee__item"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M18 4v4h-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Manual sync</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ══ ROLE EXPLORER ═══════════════════════════════════════════════════════ -->
+<section class="section" id="roles" aria-labelledby="rolesTitle">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="tag"><i aria-hidden="true"></i>Four roles, one system</span>
+      <h2 id="rolesTitle">Who it's built for</h2>
+      <p>Office roles work in the web console; field roles work in the Android app, online or off.
+        Each role sees and does only what belongs to them.</p>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="User roles" id="roleTabs">
+      <button class="tab" type="button" role="tab" id="tab-super" aria-controls="panel-super" aria-selected="true" tabindex="0">Super Admin</button>
+      <button class="tab" type="button" role="tab" id="tab-admin" aria-controls="panel-admin" aria-selected="false" tabindex="-1">Admin</button>
+      <button class="tab" type="button" role="tab" id="tab-manager" aria-controls="panel-manager" aria-selected="false" tabindex="-1">Manager</button>
+      <button class="tab" type="button" role="tab" id="tab-staff" aria-controls="panel-staff" aria-selected="false" tabindex="-1">Staff</button>
+    </div>
+
+    <div class="panels">
+      <div class="panel" role="tabpanel" id="panel-super" aria-labelledby="tab-super" tabindex="0">
+        <div>
+          <div class="panel__k">Super Admin</div>
+          <h3>Owns the platform</h3>
+          <p class="panel__who">One level above every business on the system.</p>
+          <p class="device">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2.5" stroke="currentColor" stroke-width="2"/><path d="M8 20h8M12 17v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Web console &middot; online only
+          </p>
+        </div>
+        <div>
+          <ul class="panel__list">
+            <li><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Creates <b>Admin accounts</b> — access is invite-only, never self-serve.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Deactivates</b> an Admin when the business relationship ends.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Reactivates</b> the same account later without losing anything.</span></li>
+          </ul>
+          <p class="panel__note">Deactivation is reversible by design, and enforcement lives in the database — <b>Supabase row level security</b> — not only in the interface.</p>
+        </div>
+      </div>
+
+      <div class="panel" role="tabpanel" id="panel-admin" aria-labelledby="tab-admin" tabindex="0" hidden>
+        <div>
+          <div class="panel__k">Admin</div>
+          <h3>Owns the business</h3>
+          <p class="panel__who">Registers the farm and staffs it up.</p>
+          <p class="device">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2.5" stroke="currentColor" stroke-width="2"/><path d="M8 20h8M12 17v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Web console &middot; online only
+          </p>
+        </div>
+        <div>
+          <ul class="panel__list">
+            <li><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Registers the <b>business</b> and its details.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Adds the <b>Manager</b> and up to <b>18 Staff</b> to that business.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Views <b>every batch read-only</b> — visibility without editing power.</span></li>
+          </ul>
+          <p class="panel__note">An Admin manages people and visibility. The day-to-day farm numbers stay with the Manager and Staff.</p>
+        </div>
+      </div>
+
+      <div class="panel" role="tabpanel" id="panel-manager" aria-labelledby="tab-manager" tabindex="0" hidden>
+        <div>
+          <div class="panel__k">Manager</div>
+          <h3>Runs the operation</h3>
+          <p class="panel__who">Turns a flock into a batch, and a batch into a profit figure.</p>
+          <p class="device device--mobile">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.5" stroke="currentColor" stroke-width="2"/><path d="M10.5 18.5h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Android app &middot; offline-first
+          </p>
+        </div>
+        <div>
+          <ul class="panel__list">
+            <li><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Registers <b>flock batches</b> with a starting bird count.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Assigns <b>Staff</b> to batches, and can assign on the spot.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Logs <b>expenses</b>: feed, drugs, labour and other batch costs.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Prices <b>harvests</b> per kilogram, as a flat total, or as a gift at zero.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Sees the <b>financial summaries</b>: break-even, profit or loss, FCR.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Closes a batch once every bird is accounted for — reversible.</span></li>
+          </ul>
+          <p class="panel__note">One active Manager per business keeps ownership of the numbers unambiguous.</p>
+        </div>
+      </div>
+
+      <div class="panel" role="tabpanel" id="panel-staff" aria-labelledby="tab-staff" tabindex="0" hidden>
+        <div>
+          <div class="panel__k">Staff</div>
+          <h3>Works the field</h3>
+          <p class="panel__who">Records the day, in the house, with or without signal.</p>
+          <p class="device device--mobile">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.5" stroke="currentColor" stroke-width="2"/><path d="M10.5 18.5h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Android app &middot; offline-first
+          </p>
+        </div>
+        <div>
+          <ul class="panel__list">
+            <li><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Records <b>mortality, feed, weight samples, vaccinations and harvests</b>.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Works on <b>their assigned batch only</b>.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Saves <b>on the device first</b>, then syncs automatically when signal returns.</span></li>
+          </ul>
+          <p class="panel__note">The home screen always shows connection status and how many entries are still pending, and a manual sync is one tap away.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FEATURES (BENTO) ════════════════════════════════════════════════════ -->
+<section class="section" id="features" aria-labelledby="featuresTitle">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="tag"><i aria-hidden="true"></i>Built for the farm, not just the demo</span>
+      <h2 id="featuresTitle">What it actually does</h2>
+      <p>Six things that decide whether a record book survives contact with a real farm.</p>
+    </div>
+
+    <div class="bento">
+      <article class="bento__card bento__card--lead reveal" style="--d:0ms">
+        <div>
+          <span class="fico fico--lg" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path class="anim-spin" d="M12 4.4a7.6 7.6 0 0 1 6.7 4.1" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M18.7 3.6v4.9h-4.9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path class="anim-spin-r" d="M12 19.6a7.6 7.6 0 0 1-6.7-4.1" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M5.3 20.4v-4.9h4.9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="12" cy="12" r="1.8" fill="currentColor"/>
+            </svg>
+          </span>
+          <h3>Works with no signal</h3>
+          <p>Staff keep recording in the field with no connection. Everything queues on the device and reaches
+            the server the moment it reconnects, or with a manual sync. The home screen shows whether you are
+            online and how many entries are still waiting.</p>
+          <div class="queueflow" aria-hidden="true">
+            <span class="qf-pill">Mortality</span>
+            <span class="qf-pill">Feed</span>
+            <span class="qf-pill">Weight</span>
+            <span class="qf-line"></span>
+            <span class="qf-server">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M7.5 18.5A4.5 4.5 0 0 1 7 9.6a5.5 5.5 0 0 1 10.5 1.4 3.9 3.9 0 0 1-.6 7.5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+            </span>
+          </div>
+        </div>
+        <div class="bento__meta">
+          <span class="chip">On-device first</span>
+          <span class="chip">Auto sync on reconnect</span>
+          <span class="chip">Pending count</span>
+        </div>
+      </article>
+
+      <article class="bento__card bento__card--half reveal" style="--d:60ms">
+        <span class="fico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M3.6 19.4V4.6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+            <path d="M3.6 19.4h16.8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+            <path d="M6.8 15.8l4.2-5.2 3.1 3.1 5.3-7.4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle class="anim-pulse" cx="19.4" cy="6.3" r="1.9" fill="currentColor"/>
+          </svg>
+        </span>
+        <h3>Live financials, not post-mortem</h3>
+        <p>Break-even price, profit/loss and Feed Conversion Ratio recalculate as entries come in — not once a
+          batch is finished and manually totalled.</p>
+      </article>
+
+      <article class="bento__card bento__card--half reveal" style="--d:120ms">
+        <span class="fico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M12 2.8l8 3.4v6c0 5-3.4 8.6-8 9.9-4.6-1.3-8-4.9-8-9.9v-6l8-3.4z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
+            <circle class="anim-pulse" cx="12" cy="11.6" r="2.6" fill="currentColor"/>
+          </svg>
+        </span>
+        <h3>Role-based access</h3>
+        <p>Four roles, each seeing and doing only what belongs to them — enforced at the database with Supabase
+          row level security, not just hidden in the interface.</p>
+      </article>
+
+      <article class="bento__card bento__card--thirds reveal" style="--d:0ms">
+        <span class="fico fico--green" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <rect class="anim-stack" x="4" y="6" width="16" height="12" rx="2.4" stroke="currentColor" stroke-width="2.2"/>
+            <path d="M8 11.5h8M8 15h5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <h3>One record of truth</h3>
+        <p>Mortality, feed, weight, vaccination, harvest, expenses and sales live in one place instead of across
+          a notebook and a spreadsheet.</p>
+      </article>
+
+      <article class="bento__card bento__card--thirds reveal" style="--d:60ms">
+        <span class="fico fico--green" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <rect x="3.5" y="4.5" width="7" height="6.5" rx="1.8" stroke="currentColor" stroke-width="2.2"/>
+            <rect x="13.5" y="4.5" width="7" height="6.5" rx="1.8" stroke="currentColor" stroke-width="2.2"/>
+            <rect x="3.5" y="14" width="7" height="5.5" rx="1.8" stroke="currentColor" stroke-width="2.2"/>
+            <rect x="13.5" y="14" width="7" height="5.5" rx="1.8" stroke="currentColor" stroke-width="2.2"/>
+          </svg>
+        </span>
+        <h3>Every bird accounted for</h3>
+        <p>Mortality plus harvested can never exceed the starting flock, so the numbers cannot quietly drift apart.</p>
+      </article>
+
+      <article class="bento__card bento__card--thirds reveal" style="--d:120ms">
+        <span class="fico fico--green" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <circle class="anim-stack" cx="12" cy="12" r="8.6" stroke="currentColor" stroke-width="2.2"/>
+            <path d="M7.8 12.4l3 3 5.6-6.4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <h3>Closes itself out cleanly</h3>
+        <p>Once mortality and harvest account for the full flock, the Manager is prompted to close the batch —
+          reversible, and never silent.</p>
+      </article>
+    </div>
+  </div>
+</section>
+<!-- ══ DEMO: BREAK-EVEN MATH ════════════════════════════════════════════════ -->
+<section class="section" id="break-even" aria-labelledby="mathTitle">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="tag"><i aria-hidden="true"></i>Illustration &middot; not farm data</span>
+      <h2 id="mathTitle">Try the math</h2>
+      <p>Move the figures and the break-even price recalculates with exactly the rule the app uses —
+        forward-looking, per bird still to harvest, in Nigerian Naira.</p>
+    </div>
+
+    <div class="demo reveal">
+      <div class="fields">
+        <div class="field">
+          <div class="field__top">
+            <label for="mStart">Starting birds</label>
+            <output id="mStartOut" for="mStart" class="num">500</output>
+          </div>
+          <input type="range" id="mStart" min="50" max="5000" step="10" value="500">
+        </div>
+
+        <div class="field">
+          <div class="field__top">
+            <label for="mMort">Birds lost to mortality</label>
+            <output id="mMortOut" for="mMort" class="num">18</output>
+          </div>
+          <input type="range" id="mMort" min="0" max="500" step="1" value="18">
+        </div>
+
+        <div class="field">
+          <div class="field__top">
+            <label for="mHarvest">Birds harvested</label>
+            <output id="mHarvestOut" for="mHarvest" class="num">0</output>
+          </div>
+          <input type="range" id="mHarvest" min="0" max="500" step="1" value="0">
+        </div>
+
+        <div class="field">
+          <label for="mExpenses">Total expenses so far</label>
+          <div class="money">
+            <span aria-hidden="true">&#8358;</span>
+            <input type="number" id="mExpenses" inputmode="numeric" min="0" step="5000" value="1450000">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="mRevenue">Revenue collected so far</label>
+          <div class="money">
+            <span aria-hidden="true">&#8358;</span>
+            <input type="number" id="mRevenue" inputmode="numeric" min="0" step="5000" value="0">
+          </div>
+        </div>
+      </div>
+
+      <div class="readout">
+        <div>
+          <div class="readout__k">Break-even price per bird</div>
+          <div class="readout__v num" id="mOut">&#8358;3,008</div>
+        </div>
+        <p class="readout__note" id="mNote">Every naira spent has to come back from the birds still in the house.</p>
+
+        <dl class="readout__facts">
+          <div class="fact"><dt>Birds still to harvest</dt><dd class="num" id="mLeft">482</dd></div>
+          <div class="fact"><dt>Expenses not yet recovered</dt><dd class="num" id="mUnpaid">&#8358;1,450,000</dd></div>
+        </dl>
+
+        <p class="equation">
+          <b>How it is worked out.</b> Break-even price = (total expenses &minus; revenue collected so far)
+          &divide; birds still to harvest. Dead birds are excluded from the denominator, but their cost stays in
+          the numerator. Once a batch is already profitable the price is clamped at &#8358;0, and when no birds
+          remain to price, the result is <b>&mdash;</b>.
+        </p>
+      </div>
+    </div>
+
+    <p class="demo__hint reveal">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 11v5.4M12 7.6v.9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <span>Illustration only. The figures above are made up to show the rule — they are not results from any
+        real farm, and the app derives the same figure from live entries.</span>
     </p>
   </div>
+</section>
 
-  <div class="roles" id="roles">
-    <div class="role">
-      <div class="k">Super Admin</div>
-      <h3>Owns the platform</h3>
-      <p>Creates and deactivates Admin accounts. One level above every business on the platform.</p>
+<!-- ══ DEMO: OFFLINE SYNC ═══════════════════════════════════════════════════ -->
+<section class="section" id="sync" aria-labelledby="syncTitle">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="tag"><i aria-hidden="true"></i>Illustration &middot; not farm data</span>
+      <h2 id="syncTitle">See the offline queue work</h2>
+      <p>This is the behaviour of the real home screen. Go offline, record entries, then reconnect and watch
+        the queue flush.</p>
     </div>
-    <div class="role">
-      <div class="k">Admin</div>
-      <h3>Owns the business</h3>
-      <p>Registers the farm, adds the Manager and Staff, and views every batch in read-only form.</p>
-    </div>
-    <div class="role">
-      <div class="k">Manager</div>
-      <h3>Runs the operation</h3>
-      <p>Registers batches, assigns Staff, logs expenses and harvest prices, watches the numbers.</p>
-    </div>
-    <div class="role">
-      <div class="k">Staff</div>
-      <h3>Works the field</h3>
-      <p>Records mortality, feed, weight, vaccinations and harvests on the batch they're assigned to — online or off.</p>
+
+    <div class="demo sync reveal">
+      <div class="sync__top">
+        <button class="switch" id="netSwitch" type="button" role="switch" aria-checked="false" aria-label="Network connection: offline">
+          <span class="switch__track" aria-hidden="true">
+            <span class="switch__thumb">
+              <svg class="i-wifi" viewBox="0 0 24 24" fill="none"><path d="M3.5 9.5a13 13 0 0 1 17 0M6.5 13a8.5 8.5 0 0 1 11 0M9.5 16.4a4.2 4.2 0 0 1 5 0" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/><circle cx="12" cy="19.6" r="1.2" fill="currentColor"/></svg>
+              <svg viewBox="0 0 24 24" fill="none"><path d="M3.5 4.5l17 15" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></svg>
+            </span>
+          </span>
+          <span class="switch__label" id="netLabel">Offline</span>
+        </button>
+        <span class="pill off" id="netPill"><span id="netPillText">Offline &middot; nothing can sync yet</span></span>
+      </div>
+
+      <div class="sync__body">
+        <div>
+          <div class="sync__status">
+            <div class="sync__count num" id="pendingCount">0</div>
+            <div class="sync__meta">
+              <b id="pendingLabel">entries pending</b>
+              <span id="pendingSub">Saved on this device, waiting for signal</span>
+            </div>
+          </div>
+          <div class="sync__actions" style="margin-top:16px">
+            <button class="btn primary small" id="recBtn" type="button">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/></svg>
+              <span class="lbl">Record mortality</span>
+            </button>
+            <button class="btn ghost small" id="syncBtn" type="button" disabled>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/><path d="M18 4v4h-4" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span class="lbl">Sync now</span>
+            </button>
+            <button class="btn ghost small" id="resetBtn" type="button">Reset demo</button>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="eyebrow" style="margin-bottom:12px">On-device queue</h3>
+          <ul class="queue" id="queueList"></ul>
+        </div>
+      </div>
+
+      <p class="demo__hint" style="margin-top:20px">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 11v5.4M12 7.6v.9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <span>Illustration only — a rehearsal of the app's behaviour, not a real sync against a server.</span>
+      </p>
     </div>
   </div>
+</section>
 
-  <div id="features">
-    <div class="section-head">
-      <span class="tag">Built for the farm, not just the demo</span>
-      <h2>What it actually does</h2>
+<!-- ══ LIFECYCLE ═══════════════════════════════════════════════════════════ -->
+<section class="section" id="lifecycle" aria-labelledby="lifeTitle">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="tag"><i aria-hidden="true"></i>A batch, start to finish</span>
+      <h2 id="lifeTitle">How a flock moves through the system</h2>
+      <p>Four steps, in order, from an opening bird count to a closed batch with the numbers already there.</p>
     </div>
-    <div class="features">
-      <div class="feature">
-        <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 12l3-3m0 0l3 3m-3-3v12M21 12l-3 3m0 0l-3-3m3 3V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <h3>Works with no signal</h3>
-        <p>Staff keep recording in the field with no connection. Everything queues on the device and reaches the server the moment it reconnects, or with a manual sync.</p>
-      </div>
-      <div class="feature">
-        <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 3v18h18M7 15l4-5 3 3 5-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <h3>Live financials, not post-mortem</h3>
-        <p>Break-even price, profit/loss and Feed Conversion Ratio recalculate as entries come in, not once a batch is finished and manually totalled.</p>
-      </div>
-      <div class="feature">
-        <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></div>
-        <h3>Role-based access</h3>
-        <p>Four roles, each seeing and doing only what belongs to them — enforced at the database, not just hidden in the interface.</p>
-      </div>
-      <div class="feature">
-        <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <h3>One record of truth</h3>
-        <p>Mortality, feed, weight, vaccination, harvest, expenses and sales all live in one place instead of across a notebook and a spreadsheet.</p>
-      </div>
-      <div class="feature">
-        <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 3h7v7H3V3zm11 0h7v7h-7V3zM3 14h7v7H3v-7zm11 0h7v7h-7v-7z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></div>
-        <h3>Every bird accounted for</h3>
-        <p>Mortality and harvest counts are validated against the starting flock size, so the numbers can't quietly drift apart.</p>
-      </div>
-      <div class="feature">
-        <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 7L9 18l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <h3>Closes itself out cleanly</h3>
-        <p>Once mortality and harvest account for the full flock, the Manager gets prompted to close the batch — reversible, and never silent.</p>
+
+    <div class="life__wrap" id="lifeWrap">
+      <div class="life__rail" aria-hidden="true"><i id="lifeFill"></i></div>
+
+      <ol class="lifesteps">
+        <li class="lifestep reveal">
+          <span class="lifestep__dot" aria-hidden="true">01</span>
+          <div class="lifestep__n">Step one</div>
+          <h3>Register</h3>
+          <p>The Manager opens a batch with its starting bird count and, optionally, assigns a Staff member on
+            the spot. Everything after this is measured against that number.</p>
+          <div class="lifestep__tags"><span class="chip">Starting flock</span><span class="chip">Staff assignment</span></div>
+        </li>
+
+        <li class="lifestep reveal">
+          <span class="lifestep__dot" aria-hidden="true">02</span>
+          <div class="lifestep__n">Step two</div>
+          <h3>Record</h3>
+          <p>Staff log mortality, feed, weight and vaccinations daily, from the farm, with or without a
+            connection. Each entry saves on the device first, then syncs.</p>
+          <div class="lifestep__tags"><span class="chip">Mortality</span><span class="chip">Feed</span><span class="chip">Weight</span><span class="chip">Vaccinations</span></div>
+        </li>
+
+        <li class="lifestep reveal">
+          <span class="lifestep__dot" aria-hidden="true">03</span>
+          <div class="lifestep__n">Step three</div>
+          <h3>Harvest</h3>
+          <p>Harvests are recorded by count, then priced by the Manager — per kilogram, as a flat total, or
+            given away at zero.</p>
+          <div class="lifestep__tags"><span class="chip">Count</span><span class="chip">Per kg or flat total</span></div>
+        </li>
+
+        <li class="lifestep reveal">
+          <span class="lifestep__dot" aria-hidden="true">04</span>
+          <div class="lifestep__n">Step four</div>
+          <h3>Close</h3>
+          <p>Once the numbers account for every bird, the Manager closes the batch. Profit, break-even and FCR
+            are already there, not calculated after the fact — and the close can be reversed.</p>
+          <div class="lifestep__tags"><span class="chip">Reversible</span><span class="chip">Prompted, never silent</span></div>
+        </li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ══ CLOSING CTA ═════════════════════════════════════════════════════════ -->
+<section class="section" id="download" aria-labelledby="ctaTitle">
+  <div class="wrap">
+    <div class="cta reveal-scale" id="ctaPanel">
+      <div class="cta__bg" aria-hidden="true"></div>
+      <div class="cta__inner">
+        <h2 id="ctaTitle">Try the system</h2>
+        <p>Install the Android app for the field-level mobile experience, or sign in to the web console if you've
+          been given Admin or Super Admin access.</p>
+        <div class="cta__actions">
+          <a class="btn primary" href="https://github.com/yaawaleed-tech/broiler_fms/releases/download/v1.0.0/app-release.apk">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v12m0 0l-4.2-4.2M12 15l4.2-4.2M5 21h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="lbl">Download APK</span>
+          </a>
+          <a class="btn ghost" href="/admin">Open web console</a>
+        </div>
+        <p class="cta__foot">Admin access is invite-only &middot; sample figures on this page are illustrations</p>
       </div>
     </div>
   </div>
+</section>
+</main>
 
-  <div class="lifecycle">
-    <div class="section-head">
-      <span class="tag">A batch, start to finish</span>
-      <h2>How a flock moves through the system</h2>
-    </div>
-    <div class="steps">
-      <div class="step"><div class="n">01 — Register</div><p>Manager opens a batch with its starting bird count and, optionally, assigns a Staff member on the spot.</p></div>
-      <div class="step"><div class="n">02 — Record</div><p>Staff log mortality, feed, weight and vaccinations daily, from the farm, with or without a connection.</p></div>
-      <div class="step"><div class="n">03 — Harvest</div><p>Harvests are recorded by count, then priced by the Manager — per kilogram, as a flat total, or given away at zero.</p></div>
-      <div class="step"><div class="n">04 — Close</div><p>Once the numbers account for every bird, the Manager closes the batch. Profit, break-even and FCR are already there, not calculated after the fact.</p></div>
-    </div>
-  </div>
-
-  <div class="cta-panel" id="download">
-    <div class="copy">
-      <h2>Try the system</h2>
-      <p>Install the Android app for the field-level mobile experience, or sign in to the web console if you've been given Admin or Super Admin access.</p>
-    </div>
-    <div class="actions">
-      <a class="btn primary" href="https://github.com/yaawaleed-tech/broiler_fms/releases/download/v1.0.0/app-release.apk">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Download APK
-      </a>
-      <a class="btn ghost" href="/admin">Open web console</a>
-    </div>
-  </div>
-
-  <footer>
+<!-- ══ FOOTER ══════════════════════════════════════════════════════════════ -->
+<footer class="site-footer">
+  <div class="wrap">
     <div class="fyp">
-      <div class="block">
+      <div>
         <div class="label">Student</div>
-        <div class="val">Abdullahi Abdullahi Haruna</div>
+        <div class="val fill">Abdullahi Abdullahi Haruna</div>
       </div>
-      <div class="block">
+      <div>
         <div class="label">Matric number</div>
         <div class="val">CST/22/SWE/00819</div>
       </div>
-      <div class="block">
+      <div>
         <div class="label">Department</div>
         <div class="val">Software Engineering</div>
       </div>
-      <div class="block">
+      <div>
         <div class="label">Institution</div>
         <div class="val">Bayero University, Kano</div>
       </div>
-      <div class="block">
+      <div>
         <div class="label">Supervisor</div>
         <div class="val">Buhari Ubale</div>
       </div>
-      <div class="block">
+      <div>
         <div class="label">Head of Department</div>
         <div class="val">Dr Saratu Ilu</div>
       </div>
     </div>
-    <p class="copyright">Built with Flutter and Supabase. Deployed with Firebase. Submitted in partial fulfilment of the requirements for the degree of B.Sc. Software Engineering.</p>
-  </footer>
-</div>
 
+    <div class="footer__base">
+      <p>Built with Flutter and Supabase. Deployed with Firebase. Submitted in partial fulfilment of the
+        requirements for the degree of B.Sc. Software Engineering.</p>
+      <a class="to-top" href="#top">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 19V5m0 0l-6 6m6-6l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Back to top
+      </a>
+    </div>
+  </div>
+</footer>
 <script>
-(function(){
-  var btn = document.getElementById('copyEmailBtn');
-  if(!btn) return;
-  var email = 'aah2200819.swe@buk.edu.ng';
-  function done(){
-    btn.textContent = 'Copied';
-    btn.classList.add('copied');
-    setTimeout(function(){ btn.textContent = 'Copy email'; btn.classList.remove('copied'); }, 1800);
+/* ============================================================================
+   JS — progressive enhancement only. Everything below is optional:
+   with scripting off the page still reads and every figure is shown.
+   ========================================================================== */
+(function () {
+  'use strict';
+
+  /* ---------- helpers ---------------------------------------------------- */
+  var $  = function (s, c) { return (c || document).querySelector(s); };
+  var $$ = function (s, c) { return Array.prototype.slice.call((c || document).querySelectorAll(s)); };
+  var clamp = function (v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); };
+  var mq = window.matchMedia ? function (q) { return window.matchMedia(q); } : function () { return { matches: false, addEventListener: function () {} }; };
+  var reduced = mq('(prefers-reduced-motion: reduce)');
+  var finePointer = mq('(hover: hover) and (pointer: fine)');
+  var hasIO = 'IntersectionObserver' in window;
+  var hasRAF = typeof window.requestAnimationFrame === 'function';
+
+  /* thousands separators, always */
+  function fmt(n) {
+    var neg = n < 0; n = Math.abs(Math.round(n));
+    return (neg ? '-' : '') + String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   }
-  function fallbackCopy(){
-    try{
-      var ta = document.createElement('textarea');
-      ta.value = email; ta.style.position = 'fixed'; ta.style.opacity = '0';
-      document.body.appendChild(ta); ta.focus(); ta.select();
-      document.execCommand('copy');
-      document.body.removeChild(ta);
-      done();
-    }catch(e){}
-  }
-  btn.addEventListener('click', function(){
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(email).then(done).catch(fallbackCopy);
-    } else {
-      fallbackCopy();
+
+  /* number tween that respects reduced motion and never runs in a hidden tab */
+  function tween(from, to, ms, done) {
+    if (!hasRAF || reduced.matches || document.hidden || ms <= 0) { done(to); return; }
+    var t0 = performance.now(), id;
+    function frame(now) {
+      var p = clamp((now - t0) / ms, 0, 1);
+      var e = 1 - Math.pow(1 - p, 3);
+      done(from + (to - from) * e);
+      if (p < 1) id = requestAnimationFrame(frame);
     }
-  });
+    id = requestAnimationFrame(frame);
+    document.addEventListener('visibilitychange', function stop() {
+      if (document.hidden) { cancelAnimationFrame(id); done(to); }
+    }, { once: true });
+  }
+
+  /* =======================================================================
+     1. THEME — system preference by default, remembered in localStorage
+     ======================================================================= */
+  (function theme() {
+    var root = document.documentElement;
+    var btn = $('#themeToggle');
+    var meta = $('#themeColor');
+    var KEY = 'broiler-fms-theme';
+
+    function read() {
+      try { return localStorage.getItem(KEY); } catch (e) { return null; }
+    }
+    function write(v) {
+      try { localStorage.setItem(KEY, v); } catch (e) { /* storage blocked — choice just won't persist */ }
+    }
+    function systemDark() {
+      return !!(mq('(prefers-color-scheme: dark)').matches);
+    }
+    function paint() {
+      var chosen = root.getAttribute('data-theme');
+      var dark = chosen ? chosen === 'dark' : systemDark();
+      if (btn) btn.setAttribute('aria-label', dark ? 'Switch to light theme' : 'Switch to dark theme');
+      if (meta) meta.setAttribute('content', dark ? '#17120d' : '#faf6ef');
+    }
+    var stored = read();
+    if (stored === 'dark' || stored === 'light') root.setAttribute('data-theme', stored);
+    paint();
+    if (btn) {
+      btn.addEventListener('click', function () {
+        var chosen = root.getAttribute('data-theme');
+        var dark = chosen ? chosen === 'dark' : systemDark();
+        root.setAttribute('data-theme', dark ? 'light' : 'dark');
+        write(dark ? 'light' : 'dark');
+        paint();
+      });
+    }
+    if (mq('(prefers-color-scheme: dark)').addEventListener) {
+      mq('(prefers-color-scheme: dark)').addEventListener('change', function () {
+        if (!root.getAttribute('data-theme')) paint();
+      });
+    }
+  })();
+
+  /* =======================================================================
+     2. NAV — mobile menu, scroll progress, sticky state, scroll spy
+     ======================================================================= */
+  (function navigation() {
+    var header = $('#siteHeader');
+    var burger = $('#navToggle');
+    var menu = $('#mobileMenu');
+    var closeBtn = $('#menuClose');
+    var bar = $('#progressBar');
+    var links = $$('#navLinks a');
+    var lastFocus = null;
+    var menuOpen = false;
+
+    /* mobile menu */
+    function openMenu() {
+      if (!menu || menuOpen) return;
+      menuOpen = true; lastFocus = document.activeElement;
+      menu.hidden = false;
+      requestAnimationFrame(function () { menu.classList.add('is-open'); });
+      document.body.style.overflow = 'hidden';
+      if (burger) { burger.setAttribute('aria-expanded', 'true'); burger.setAttribute('aria-label', 'Close menu'); }
+      if (closeBtn) closeBtn.focus();
+    }
+    function closeMenu() {
+      if (!menu || !menuOpen) return;
+      menuOpen = false;
+      menu.classList.remove('is-open');
+      document.body.style.overflow = '';
+      if (burger) { burger.setAttribute('aria-expanded', 'false'); burger.setAttribute('aria-label', 'Open menu'); }
+      window.setTimeout(function () { if (!menuOpen) menu.hidden = true; }, 280);
+      if (lastFocus && lastFocus.focus) lastFocus.focus();
+    }
+    if (burger) burger.addEventListener('click', function () { menuOpen ? closeMenu() : openMenu(); });
+    if (closeBtn) closeBtn.addEventListener('click', closeMenu);
+    if (menu) {
+      $$('a, button', menu).forEach(function (el) {
+        el.addEventListener('click', function (e) {
+          if (el.tagName === 'A') { closeMenu(); }
+          if (el.tagName === 'BUTTON' && el === burger) { e.preventDefault(); }
+        });
+      });
+    }
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && menuOpen) { closeMenu(); }
+    });
+    /* close if the layout grows past the mobile breakpoint */
+    var wide = mq('(min-width: 1001px)');
+    if (wide.addEventListener) wide.addEventListener('change', function (e) { if (e.matches) closeMenu(); });
+
+    /* scroll work — one rAF-throttled handler for progress, sticky and spy */
+    var targets = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
+    var ticking = false;
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () {
+        ticking = false;
+        var y = window.pageYOffset || document.documentElement.scrollTop;
+        var docH = document.documentElement.scrollHeight - window.innerHeight;
+        if (bar) bar.style.transform = 'scaleX(' + (docH > 0 ? clamp(y / docH, 0, 1) : 0) + ')';
+        if (header) header.classList.toggle('is-stuck', y > 8);
+
+        var line = (header ? header.offsetHeight : 70) + 100;
+        var active = -1;
+        for (var i = 0; i < targets.length; i++) {
+          if (targets[i] && targets[i].getBoundingClientRect().top <= line) active = i;
+        }
+        if (docH > 0 && y >= docH - 4) active = targets.length - 1;
+        links.forEach(function (a, i) {
+          a.classList.toggle('is-active', i === active);
+          if (i === active) a.setAttribute('aria-current', 'location');
+          else a.removeAttribute('aria-current');
+        });
+
+        if (window.lifeFill) {
+          /* reduced motion: the rail is simply drawn full, not scrubbed */
+          var p = 1;
+          if (!reduced.matches) {
+            var rect = window.lifeWrap.getBoundingClientRect();
+            var total = Math.max(1, rect.height - window.innerHeight * 0.35);
+            p = clamp((window.innerHeight * 0.62 - rect.top) / total, 0, 1);
+          }
+          window.lifeFill.style.transform = 'scaleY(' + p + ')';
+        }
+      });
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    onScroll();
+  })();
+
+  /* =======================================================================
+     3. SCROLL REVEAL — staggered, progressive
+     ======================================================================= */
+  (function reveal() {
+    var items = $$('.reveal, .reveal-scale');
+    if (!items.length) return;
+    var pending = items.slice();
+    function show(el) {
+      el.classList.add('is-in');
+      var i = pending.indexOf(el);
+      if (i > -1) pending.splice(i, 1);
+    }
+    /* deterministic sweep: anything at or above the fold is shown, no observer required */
+    function sweep() {
+      if (!pending.length) return;
+      var limit = window.innerHeight * 0.94;
+      pending.slice().forEach(function (el) {
+        if (el.getBoundingClientRect().top < limit) show(el);
+      });
+    }
+    if (!hasIO || reduced.matches) { items.forEach(show); return; }
+
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { show(e.target); io.unobserve(e.target); }
+      });
+    }, { rootMargin: '0px 0px -4% 0px', threshold: 0.01 });
+    items.forEach(function (el) { io.observe(el); });
+
+    /* belt and braces: a fast scroll can out-run the observer, so sweep on scroll too */
+    var ticking = false;
+    window.addEventListener('scroll', function () {
+      if (ticking || !pending.length) return;
+      ticking = true;
+      requestAnimationFrame(function () { ticking = false; sweep(); });
+    }, { passive: true });
+    window.addEventListener('resize', sweep, { passive: true });
+    sweep();
+    window.setTimeout(sweep, 900);
+    window.setTimeout(sweep, 2600);
+  })();
+
+  /* =======================================================================
+     4. HERO — split headline, count-up stats, mock sync pill, pointer parallax
+     ======================================================================= */
+  (function hero() {
+    /* staggered word reveal */
+    var h1 = $('[data-split]');
+    if (h1 && hasIO && !reduced.matches) {
+      var words = [];
+      Array.prototype.slice.call(h1.childNodes).forEach(function (node) {
+        if (node.nodeType === 3) {
+          node.textContent.split(/\s+/).forEach(function (w) { if (w) words.push(document.createTextNode(w)); });
+        } else if (node.nodeType === 1) {
+          words.push(node);
+        }
+      });
+      h1.textContent = '';
+      words.forEach(function (w, i) {
+        var outer = document.createElement('span');
+        var inner = document.createElement('span');
+        outer.className = 'w';
+        outer.style.setProperty('--d', (130 + i * 95) + 'ms');
+        inner.appendChild(w);
+        outer.appendChild(inner);
+        h1.appendChild(outer);
+        h1.appendChild(document.createTextNode(' '));
+      });
+    }
+
+    /* count-up for the factual figures only */
+    var stats = $$('[data-count]');
+    if (stats.length) {
+      var run = function (el) {
+        var to = parseFloat(el.getAttribute('data-count')) || 0;
+        var prefix = el.getAttribute('data-prefix') || '';
+        if (reduced.matches || !hasRAF) { el.textContent = prefix + fmt(to); return; }
+        tween(0, to, 850, function (v) { el.textContent = prefix + fmt(v); });
+      };
+      if (!hasIO) { stats.forEach(run); }
+      else {
+        var io2 = new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) {
+            if (e.isIntersecting) { run(e.target); io2.unobserve(e.target); }
+          });
+        }, { threshold: 0.4 });
+        stats.forEach(function (el) { io2.observe(el); });
+      }
+    }
+
+    /* the mock sync pill: offline/pending <-> synced, only while visible */
+    var showcase = $('#showcase');
+    var pill = $('#mockPill');
+    var pillText = $('#mockPillText');
+    var mark = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    mark.setAttribute('width', '11'); mark.setAttribute('height', '11');
+    mark.setAttribute('viewBox', '0 0 24 24'); mark.setAttribute('fill', 'none');
+    mark.setAttribute('aria-hidden', 'true');
+    var mp = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    mp.setAttribute('d', 'M4.5 12.5l4.6 4.6L19.5 6.5');
+    mp.setAttribute('stroke', 'currentColor'); mp.setAttribute('stroke-width', '2.6');
+    mp.setAttribute('stroke-linecap', 'round'); mp.setAttribute('stroke-linejoin', 'round');
+    mark.appendChild(mp);
+    var down = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    down.setAttribute('width', '11'); down.setAttribute('height', '11');
+    down.setAttribute('viewBox', '0 0 24 24'); down.setAttribute('fill', 'none');
+    down.setAttribute('aria-hidden', 'true');
+    var dp = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    dp.setAttribute('d', 'M12 4v9m0 0l-3.2-3.2M12 13l3.2-3.2M5 19h14');
+    dp.setAttribute('stroke', 'currentColor'); dp.setAttribute('stroke-width', '2.4');
+    dp.setAttribute('stroke-linecap', 'round'); dp.setAttribute('stroke-linejoin', 'round');
+    down.appendChild(dp);
+
+    if (pill && pillText) {
+      if (reduced.matches) {
+        /* show the settled state instead of a loop */
+        pill.className = 'pill on';
+        pillText.textContent = 'Synced';
+        pill.replaceChild(mark, pill.firstElementChild);
+      } else {
+        var visible = !hasIO, timer = null;
+        if (hasIO) {
+          new IntersectionObserver(function (entries) {
+            visible = entries[0].isIntersecting;
+            sync();
+          }, { threshold: 0.05 }).observe(showcase);
+        }
+        function sync() {
+          var running = visible && !document.hidden;
+          if (!running) { window.clearInterval(timer); timer = null; return; }
+          if (timer) return;
+          timer = window.setInterval(function () {
+            var offline = pill.classList.contains('off');
+            pill.className = offline ? 'pill on' : 'pill off';
+            pillText.textContent = offline ? 'Synced' : '3 pending · Offline';
+            pill.replaceChild(offline ? mark : down, pill.firstElementChild);
+          }, 3400);
+        }
+        sync();
+      }
+    }
+
+    /* gentle pointer parallax — fine pointers, no reduced motion, no offscreen work */
+    var stage = $('#stage');
+    var phone = $('.phone', stage);
+    var floats = $$('.float', stage);
+    if (stage && finePointer.matches && !reduced.matches && floats.length) {
+      var onMove = function (e) {
+        var r = stage.getBoundingClientRect();
+        var dx = (e.clientX - (r.left + r.width / 2)) / r.width;
+        var dy = (e.clientY - (r.top + r.height / 2)) / r.height;
+        floats.forEach(function (f) {
+          var d = parseFloat(f.getAttribute('data-depth')) || 20;
+          f.style.transform = 'translate3d(' + (dx * d).toFixed(2) + 'px,' + (dy * d * 0.7).toFixed(2) + 'px,0)';
+        });
+        if (phone) phone.style.transform = 'translate3d(' + (dx * -8).toFixed(2) + 'px,' + (dy * -6).toFixed(2) + 'px,0) rotate(' + (dx * 1.4).toFixed(2) + 'deg)';
+      };
+      var onLeave = function () {
+        floats.forEach(function (f) { f.style.transform = ''; });
+        if (phone) phone.style.transform = '';
+      };
+      stage.addEventListener('pointermove', onMove);
+      stage.addEventListener('pointerleave', onLeave);
+    }
+  })();
+
+  /* =======================================================================
+     5. OFFSCREEN PAUSE — loops stop when scrolled away or tab hidden
+     ======================================================================= */
+  (function pauseOffscreen() {
+    var loops = ['#capabilities', '#showcase', '#ctaPanel'];
+    var nodes = loops.map(function (s) { return $(s); }).filter(Boolean);
+    if (!nodes.length) return;
+    function set(off) { nodes.forEach(function (n) { n.classList.toggle('is-off', off); }); }
+    if (hasIO) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) { e.target.classList.toggle('is-off', !e.isIntersecting); });
+      }, { threshold: 0 });
+      nodes.forEach(function (n) { io.observe(n); });
+    }
+    document.addEventListener('visibilitychange', function () { if (document.hidden) set(true); });
+  })();
+
+  /* =======================================================================
+     6. BENTO SPOTLIGHT — cursor position, fine pointers only
+     ======================================================================= */
+  (function spotlight() {
+    if (!finePointer.matches || reduced.matches) return;
+    $$('.bento__card').forEach(function (card) {
+      card.addEventListener('pointermove', function (e) {
+        var r = card.getBoundingClientRect();
+        card.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100).toFixed(1) + '%');
+        card.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100).toFixed(1) + '%');
+      });
+    });
+  })();
+
+  /* =======================================================================
+     7. ROLE EXPLORER — ARIA tabs with arrow-key support
+     ======================================================================= */
+  (function roleTabs() {
+    var list = $('#roleTabs');
+    if (!list) return;
+    var tabs = $$('[role="tab"]', list);
+    if (!tabs.length) return;
+    var panels = tabs.map(function (t) { return document.getElementById(t.getAttribute('aria-controls')); });
+
+    function select(i, focus) {
+      tabs.forEach(function (t, j) {
+        t.setAttribute('aria-selected', j === i ? 'true' : 'false');
+        t.tabIndex = j === i ? 0 : -1;
+      });
+      panels.forEach(function (p, j) {
+        if (!p) return;
+        p.hidden = j !== i;
+        if (j === i && !reduced.matches) {
+          p.classList.remove('is-swap');
+          void p.offsetWidth;
+          p.classList.add('is-swap');
+        }
+      });
+      if (focus && tabs[i]) tabs[i].focus();
+    }
+    tabs.forEach(function (t, i) {
+      t.addEventListener('click', function () { select(i, false); });
+    });
+    list.addEventListener('keydown', function (e) {
+      var i = tabs.indexOf(document.activeElement);
+      if (i < 0) return;
+      var next = null;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = (i + 1) % tabs.length;
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = (i - 1 + tabs.length) % tabs.length;
+      else if (e.key === 'Home') next = 0;
+      else if (e.key === 'End') next = tabs.length - 1;
+      if (next === null) return;
+      e.preventDefault();
+      select(next, true);
+    });
+  })();
+
+  /* =======================================================================
+     8. BREAK-EVEN DEMO — the app's exact rule
+        (total expenses − revenue collected) ÷ birds still to harvest,
+      dead birds excluded from the denominator, clamped at ₦0, "—" when
+      no birds remain to price.
+     ======================================================================= */
+  (function breakEven() {
+    var start = $('#mStart'), mort = $('#mMort'), harv = $('#mHarvest'),
+        exp = $('#mExpenses'), rev = $('#mRevenue');
+    if (!start || !mort || !harv || !exp || !rev) return;
+    var oStart = $('#mStartOut'), oMort = $('#mMortOut'), oHarv = $('#mHarvestOut');
+    var out = $('#mOut'), note = $('#mNote'), left = $('#mLeft'), unpaid = $('#mUnpaid');
+
+    function calc() {
+      var s = clamp(parseInt(start.value, 10) || 0, 50, 5000);
+      var m = clamp(parseInt(mort.value, 10) || 0, 0, s);
+      var h = clamp(parseInt(harv.value, 10) || 0, 0, s - m);
+      var e = Math.max(0, parseFloat(exp.value) || 0);
+      var r = Math.max(0, parseFloat(rev.value) || 0);
+
+      mort.max = String(s);
+      harv.max = String(Math.max(0, s - m));
+      if (oStart) oStart.textContent = fmt(s);
+      if (oMort) oMort.textContent = fmt(m);
+      if (oHarv) oHarv.textContent = fmt(h);
+
+      var remaining = s - m - h;
+      var owed = e - r;
+      if (left) left.textContent = fmt(Math.max(0, remaining));
+      if (unpaid) unpaid.textContent = '₦' + fmt(Math.max(0, owed));
+
+      if (remaining <= 0) {
+        out.textContent = '—';
+        out.classList.remove('is-zero');
+        note.textContent = 'No birds left to harvest — mortality plus harvest accounts for the whole flock, so there is nothing left to price.';
+        return;
+      }
+      if (owed <= 0) {
+        out.innerHTML = '&#8358;0<small>' + (owed < 0 ? 'already profitable' : 'expenses covered') + '</small>';
+        out.classList.add('is-zero');
+        note.textContent = owed < 0
+          ? 'Revenue collected already exceeds every expense, so the batch is profitable and the break-even price is clamped at ₦0 rather than shown as a negative figure.'
+          : 'Revenue collected has exactly covered the expenses, so there is nothing left to recover and the break-even price sits at ₦0.';
+        return;
+      }
+      out.textContent = '₦' + fmt(owed / remaining);
+      out.classList.remove('is-zero');
+      note.textContent = '₦' + fmt(owed) + ' still to recover, spread across the ' + fmt(remaining) + ' bird' + (remaining === 1 ? '' : 's') + ' still to harvest.';
+    }
+    [start, mort, harv, exp, rev].forEach(function (el) {
+      el.addEventListener('input', calc);
+      el.addEventListener('change', calc);
+    });
+    calc();
+  })();
+
+  /* =======================================================================
+     9. OFFLINE SYNC DEMO — queue on device, flush on reconnect
+     ======================================================================= */
+  (function syncDemo() {
+    var sw = $('#netSwitch'), pill = $('#netPill'), pillText = $('#netPillText'),
+        label = $('#netLabel'), count = $('#pendingCount'), countLabel = $('#pendingLabel'),
+        sub = $('#pendingSub'), rec = $('#recBtn'), syncBtn = $('#syncBtn'),
+        reset = $('#resetBtn'), queue = $('#queueList');
+    if (!sw || !queue) return;
+
+    var online = false, pending = 0, serial = 0, busy = false;
+
+    function setPill(kind, text) {
+      pill.className = 'pill ' + kind;
+      pillText.textContent = text;
+    }
+    function render() {
+      count.textContent = fmt(pending);
+      countLabel.textContent = pending === 1 ? 'entry pending' : 'entries pending';
+      sub.textContent = pending === 0
+        ? (online ? 'Everything is on the server' : 'Saved on this device, waiting for signal')
+        : 'Saved on this device, waiting for signal';
+    }
+    function emptyRow() {
+      var li = document.createElement('li');
+      li.className = 'queue__empty';
+      li.textContent = online ? 'Queue empty — every entry is already on the server.' : 'Queue empty. Go offline and record something to see it wait.';
+      return li;
+    }
+    function addRow(text) {
+      if ($('.queue__empty', queue)) queue.innerHTML = '';
+      var li = document.createElement('li');
+      li.innerHTML = '<span class="qi" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></span>'
+        + '<b>' + text + '</b><small>just now</small>';
+      queue.appendChild(li);
+      while (queue.children.length > 5) queue.removeChild(queue.firstElementChild);
+      return li;
+    }
+    function flush() {
+      if (busy || pending === 0) {
+        if (online && pending === 0) setPill('on', 'Online · nothing waiting to sync');
+        return;
+      }
+      busy = true;
+      if (syncBtn) syncBtn.disabled = true;
+      if (rec) rec.disabled = true;
+      setPill('on', 'Syncing the queue…');
+      window.setTimeout(function () {
+        tween(pending, 0, 700, function (v) {
+          pending = Math.round(v);
+          render();
+          if (pending === 0) {
+            busy = false;
+            queue.innerHTML = '';
+            queue.appendChild(emptyRow());
+            setPill('on', 'All entries synced · 0 pending');
+            if (syncBtn) syncBtn.disabled = true;
+            if (rec) rec.disabled = false;
+          }
+        });
+      }, 650);
+    }
+    function setNet(next) {
+      online = next;
+      sw.setAttribute('aria-checked', next ? 'true' : 'false');
+      sw.setAttribute('aria-label', 'Network connection: ' + (next ? 'online' : 'offline'));
+      label.textContent = next ? 'Online' : 'Offline';
+      if (next) setPill('on', pending ? 'Connection restored · syncing…' : 'Online · nothing waiting to sync');
+      else setPill('off', 'Offline · nothing can sync yet');
+      if (syncBtn) syncBtn.disabled = !next || pending === 0;
+      render();
+      if (next) flush();
+    }
+
+    rec.addEventListener('click', function () {
+      serial += 1;
+      if (online) {
+        var row = addRow('Mortality · Batch 3');
+        setPill('on', 'Saved online · synced immediately');
+        window.setTimeout(function () {
+          row.classList.add('is-synced');
+          row.classList.add('is-leaving');
+          window.setTimeout(function () {
+            if (row.parentNode) row.parentNode.removeChild(row);
+            if (!queue.children.length) queue.appendChild(emptyRow());
+          }, 400);
+        }, 700);
+        return;
+      }
+      pending += 1;
+      addRow('Mortality · Batch 3 · entry ' + serial);
+      count.classList.remove('is-bump');
+      void count.offsetWidth;
+      count.classList.add('is-bump');
+      setPill('off', pending + (pending === 1 ? ' entry pending · Offline' : ' entries pending · Offline'));
+      render();
+      if (syncBtn) syncBtn.disabled = true;
+    });
+
+    syncBtn.addEventListener('click', function () { if (online) flush(); });
+    sw.addEventListener('click', function () { setNet(!online); });
+    reset.addEventListener('click', function () {
+      pending = 0; busy = false; queue.innerHTML = '';
+      queue.appendChild(emptyRow());
+      if (rec) rec.disabled = false;
+      setNet(false);
+    });
+
+    queue.appendChild(emptyRow());
+    render();
+    setNet(false);
+  })();
+
+  /* =======================================================================
+     10. LIFECYCLE — steps light up as they enter, rail fills with scroll
+     ======================================================================= */
+  (function lifecycle() {
+    var wrap = $('#lifeWrap'), fill = $('#lifeFill');
+    if (!wrap || !fill) return;
+    window.lifeWrap = wrap; window.lifeFill = fill;
+    var steps = $$('.lifestep', wrap);
+    if (hasIO && steps.length) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) { e.target.classList.toggle('is-active', e.isIntersecting); });
+      }, { rootMargin: '-45% 0px -45% 0px', threshold: 0 });
+      steps.forEach(function (s) { io.observe(s); });
+    }
+  })();
+
+  /* =======================================================================
+     11. COPY EMAIL — clipboard API with a fallback for older browsers
+     ======================================================================= */
+  (function copyEmail() {
+    var btn = $('#copyEmailBtn');
+    if (!btn) return;
+    var text = btn.querySelector('span') || btn;
+    var email = 'aah2200819.swe@buk.edu.ng';
+    var timer = null;
+    function done() {
+      text.textContent = 'Copied';
+      btn.classList.add('copied');
+      btn.setAttribute('aria-label', 'Email address copied');
+      window.clearTimeout(timer);
+      timer = window.setTimeout(function () {
+        text.textContent = 'Copy email';
+        btn.classList.remove('copied');
+        btn.setAttribute('aria-label', 'Copy the access-request email address');
+      }, 1800);
+    }
+    function fallbackCopy() {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = email; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.focus(); ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        done();
+      } catch (e) { /* nothing else we can do */ }
+    }
+    btn.addEventListener('click', function () {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(email).then(done).catch(fallbackCopy);
+      } else {
+        fallbackCopy();
+      }
+    });
+  })();
 })();
 </script>
-
+</body>
+</html>
