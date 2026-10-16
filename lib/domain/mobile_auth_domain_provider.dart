@@ -38,5 +38,8 @@ final authDomainProvider = Provider<AuthDomain>((ref) {
       // second copy of it drifting out of step.
       await ref.read(pullServiceProvider).pullAll();
     },
+    allowedRoles: const ['manager', 'staff'],
+    wrongAppMessage:
+        'This account is for the web app. Please log in on the web.',
   );
 });

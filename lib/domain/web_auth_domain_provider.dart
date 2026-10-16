@@ -11,5 +11,8 @@ final authDomainProvider = Provider<AuthDomain>((ref) {
   return AuthDomain(
     supabase: ref.watch(supabaseClientProvider),
     onLoginSuccess: () async {},
+    allowedRoles: const ['super_admin', 'admin'],
+    wrongAppMessage:
+        'This account is for the mobile app. Please log in on the phone app.',
   );
 });

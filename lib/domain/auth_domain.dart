@@ -15,12 +15,19 @@ class AuthDomain {
   AuthDomain({
     required SupabaseClient supabase,
     required Future<void> Function() onLoginSuccess,
+    required List<String> allowedRoles,
+    required String wrongAppMessage,
   })
       : _supabase = supabase,
-        _onLoginSuccess = onLoginSuccess;
+        _onLoginSuccess = onLoginSuccess,
+        _allowedRoles = allowedRoles,
+        _wrongAppMessage = wrongAppMessage;
 
   final SupabaseClient _supabase;
   final Future<void> Function() _onLoginSuccess;
+  // Roles this app accepts, and the message shown for any other role.
+  final List<String> _allowedRoles;
+  final String _wrongAppMessage;
 
   Future<void> sendLoginCode(String email) async {
     try {
@@ -38,6 +45,14 @@ class AuthDomain {
         throw const DomainException(
           'No account was found for this email. Contact your Admin for help.',
         );
+      }
+      // An account that belongs to the other app never gets a code.
+      final role = await _supabase.rpc(
+        'check_account_login_role',
+        params: {'p_email': email},
+      ) as String?;
+      if (role != null && !_allowedRoles.contains(role)) {
+        throw DomainException(_wrongAppMessage);
       }
       // 'active' and 'pending' accounts continue to the code request.
       await _supabase.auth.signInWithOtp(email: email);

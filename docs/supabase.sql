@@ -1018,6 +1018,29 @@ as $$
 $$;
 
 -- ============================================================
+-- Returns the role stored for an email, or null when no account
+-- exists. Lets the login screen refuse an OTP when the account
+-- belongs to the other app (web: super_admin and admin, mobile:
+-- manager and staff). Same accepted tradeoff as
+-- check_account_login_status: a caller can learn whether an
+-- email exists.
+-- ============================================================
+
+
+create or replace function public.check_account_login_role(p_email text)
+returns text
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select role from public.account where lower(email) = lower(p_email) limit 1;
+$$;
+
+
+grant execute on function public.check_account_login_role(text) to anon, authenticated;
+
+-- ============================================================
 -- New: lets an already-signed-in client periodically check "is
 -- my session still valid right now," without re-running the
 -- whole login flow. Feeds the force-logout polling timer.
