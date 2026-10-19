@@ -10,6 +10,7 @@ import 'package:broiler_fms/domain/models/batch.dart';
 import 'package:broiler_fms/domain/rules/batch_list_rule.dart';
 import 'package:broiler_fms/presentation/mobile/home/batch_card.dart';
 import 'package:broiler_fms/presentation/mobile/home/closed_batches_section.dart';
+import 'package:broiler_fms/presentation/shared/sync_action.dart';
 import 'package:broiler_fms/presentation/shared/theme/app_theme.dart';
 import 'package:broiler_fms/presentation/shared/widgets/confirm_dialog.dart';
 import 'package:broiler_fms/presentation/mobile/widgets/sync_now_button.dart';
@@ -162,36 +163,35 @@ final _visibleBatchesProvider = StreamProvider.autoDispose<List<Batch>>((
   return (open: groups.open, past: groups.closed);
 }
 
-/// Pull-to-refresh for the batch list, identical for both roles.
+/// Pull-to-refresh for the batch list.
 ///
-/// Goes through [AutoPullTrigger.refreshNow], so it drains the push queue
-/// before pulling exactly as every other automatic pass does, and joins a
-/// pull already running instead of starting a second one. The throttle is
-/// skipped: somebody who has just dragged the list down is not going to
-/// be told to wait a minute.
+/// Exactly the same action as the Sync now button in the AppBar above it.
+/// Both go through [performManualSync], so both drain the push queue,
+/// pull, join a run already in flight rather than starting a second one,
+/// and end up at [manualSyncMessage] for their words. There is no second
+/// code path to keep in step, which is the whole reason this file used to
+/// disagree with the button — it turned every "did not run" into a
+/// no-internet snackbar, including when a periodic pull was already going.
 ///
-/// [isStaff] is threaded through only so a failure can be worded the same
-/// way for either role; the pull itself has no role logic at all.
-Future<void> _refresh(WidgetRef ref, {required bool isStaff}) async {
-  final messenger = ScaffoldMessenger.maybeOf(ref.context);
-  final result = await ref.read(autoPullTriggerProvider).refreshNow();
-  // Null means the run never reached a pull (nothing signed in, or one
-  // already in flight and this joined it). A result whose every table
-  // failed means it ran and could not land.
-  final failed = result == null ||
-      result.errors.length >= result.tablesPulled;
-  if (!failed || messenger == null) return;
-  messenger
-    ..hideCurrentSnackBar()
-    ..showSnackBar(
-      // Same wording the login flow uses, so "no internet" reads the
-      // same wherever somebody meets it.
-      const SnackBar(
-        content: Text(
-          'No internet connection. Check your network and try again.',
-        ),
-      ),
-    );
+/// No connectivity check decides whether to try. `connectivity_plus`
+/// reports radio status rather than whether a request will get through,
+/// so gating a sync on it refused syncs that would have worked and told
+/// people they were offline when they were not. What the request did is
+/// the signal.
+///
+/// Identical for both roles. There is no role logic in syncing at all:
+/// Row Level Security decides what each account receives on the pull.
+///
+/// The RefreshIndicator stays up until this future completes, so the
+/// person sees the spinner for the whole of the shared action and only
+/// then gets its message.
+Future<void> _refresh(WidgetRef ref) async {
+  final outcome = await performManualSync(
+    ref,
+    isMounted: () => ref.context.mounted,
+  );
+  if (!ref.context.mounted) return;
+  saySyncMessage(ref.context, manualSyncMessage(outcome));
 }
 
 /// Home screen: a list of batches, filtered by role. Manager also sees
@@ -289,7 +289,7 @@ class BatchListScreen extends ConsumerWidget {
                   // is most likely to drag for an answer, so it gets the
                   // same indicator as a full one.
                   return RefreshIndicator(
-                    onRefresh: () => _refresh(ref, isStaff: isStaff),
+                    onRefresh: () => _refresh(ref),
                     child: ListView(
                       physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.fromLTRB(16, 120, 16, 96),
@@ -321,7 +321,7 @@ class BatchListScreen extends ConsumerWidget {
                   // refresh identically. AlwaysScrollable keeps it
                   // working when the list is empty or too short to
                   // scroll on its own.
-                  onRefresh: () => _refresh(ref, isStaff: isStaff),
+                  onRefresh: () => _refresh(ref),
                   child: ListView(
                     // AlwaysScrollableScrollPhysics: a list with one or
                     // two cards, or none at all, must still respond to a

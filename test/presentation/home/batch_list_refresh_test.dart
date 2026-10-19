@@ -169,6 +169,8 @@ void main() {
 
   const noInternet =
       'No internet connection. Check your network and try again.';
+  const couldNotReachServer =
+      "Couldn't reach the server. We'll sync when you're back online.";
 
   /// Runs [body] once per role, over the same data, so the two can be
   /// compared directly.
@@ -216,7 +218,7 @@ void main() {
     h.pull.gate = Completer<void>();
     await mount(tester, role: role, trigger: h.trigger);
 
-    unawaited(h.trigger.refreshNow());
+    unawaited(h.trigger.syncNow());
     await tester.pump();
     expect(h.trigger.isRunning, isTrue);
 
@@ -229,7 +231,11 @@ void main() {
     h.trigger.dispose();
   });
 
-  forBothRoles('a failed pull shows the no-internet snackbar',
+  // Was: "a failed pull shows the no-internet snackbar". That assertion
+  // was the bug. Every table failing is a statement about the result, not
+  // about the radio, and the old wording claimed the device was offline
+  // while the pill next to it said otherwise.
+  forBothRoles('a failed pull does not claim the device is offline',
       (tester, role) async {
     final h = harness();
     h.pull.failEverything = true;
@@ -237,18 +243,25 @@ void main() {
 
     await dragToRefresh(tester);
 
-    expect(find.text(noInternet), findsOneWidget);
+    expect(find.text(noInternet), findsNothing,
+        reason: 'a failed pull is not evidence about the network');
+    expect(find.text(couldNotReachServer), findsOneWidget);
     await unmount(tester);
     h.trigger.dispose();
   });
 
-  forBothRoles('a successful pull shows no snackbar', (tester, role) async {
+  // Was: "a successful pull shows no snackbar". Pull-to-refresh now
+  // reports the same way the Sync now button does, so a completed sync
+  // says what it did instead of leaving the person to guess.
+  forBothRoles('a successful pull reports the same as the button',
+      (tester, role) async {
     final h = harness();
     await mount(tester, role: role, trigger: h.trigger);
 
     await dragToRefresh(tester);
 
     expect(find.text(noInternet), findsNothing);
+    expect(find.text('Already up to date.'), findsOneWidget);
     await unmount(tester);
     h.trigger.dispose();
   });
