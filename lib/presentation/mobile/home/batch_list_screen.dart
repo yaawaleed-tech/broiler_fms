@@ -162,6 +162,38 @@ final _visibleBatchesProvider = StreamProvider.autoDispose<List<Batch>>((
   return (open: groups.open, past: groups.closed);
 }
 
+/// Pull-to-refresh for the batch list, identical for both roles.
+///
+/// Goes through [AutoPullTrigger.refreshNow], so it drains the push queue
+/// before pulling exactly as every other automatic pass does, and joins a
+/// pull already running instead of starting a second one. The throttle is
+/// skipped: somebody who has just dragged the list down is not going to
+/// be told to wait a minute.
+///
+/// [isStaff] is threaded through only so a failure can be worded the same
+/// way for either role; the pull itself has no role logic at all.
+Future<void> _refresh(WidgetRef ref, {required bool isStaff}) async {
+  final messenger = ScaffoldMessenger.maybeOf(ref.context);
+  final result = await ref.read(autoPullTriggerProvider).refreshNow();
+  // Null means the run never reached a pull (nothing signed in, or one
+  // already in flight and this joined it). A result whose every table
+  // failed means it ran and could not land.
+  final failed = result == null ||
+      result.errors.length >= result.tablesPulled;
+  if (!failed || messenger == null) return;
+  messenger
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      // Same wording the login flow uses, so "no internet" reads the
+      // same wherever somebody meets it.
+      const SnackBar(
+        content: Text(
+          'No internet connection. Check your network and try again.',
+        ),
+      ),
+    );
+}
+
 /// Home screen: a list of batches, filtered by role. Manager also sees
 /// a button to register a new batch, Staff does not.
 class BatchListScreen extends ConsumerWidget {
@@ -253,7 +285,28 @@ class BatchListScreen extends ConsumerWidget {
                   Center(child: Text('Could not load batches: $error')),
               data: (batches) {
                 if (batches.isEmpty) {
-                  return const Center(child: Text('No batches yet.'));
+                  // Still pullable. An empty list is exactly when somebody
+                  // is most likely to drag for an answer, so it gets the
+                  // same indicator as a full one.
+                  return RefreshIndicator(
+                    onRefresh: () => _refresh(ref, isStaff: isStaff),
+                    child: ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(16, 120, 16, 96),
+                      children: [
+                        Center(
+                          child: Text(
+                            'No batches yet.',
+                            style: TextStyle(
+                              fontFamily: 'PublicSans',
+                              fontSize: 15,
+                              color: AppColors.inkMuted,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
                 }
                 // Open newest first in the main list, closed newest first
                 // in the collapsible section. The stream emits a
@@ -262,32 +315,44 @@ class BatchListScreen extends ConsumerWidget {
                 // needed.
                 final groups =
                     _splitForRole(batches, isStaff: isStaff);
-                return ListView(
-                  // Deep bottom padding so the floating "New batch"
-                  // button never covers the last card, even with the
-                  // closed section expanded.
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-                  children: [
-                    for (final batch in groups.open) ...[
-                      BatchCard(batch: batch),
-                      const SizedBox(height: 10),
-                    ],
-                    if (groups.open.isEmpty && groups.past.isNotEmpty)
-                      const Padding(
-                        padding: EdgeInsets.only(bottom: 10),
-                        child: Center(
-                          child: Text(
-                            'No open batches. Tap New batch to register one.',
+                return RefreshIndicator(
+                  // Added here, above the single ListView both roles
+                  // share, so a Manager and a Staff member drag to
+                  // refresh identically. AlwaysScrollable keeps it
+                  // working when the list is empty or too short to
+                  // scroll on its own.
+                  onRefresh: () => _refresh(ref, isStaff: isStaff),
+                  child: ListView(
+                    // AlwaysScrollableScrollPhysics: a list with one or
+                    // two cards, or none at all, must still respond to a
+                    // pull from the top.
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    // Deep bottom padding so the floating "New batch"
+                    // button never covers the last card, even with the
+                    // closed section expanded.
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+                    children: [
+                      for (final batch in groups.open) ...[
+                        BatchCard(batch: batch),
+                        const SizedBox(height: 10),
+                      ],
+                      if (groups.open.isEmpty && groups.past.isNotEmpty)
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 10),
+                          child: Center(
+                            child: Text(
+                              'No open batches. Tap New batch to register one.',
+                            ),
                           ),
                         ),
-                      ),
-                    if (groups.past.isNotEmpty)
-                      ClosedBatchesSection(
-                        closed: groups.past,
-                        startExpanded: groups.open.isEmpty,
-                        readOnly: isStaff,
-                      ),
-                  ],
+                      if (groups.past.isNotEmpty)
+                        ClosedBatchesSection(
+                          closed: groups.past,
+                          startExpanded: groups.open.isEmpty,
+                          readOnly: isStaff,
+                        ),
+                    ],
+                  ),
                 );
               },
             ),

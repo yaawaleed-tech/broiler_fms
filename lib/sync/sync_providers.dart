@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:broiler_fms/data/local/database_provider.dart';
 import 'package:broiler_fms/data/local/local_sync_queue_repository.dart';
 import 'package:broiler_fms/data/remote/supabase_provider.dart';
+import 'package:broiler_fms/domain/current_account_domain.dart';
 
 import 'pull_service.dart';
 import 'pushers/batch_pusher.dart';
@@ -105,10 +106,22 @@ final connectivitySyncTriggerProvider =
   return trigger;
 });
 
+/// How long the automatic pull waits for the account behind a restored
+/// session to become readable before giving up on that run.
+///
+/// Twelve seconds: comfortably longer than reading the local account
+/// cache, which is one row already on the device, and short enough that a
+/// session that will never resolve does not stall the phone. A run that
+/// reaches it is skipped, not failed.
+const _accountReadyTimeout = Duration(seconds: 12);
+
 /// Drains and then pulls automatically on app start, on app resume, and
 /// when the network comes back — one throttle and one in-flight guard
 /// shared by all three, so a phone waking up offline does not fire three
 /// passes when it reconnects.
+///
+/// A periodic pull joins them, so a row somebody else recorded arrives
+/// while the app is open rather than on the next cold start.
 ///
 /// Identical for every role: what each account receives is decided by RLS
 /// on the pull, and the only condition this trigger applies is that
@@ -130,6 +143,23 @@ final autoPullTriggerProvider = Provider<AutoPullTrigger>((ref) {
     ref.watch(syncServiceProvider),
     ref.watch(pullServiceProvider),
     hasAccount: () => client.auth.currentUser != null,
+    // Read, never watched: watching the account would rebuild this
+    // provider — and dispose the live trigger — on every invalidation of
+    // it, including the ones sign-out causes. Reading it inside the
+    // trigger's own wait keeps the instance alive and still makes the
+    // first pull wait for the account to be readable.
+    accountReady: () async {
+      try {
+        final account = await ref
+            .read(currentAccountProvider.future)
+            .timeout(_accountReadyTimeout);
+        return account != null;
+      } catch (_) {
+        // An error, or an account that never arrives, simply means this
+        // run is skipped. The next trigger tries again.
+        return false;
+      }
+    },
   );
   trigger.start();
   ref.onDispose(trigger.dispose);
