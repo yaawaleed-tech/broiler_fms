@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:broiler_fms/domain/web_auth_domain_provider.dart';
 import 'package:broiler_fms/domain/domain_exception.dart';
 import 'package:broiler_fms/presentation/shared/theme/app_theme.dart';
+import 'package:broiler_fms/presentation/shared/widgets/loading_button_content.dart';
 import 'package:broiler_fms/presentation/shared/widgets/notice_banner.dart';
 
 /// First login screen for web: email, then a 6-digit code is sent.
@@ -153,18 +154,19 @@ class _EmailScreenState extends ConsumerState<EmailScreen> {
                     ],
                     const SizedBox(height: 24),
                     ElevatedButton(
-                      onPressed: _isSending ? null : _sendCode,
+                      onPressed: busyGuard(_sendCode, _isSending),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFA8442A), // Terracotta/rust
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                      child: _isSending
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                            )
-                          : const Text('Send login code', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      child: ButtonLoadingContent(
+                        label: 'Send login code',
+                        loading: _isSending,
+                        labelStyle: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 16),
                     const Text(

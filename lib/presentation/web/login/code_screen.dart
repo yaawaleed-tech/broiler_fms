@@ -7,6 +7,7 @@ import 'package:broiler_fms/domain/web_auth_domain_provider.dart';
 import 'package:broiler_fms/domain/web_current_account_domain.dart';
 import 'package:broiler_fms/domain/domain_exception.dart';
 import 'package:broiler_fms/presentation/shared/theme/app_theme.dart';
+import 'package:broiler_fms/presentation/shared/widgets/loading_button_content.dart';
 
 class CodeScreen extends ConsumerStatefulWidget {
   const CodeScreen({super.key, required this.email});
@@ -218,18 +219,16 @@ class _CodeScreenState extends ConsumerState<CodeScreen> {
                   ],
                   const SizedBox(height: 32),
                   ElevatedButton(
-                    onPressed: _isVerifying ? null : _verifyCode,
+                    onPressed: busyGuard(_verifyCode, _isVerifying),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFA8442A),
                       minimumSize: const Size(double.infinity, 50),
                     ),
-                    child: _isVerifying
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                          )
-                        : const Text('Verify and sign in', style: TextStyle(color: Colors.white)),
+                    child: ButtonLoadingContent(
+                      label: 'Verify and sign in',
+                      loading: _isVerifying,
+                      labelStyle: const TextStyle(color: Colors.white),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   TextButton(

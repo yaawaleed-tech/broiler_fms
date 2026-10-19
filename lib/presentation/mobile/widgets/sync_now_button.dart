@@ -9,20 +9,15 @@ import 'package:broiler_fms/sync/pull_service.dart';
 import 'package:broiler_fms/sync/sync_providers.dart';
 import 'package:broiler_fms/sync/sync_result.dart';
 
-/// The mobile app's manual "Sync now" action: one widget, branching by
-/// role, because what each role needs from a sync is genuinely
-/// different.
+/// The mobile app's manual "Sync now" action, the same for every role:
+/// it pushes the waiting entries, then pulls the data the signed-in
+/// account is allowed to see. Row Level Security decides what each
+/// role receives, so the button needs no role logic of its own.
 ///
-/// **Staff push only.** They record entries against the batches they
-/// are assigned to and read nothing they did not write themselves, so
-/// there is nothing for a pull to bring them. Everything they have
-/// pending goes up and the job is done.
-///
-/// **Manager pushes, then pulls.** A Manager runs the farm from the
-/// same kind of phone but needs to see what Staff have recorded on
-/// their own devices, and the login pull is the only thing that ever
-/// brought that down. This button is that same pull, on demand, so a
-/// Manager can refresh without signing out and back in.
+/// Staff receive the batches assigned to them and the entries on those
+/// batches, so a Staff member sees a newly assigned batch without
+/// signing out and back in. A Manager receives every batch of the
+/// business, including what Staff have recorded on their own devices.
 ///
 /// The drain is awaited rather than fired and forgotten like the
 /// automatic triggers: this action is user-initiated, so it reports its
@@ -57,7 +52,6 @@ class _SyncNowButtonState extends ConsumerState<SyncNowButton> {
     if (_busy) return;
     final account = ref.read(currentAccountProvider).value;
     if (account == null) return;
-    final isManager = account.role == 'manager';
 
     // Deliberately no connectivity_plus check before this point. That
     // plugin reports radio/interface status, not whether a request will
@@ -78,9 +72,7 @@ class _SyncNowButtonState extends ConsumerState<SyncNowButton> {
       // drain() joins a pass already in flight rather than starting a
       // second one, so a tap during the debounced auto-drain is safe.
       pushResult = await ref.read(syncServiceProvider).drain();
-      if (isManager) {
-        pullResult = await ref.read(pullServiceProvider).pullAll();
-      }
+      pullResult = await ref.read(pullServiceProvider).pullAll();
     } catch (e) {
       if (mounted) {
         setState(() => _busy = false);
@@ -91,13 +83,13 @@ class _SyncNowButtonState extends ConsumerState<SyncNowButton> {
     if (!mounted) return;
     setState(() => _busy = false);
 
-    // After the drain (and pull for Manager), re-read the sync queue's
+    // After the drain and the pull, re-read the sync queue's
     // current state so the "_Online · N pending" pill updates immediately
     // rather than waiting for the next connectivity change event.
     ref.invalidate(syncStatusProvider);
     if (!mounted) return;
-    if (isManager) _invalidateOpenBatchProviders();
-    _say(_message(pushResult, pullResult, isManager));
+    _invalidateOpenBatchProviders();
+    _say(_message(pushResult, pullResult));
   }
 
   /// Drops the cached reads for the batch on screen so they recompute
@@ -125,7 +117,7 @@ class _SyncNowButtonState extends ConsumerState<SyncNowButton> {
   /// beforehand. A failed or rejected row is the only thing in this
   /// outcome the person can do something about, so it leads; a cheerful
   /// "3 sent, 40 updated" would bury it.
-  String _message(SyncResult push, PullResult? pull, bool isManager) {
+  String _message(SyncResult push, PullResult? pull) {
     final problems = <String>[];
 
     if (push.rejected > 0) {
@@ -157,14 +149,7 @@ class _SyncNowButtonState extends ConsumerState<SyncNowButton> {
     }
     if (problems.isNotEmpty) return problems.join(' ');
 
-    final updated = pull?.updated ?? 0;
-    if (push.pushed == 0 && updated == 0) return 'Already up to date.';
-
-    if (!isManager) {
-      return '${push.pushed} '
-          '${push.pushed == 1 ? 'entry' : 'entries'} uploaded.';
-    }
-    return 'Synced. ${push.pushed} sent, $updated updated from server.';
+    return syncOutcomeMessage(push.pushed, pull?.updated ?? 0);
   }
 
   @override
@@ -189,4 +174,27 @@ class _SyncNowButtonState extends ConsumerState<SyncNowButton> {
       ),
     );
   }
+}
+
+/// The one-line report of a sync that had no problems to report: what went
+/// up, and what came down that was actually new.
+///
+/// Split out from [_SyncNowButtonState._message] so it can be tested on
+/// its own, and deliberately free of any role logic: the same words are
+/// right for every role, because [updated] already counts only real
+/// changes.
+///
+/// * [pushed] — queue rows that reached Supabase.
+/// * [updated] — rows the pull found new or different, zero when nothing
+///   had changed on the server.
+String syncOutcomeMessage(int pushed, int updated) {
+  if (pushed == 0 && updated == 0) return 'Already up to date.';
+
+  final sent = '$pushed ${pushed == 1 ? 'entry' : 'entries'} sent';
+  final received =
+      '$updated ${updated == 1 ? 'change' : 'changes'} received';
+
+  if (pushed == 0) return received;
+  if (updated == 0) return sent;
+  return '$sent, $received';
 }

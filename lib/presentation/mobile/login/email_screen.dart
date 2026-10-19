@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:broiler_fms/domain/mobile_auth_domain_provider.dart';
 import 'package:broiler_fms/domain/domain_exception.dart';
 import 'package:broiler_fms/presentation/shared/theme/app_theme.dart';
+import 'package:broiler_fms/presentation/shared/widgets/loading_button_content.dart';
 import 'package:broiler_fms/presentation/shared/widgets/notice_banner.dart';
 
 /// First login screen: the person enters their email, and a 6-digit
@@ -144,14 +145,11 @@ class _EmailScreenState extends ConsumerState<EmailScreen> {
               ],
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: _isSending ? null : _sendCode,
-                child: _isSending
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Send login code'),
+                onPressed: busyGuard(_sendCode, _isSending),
+                child: ButtonLoadingContent(
+                  label: 'Send login code',
+                  loading: _isSending,
+                ),
               ),
               const SizedBox(height: 16),
               const Text(

@@ -7,6 +7,7 @@ import 'package:broiler_fms/domain/current_account_domain.dart';
 import 'package:broiler_fms/domain/mobile_auth_domain_provider.dart';
 import 'package:broiler_fms/domain/domain_exception.dart';
 import 'package:broiler_fms/presentation/shared/theme/app_theme.dart';
+import 'package:broiler_fms/presentation/shared/widgets/loading_button_content.dart';
 
 /// Second login screen: the 6-digit code sent to [email] is entered
 /// here in six separate boxes — typing auto-advances, backspace steps
@@ -237,17 +238,14 @@ class _CodeScreenState extends ConsumerState<CodeScreen> {
               ],
               const SizedBox(height: 28),
               ElevatedButton(
-                onPressed: _isVerifying ? null : _verifyCode,
+                onPressed: busyGuard(_verifyCode, _isVerifying),
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size.fromHeight(50),
                 ),
-                child: _isVerifying
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Verify and sign in'),
+                child: ButtonLoadingContent(
+                  label: 'Verify and sign in',
+                  loading: _isVerifying,
+                ),
               ),
               const SizedBox(height: 8),
               TextButton(

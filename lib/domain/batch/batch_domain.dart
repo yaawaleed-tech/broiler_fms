@@ -142,10 +142,20 @@ class BatchDomain {
   ///
   /// Returns how many rows were written into the cache, after
   /// [LocalBatchRepository.upsertAll] skips any batch still queued for
-  /// push.
+  /// push, plus how many were released because the server stopped
+  /// returning them to this account.
   Future<int> refreshBatches() async {
     final batches = await _remoteBatchRepo.getAll();
-    return _batchRepo.upsertAll(batches);
+    final written = await _batchRepo.upsertAll(batches);
+    // Only reached once getAll has returned, so a failed pull throws
+    // above and never marks anything. The ids come from the same
+    // response that was just applied, so a batch the server still
+    // returns is never mistaken for a reassigned one.
+    final released = await _batchRepo.releaseMissing(
+      accountId: _currentAccount.accountId,
+      serverBatchIds: batches.map((b) => b.batchId).toSet(),
+    );
+    return written + released;
   }
 
 

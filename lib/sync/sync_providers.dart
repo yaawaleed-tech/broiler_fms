@@ -8,6 +8,7 @@ import 'package:broiler_fms/data/local/database_provider.dart';
 import 'package:broiler_fms/data/local/local_sync_queue_repository.dart';
 import 'package:broiler_fms/data/remote/supabase_provider.dart';
 
+import 'pull_service.dart';
 import 'pushers/batch_pusher.dart';
 import 'pushers/entity_pusher.dart';
 import 'pushers/expense_pusher.dart';
@@ -18,6 +19,7 @@ import 'pushers/sale_pusher.dart';
 import 'pushers/vaccination_pusher.dart';
 import 'pushers/weight_pusher.dart';
 import 'sync_service.dart';
+import 'triggers/auto_pull_trigger.dart';
 import 'triggers/connectivity_sync_trigger.dart';
 import 'triggers/lifecycle_sync_trigger.dart';
 
@@ -98,6 +100,37 @@ final lifecycleSyncTriggerProvider = Provider<LifecycleSyncTrigger>((ref) {
 final connectivitySyncTriggerProvider =
     Provider<ConnectivitySyncTrigger>((ref) {
   final trigger = ConnectivitySyncTrigger(ref.watch(syncServiceProvider));
+  trigger.start();
+  ref.onDispose(trigger.dispose);
+  return trigger;
+});
+
+/// Drains and then pulls automatically on app start, on app resume, and
+/// when the network comes back — one throttle and one in-flight guard
+/// shared by all three, so a phone waking up offline does not fire three
+/// passes when it reconnects.
+///
+/// Identical for every role: what each account receives is decided by RLS
+/// on the pull, and the only condition this trigger applies is that
+/// somebody is signed in, read the same way [SessionPollTrigger] reads
+/// it — off the Supabase session, which is synchronous and available at the
+/// instant a lifecycle event arrives.
+///
+/// Started from here rather than at import time, like the other two
+/// triggers: it exists only while something watches this provider, and
+/// the app's root widget watches it for the whole session.
+///
+/// The provider cannot supply the presentation side of an automatic pull,
+/// because invalidating open screens needs types from lib/presentation and
+/// lib/sync must not import those. `AutoPullHost` does that half; see
+/// lib/presentation/shared/widgets/auto_pull_host.dart.
+final autoPullTriggerProvider = Provider<AutoPullTrigger>((ref) {
+  final client = ref.watch(supabaseClientProvider);
+  final trigger = AutoPullTrigger(
+    ref.watch(syncServiceProvider),
+    ref.watch(pullServiceProvider),
+    hasAccount: () => client.auth.currentUser != null,
+  );
   trigger.start();
   ref.onDispose(trigger.dispose);
   return trigger;

@@ -11,6 +11,7 @@ import 'package:broiler_fms/domain/logout_domain.dart';
 import 'package:broiler_fms/domain/session_poll_trigger.dart';
 import 'package:broiler_fms/presentation/mobile/router.dart';
 import 'package:broiler_fms/presentation/shared/theme/app_theme.dart';
+import 'package:broiler_fms/presentation/shared/widgets/auto_pull_host.dart';
 import 'package:broiler_fms/presentation/shared/widgets/session_poller.dart';
 import 'package:broiler_fms/sync/sync_providers.dart';
 
@@ -71,13 +72,17 @@ class BroilerFmsApp extends ConsumerWidget {
     // authenticated shell — every screen is independent. The trigger
     // itself skips ticks with no signed-in session, so this is a no-op
     // while logged out.
+    // Inside SessionPoller, so the automatic pull has the same lifetime as
+    // the rest of the session watch and is torn down with it.
     return SessionPoller(
       onAccessLost: () => _forceLogOut(context, ref),
-      child: MaterialApp.router(
-        debugShowCheckedModeBanner: false,
-        title: 'Broiler FMS',
-        theme: buildAppTheme(),
-        routerConfig: router,
+      child: AutoPullHost(
+        child: MaterialApp.router(
+          debugShowCheckedModeBanner: false,
+          title: 'Broiler FMS',
+          theme: buildAppTheme(),
+          routerConfig: router,
+        ),
       ),
     );
   }

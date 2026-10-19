@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:broiler_fms/data/local/database_provider.dart';
 import 'package:broiler_fms/data/local/local_sync_queue_repository.dart';
+import 'package:broiler_fms/repository/shared/changed_rows.dart';
 
 /// Sales stored on the device, used by the mobile app (Manager). It talks
 /// only to Drift and always returns [Sale] objects.
@@ -40,13 +41,39 @@ class LocalSaleRepository {
     final safe =
         sales.where((item) => !pending.contains(item.saleId)).toList();
     if (safe.isEmpty) return 0;
+    final stored = await (_db.select(_db.sales)
+          ..where((s) => s.saleId.isIn(safe.map((s) => s.saleId))))
+        .get();
+    final existingById = {for (final row in stored) row.saleId: _fromRow(row)};
+    final changed = changedRows(
+      safe,
+      existingById,
+      (s) => s.saleId,
+      _differs,
+    );
+    if (changed.isEmpty) return 0;
     await _db.batch((batch) {
       batch.insertAllOnConflictUpdate(
         _db.sales,
-        safe.map(_toCompanion).toList(),
+        changed.map(_toCompanion).toList(),
       );
     });
-    return safe.length;
+    return changed.length;
+  }
+
+  /// True when [incoming] differs from what is already stored. Covers
+  /// every column this table persists.
+  bool _differs(Sale incoming, Sale stored) {
+    return incoming.harvestId != stored.harvestId ||
+        incoming.recordedBy != stored.recordedBy ||
+        incoming.disposition != stored.disposition ||
+        incoming.amount != stored.amount ||
+        !sameStoredInstant(incoming.createdAt, stored.createdAt) ||
+        incoming.buyerName != stored.buyerName ||
+        incoming.pricingMethod != stored.pricingMethod ||
+        incoming.weightSold != stored.weightSold ||
+        incoming.pricePerUnit != stored.pricePerUnit ||
+        incoming.paymentStatus != stored.paymentStatus;
   }
 
   /// Saves a new sale on the device and returns it.

@@ -32,6 +32,7 @@ class ClosedBatchesSection extends ConsumerStatefulWidget {
     super.key,
     required this.closed,
     required this.startExpanded,
+    this.readOnly = false,
   });
 
   /// The closed batches, already newest first.
@@ -40,6 +41,12 @@ class ClosedBatchesSection extends ConsumerStatefulWidget {
   /// True when there is nothing open: the section starts expanded so
   /// the screen is never blank.
   final bool startExpanded;
+
+  /// Staff's section. Its cards are read-only and it is titled
+  /// "Past batches", because for Staff it holds closed and reassigned
+  /// batches together. Manager leaves this false and gets today's
+  /// behaviour exactly.
+  final bool readOnly;
 
   @override
   ConsumerState<ClosedBatchesSection> createState() =>
@@ -72,13 +79,17 @@ class _ClosedBatchesSectionState
     final choice = ref.watch(closedSectionChoiceProvider);
     final expanded = choice ?? widget.startExpanded;
     final count = widget.closed.length;
+    // One title for both, decided here so the screen does not have to
+    // repeat the wording. Manager keeps "Closed batches"; Staff sees
+    // "Past batches" because their section holds reassigned rows too.
+    final title = widget.readOnly ? 'Past batches' : 'Closed batches';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Semantics(
           label:
-              'Closed batches, $count, ${expanded ? 'expanded' : 'collapsed'}',
+              '$title, $count, ${expanded ? 'expanded' : 'collapsed'}',
           hint: 'Double tap to ${expanded ? 'collapse' : 'expand'}',
           button: true,
           onTap: () => _toggle(expanded),
@@ -108,10 +119,10 @@ class _ClosedBatchesSectionState
                     color: AppColors.inkMuted,
                   ),
                   const SizedBox(width: 10),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Closed batches',
-                      style: TextStyle(
+                      title,
+                      style: const TextStyle(
                         fontFamily: 'RobotoSlab',
                         fontWeight: FontWeight.w700,
                         fontSize: 15,
@@ -148,13 +159,10 @@ class _ClosedBatchesSectionState
                 if (i == 0)
                   Container(
                     key: _firstCardKey,
-                    child: BatchCard(
-                      batch: widget.closed[i],
-                      muted: true,
-                    ),
+                    child: _card(widget.closed[i]),
                   )
                 else
-                  BatchCard(batch: widget.closed[i], muted: true),
+                  _card(widget.closed[i]),
               ],
             ],
           ),
@@ -166,4 +174,16 @@ class _ClosedBatchesSectionState
       ],
     );
   }
+
+  /// One card in the section. A Staff member cannot open anything from
+  /// here, so their cards carry no tap and say so when the batch is
+  /// reassigned rather than merely closed.
+  Widget _card(Batch batch) => BatchCard(
+        batch: batch,
+      muted: true,
+      onTap: !widget.readOnly,
+      reassigned: widget.readOnly &&
+          !batch.isClosed &&
+          batch.assignedStaffId == null,
+    );
 }

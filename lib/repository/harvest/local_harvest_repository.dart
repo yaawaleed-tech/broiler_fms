@@ -6,6 +6,7 @@ import 'package:broiler_fms/domain/models/harvest.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:broiler_fms/data/local/local_sync_queue_repository.dart';
+import 'package:broiler_fms/repository/shared/changed_rows.dart';
 
 import 'package:broiler_fms/data/local/database_provider.dart';
 
@@ -40,13 +41,34 @@ class LocalHarvestRepository {
     final safe =
         harvests.where((item) => !pending.contains(item.harvestId)).toList();
     if (safe.isEmpty) return 0;
+    final stored = await (_db.select(_db.harvestEntries)
+          ..where((h) => h.harvestId.isIn(safe.map((h) => h.harvestId))))
+        .get();
+    final existingById = {for (final row in stored) row.harvestId: _fromRow(row)};
+    final changed = changedRows(
+      safe,
+      existingById,
+      (h) => h.harvestId,
+      _differs,
+    );
+    if (changed.isEmpty) return 0;
     await _db.batch((batch) {
       batch.insertAllOnConflictUpdate(
         _db.harvestEntries,
-        safe.map(_toCompanion).toList(),
+        changed.map(_toCompanion).toList(),
       );
     });
-    return safe.length;
+    return changed.length;
+  }
+
+  /// True when [incoming] differs from what is already stored. Covers
+  /// every column this table persists.
+  bool _differs(Harvest incoming, Harvest stored) {
+    return incoming.batchId != stored.batchId ||
+        incoming.recordedBy != stored.recordedBy ||
+        !sameStoredInstant(incoming.date, stored.date) ||
+        incoming.birdCount != stored.birdCount ||
+        !sameStoredInstant(incoming.recordedAt, stored.recordedAt);
   }
 
   /// Saves a new harvest entry on the device and returns it.

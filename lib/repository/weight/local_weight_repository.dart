@@ -6,6 +6,7 @@ import 'package:broiler_fms/domain/models/weight_sample.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:broiler_fms/data/local/database_provider.dart';
 import 'package:broiler_fms/data/local/local_sync_queue_repository.dart';
+import 'package:broiler_fms/repository/shared/changed_rows.dart';
 
 /// Weight samples stored on the device, used by the mobile app
 /// (Staff only). It talks only to Drift and always returns
@@ -36,13 +37,37 @@ class LocalWeightRepository {
     final safe =
         samples.where((item) => !pending.contains(item.weightSampleId)).toList();
     if (safe.isEmpty) return 0;
+    final stored = await (_db.select(_db.weightSamples)
+          ..where((w) => w.weightSampleId.isIn(safe.map((w) => w.weightSampleId))))
+        .get();
+    final existingById = {
+      for (final row in stored) row.weightSampleId: _fromRow(row),
+    };
+    final changed = changedRows(
+      safe,
+      existingById,
+      (w) => w.weightSampleId,
+      _differs,
+    );
+    if (changed.isEmpty) return 0;
     await _db.batch((batch) {
       batch.insertAllOnConflictUpdate(
         _db.weightSamples,
-        safe.map(_toCompanion).toList(),
+        changed.map(_toCompanion).toList(),
       );
     });
-    return safe.length;
+    return changed.length;
+  }
+
+  /// True when [incoming] differs from what is already stored. Covers
+  /// every column this table persists.
+  bool _differs(WeightSample incoming, WeightSample stored) {
+    return incoming.batchId != stored.batchId ||
+        incoming.recordedBy != stored.recordedBy ||
+        !sameStoredInstant(incoming.date, stored.date) ||
+        incoming.sampleWeight != stored.sampleWeight ||
+        incoming.sampleCount != stored.sampleCount ||
+        !sameStoredInstant(incoming.recordedAt, stored.recordedAt);
   }
 
   /// Saves a new weight sample on the device and returns it.

@@ -1,4 +1,7 @@
-import 'package:drift/drift.dart' show Value;
+// drift exports its own `Batch` (a bulk-operation helper), which collides
+// with this app's Batch model imported below. Hiding it is enough to keep
+// the query-builder operators that a where-clause needs.
+import 'package:drift/drift.dart' hide Batch;
 import 'package:uuid/uuid.dart';
 
 import 'package:broiler_fms/data/local/database.dart' as local;
@@ -8,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:broiler_fms/data/local/database_provider.dart';
 import 'package:broiler_fms/data/local/local_sync_queue_repository.dart';
+import 'package:broiler_fms/repository/shared/changed_rows.dart';
 
 /// Batches stored on the device, used by the mobile app (Manager and
 /// Staff). It talks only to Drift and always returns [Batch] objects.
@@ -38,20 +42,54 @@ class LocalBatchRepository {
   /// the same row, or the pending edit would be silently lost and then
   /// pushed back up in its stale form.
   ///
-  /// Returns how many rows were actually written into the cache.
+  /// Only rows that are new, or whose stored values actually differ from
+  /// the server's copy, are written — so a pull that changes nothing
+  /// reports nothing instead of re-reporting every row it read. Returns
+  /// how many rows were genuinely new or different.
   Future<int> upsertAll(List<Batch> batches) async {
     final pending =
         await _syncQueueRepo.pendingRecordIds(entityTable: 'batches');
     final safe =
         batches.where((item) => !pending.contains(item.batchId)).toList();
     if (safe.isEmpty) return 0;
+    final stored = await (_db.select(_db.batches)
+          ..where((b) => b.batchId.isIn(safe.map((b) => b.batchId))))
+        .get();
+    final existingById = {for (final row in stored) row.batchId: _fromRow(row)};
+    final changed = changedRows(
+      safe,
+      existingById,
+      (b) => b.batchId,
+      _differs,
+    );
+    if (changed.isEmpty) return 0;
     await _db.batch((batch) {
       batch.insertAllOnConflictUpdate(
         _db.batches,
-        safe.map(_toCompanion).toList(),
+        changed.map(_toCompanion).toList(),
       );
     });
-    return safe.length;
+    return changed.length;
+  }
+
+  /// True when [incoming] differs from what is already stored.
+  ///
+  /// Covers every column this table persists, and nothing else:
+  /// [Batch.assignedStaffName] and [Batch.closedByName] are joined in by
+  /// the remote read but are not local columns, so comparing them would
+  /// call every pulled batch changed on every pull.
+  bool _differs(Batch incoming, Batch stored) {
+    return incoming.businessId != stored.businessId ||
+        incoming.batchName != stored.batchName ||
+        incoming.startingBirdCount != stored.startingBirdCount ||
+        !sameStoredInstant(incoming.startDate, stored.startDate) ||
+        incoming.isClosed != stored.isClosed ||
+        !sameStoredInstant(incoming.createdAt, stored.createdAt) ||
+        incoming.assignedStaffId != stored.assignedStaffId ||
+        incoming.closedBy != stored.closedBy ||
+        incoming.breed != stored.breed ||
+        incoming.description != stored.description ||
+        !sameStoredInstant(incoming.closedAt, stored.closedAt);
   }
 
   /// Registers a new batch. Starts unassigned and open.
@@ -161,8 +199,53 @@ class LocalBatchRepository {
   /// Same as [getForStaff], but emits a new list when data changes.
   Stream<List<Batch>> watchForStaff(String staffId) {
     final query = _db.select(_db.batches)
-      ..where((b) => b.assignedStaffId.equals(staffId));
+      ..where((b) =>
+          b.assignedStaffId.equals(staffId) | b.assignedStaffId.isNull());
     return query.watch().map((rows) => rows.map(_fromRow).toList());
+  }
+
+  /// Releases this Staff member's batches that the server no longer
+  /// returns to them, by clearing their assignment locally.
+  ///
+  /// A Staff account only ever sees the batches assigned to it, so a
+  /// batch that has gone missing from that response has been reassigned
+  /// to somebody else. Clearing the assignment keeps the row on the
+  /// device — the entries and history stay — and lets the screen show
+  /// it as read-only instead of letting it vanish mid-session.
+  ///
+  /// Guarded three ways, so this can only ever mark, never destroy:
+  ///   * only rows currently assigned to [accountId] are touched;
+  ///   * only rows whose id is absent from [serverBatchIds];
+  ///   * any row still waiting in the sync queue is skipped outright, so
+  ///     a batch this device created and has not pushed yet is never
+  ///     mistaken for one the server dropped.
+  ///
+  /// Writes [Batch.assignedStaffId] and nothing else, and enqueues
+  /// nothing: this is a local record of a decision the server already
+  /// made, so pushing it back would be pushing the absence of an
+  /// assignment the server has already forgotten about. Returns how
+  /// many rows were changed.
+  Future<int> releaseMissing({
+    required String accountId,
+    required Set<String> serverBatchIds,
+  }) async {
+    final pending =
+        await _syncQueueRepo.pendingRecordIds(entityTable: 'batches');
+    // Anything the server still returns, plus anything this device has
+    // not pushed yet, is a row to KEEP. A row is released only when it
+    // is in neither set.
+    final keep = <String>{...serverBatchIds, ...pending};
+    final released = await (_db.update(_db.batches)
+          ..where((b) =>
+              b.assignedStaffId.equals(accountId) &
+              // An empty keep-set must mean "every row of this account",
+              // so it is spelled as a skipped clause rather than the
+              // "in ()" SQLite rejects.
+              (keep.isEmpty
+                  ? const Constant(true)
+                  : b.batchId.isNotIn(keep))))
+        .write(const local.BatchesCompanion(assignedStaffId: Value(null)));
+    return released;
   }
 
   /// One batch by id, or null if it isn't in local storage.

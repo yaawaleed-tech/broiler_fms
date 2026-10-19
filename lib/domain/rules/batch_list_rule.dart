@@ -38,6 +38,50 @@ BatchListGroups groupBatchesForList(List<Batch> batches) {
   return BatchListGroups(open: open, closed: closed);
 }
 
+/// The Staff split: batches still theirs to work on, and batches they
+/// can no longer act on.
+///
+/// "Past" is both kinds — closed, and reassigned away. A card in here is
+/// read-only for Staff, so the two being in one list is the point.
+class StaffBatchListGroups {
+  const StaffBatchListGroups({required this.open, required this.past});
+
+  /// Still assigned and still open: Staff may record against these.
+  final List<Batch> open;
+
+  /// Closed and/or no longer assigned to this Staff member. Read-only.
+  final List<Batch> past;
+}
+
+/// Splits [batches] for a Staff account into open and past, each newest
+/// first.
+///
+/// Closed wins over reassigned: a batch that is closed reads as Closed
+/// even when its assignment was also released, matching the chip the
+/// card shows.
+///
+/// A null [Batch.assignedStaffId] means "no longer assigned" *only here*.
+/// For a Manager the same null means "not assigned yet", which is a
+/// normal open state — so this must never be used for Manager, and
+/// [groupBatchesForList] is the function Manager keeps.
+///
+/// Separate from [groupBatchesForList] rather than an extra parameter on
+/// it, so the Manager grouping keeps its exact signature and behaviour.
+StaffBatchListGroups groupBatchesForStaffList(List<Batch> batches) {
+  final open = <Batch>[];
+  final past = <Batch>[];
+  for (final batch in batches) {
+    if (batch.isClosed || batch.assignedStaffId == null) {
+      past.add(batch);
+    } else {
+      open.add(batch);
+    }
+  }
+  open.sort(_newestFirst);
+  past.sort(_newestFirst);
+  return StaffBatchListGroups(open: open, past: past);
+}
+
 /// Newest start date first, then newest created timestamp, then id —
 /// every tie-breaker descending so the order is fully deterministic.
 int _newestFirst(Batch a, Batch b) {

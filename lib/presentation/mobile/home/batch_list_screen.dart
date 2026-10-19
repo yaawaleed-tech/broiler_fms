@@ -141,6 +141,27 @@ final _visibleBatchesProvider = StreamProvider.autoDispose<List<Batch>>((
 /// waiting in the local sync queue. Both sources are local (the OS
 /// connectivity API and the Drift queue table) — nothing here talks
 /// to the server.
+/// Splits the loaded batches the way the signed-in role reads them.
+///
+/// Manager keeps [groupBatchesForList] exactly as it was. Staff get
+/// [groupBatchesForStaffList], where a released assignment lands in the
+/// same section as a closed batch, because for them both mean the same
+/// thing: nothing left to record against.
+///
+/// Returned as one shape so the summary strip and the list cannot drift
+/// apart on what "open" means.
+({List<Batch> open, List<Batch> past}) _splitForRole(
+  List<Batch> batches, {
+  required bool isStaff,
+}) {
+  if (isStaff) {
+    final groups = groupBatchesForStaffList(batches);
+    return (open: groups.open, past: groups.past);
+  }
+  final groups = groupBatchesForList(batches);
+  return (open: groups.open, past: groups.closed);
+}
+
 /// Home screen: a list of batches, filtered by role. Manager also sees
 /// a button to register a new batch, Staff does not.
 class BatchListScreen extends ConsumerWidget {
@@ -151,6 +172,9 @@ class BatchListScreen extends ConsumerWidget {
     final batchesAsync = ref.watch(_visibleBatchesProvider);
     final account = ref.watch(currentAccountProvider).value;
     final isManager = account?.role == 'manager';
+    // Exactly the test _visibleBatchesProvider uses to pick the query,
+    // so the grouping always matches the rows that were loaded.
+    final isStaff = account?.role == 'staff';
 
     return Scaffold(
       appBar: AppBar(
@@ -204,7 +228,7 @@ class BatchListScreen extends ConsumerWidget {
                 fontFamily: 'PublicSans',
                 fontWeight: FontWeight.w600,
                 fontSize: 12.5,
-                decoration: TextDecoration.underline,
+                decoration: TextDecoration.none,
               ),
             ),
           ),
@@ -217,7 +241,10 @@ class BatchListScreen extends ConsumerWidget {
         children: [
           if (batchesAsync.hasValue)
             _FlockSummaryStrip(
-              openCount: groupBatchesForList(batchesAsync.value!).open.length,
+              openCount:
+                  _splitForRole(batchesAsync.value!, isStaff: isStaff)
+                      .open
+                      .length,
             ),
           Expanded(
             child: batchesAsync.when(
@@ -228,12 +255,13 @@ class BatchListScreen extends ConsumerWidget {
                 if (batches.isEmpty) {
                   return const Center(child: Text('No batches yet.'));
                 }
-                // Open newest first in the main list, closed newest
-                // first in the collapsible section. The stream emits a
+                // Open newest first in the main list, closed newest first
+                // in the collapsible section. The stream emits a
                 // fresh list on every write, so a new batch lands on
                 // top as soon as the user returns — no invalidation
                 // needed.
-                final groups = groupBatchesForList(batches);
+                final groups =
+                    _splitForRole(batches, isStaff: isStaff);
                 return ListView(
                   // Deep bottom padding so the floating "New batch"
                   // button never covers the last card, even with the
@@ -244,8 +272,7 @@ class BatchListScreen extends ConsumerWidget {
                       BatchCard(batch: batch),
                       const SizedBox(height: 10),
                     ],
-                    if (groups.open.isEmpty &&
-                        groups.closed.isNotEmpty)
+                    if (groups.open.isEmpty && groups.past.isNotEmpty)
                       const Padding(
                         padding: EdgeInsets.only(bottom: 10),
                         child: Center(
@@ -254,10 +281,11 @@ class BatchListScreen extends ConsumerWidget {
                           ),
                         ),
                       ),
-                    if (groups.closed.isNotEmpty)
+                    if (groups.past.isNotEmpty)
                       ClosedBatchesSection(
-                        closed: groups.closed,
+                        closed: groups.past,
                         startExpanded: groups.open.isEmpty,
+                        readOnly: isStaff,
                       ),
                   ],
                 );

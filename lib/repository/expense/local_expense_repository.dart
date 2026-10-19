@@ -6,6 +6,7 @@ import 'package:broiler_fms/domain/models/expense.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:broiler_fms/data/local/database_provider.dart';
 import 'package:broiler_fms/data/local/local_sync_queue_repository.dart';
+import 'package:broiler_fms/repository/shared/changed_rows.dart';
 
 /// Expenses stored on the device, used by the mobile app (Manager only,
 /// unlike the other entry types). It talks only to Drift and always
@@ -31,21 +32,48 @@ class LocalExpenseRepository {
   ///
   /// Any expense whose id is still queued is skipped entirely, so a
   /// local record the server has not accepted yet is never replaced by
-  /// the server's older copy of the same row. Returns how many rows
-  /// were actually written into the cache.
+  /// the server's older copy of the same row. Returns how many rows were
+  /// genuinely new or different, so an unchanged pull reports nothing.
   Future<int> upsertAll(List<Expense> expenses) async {
     final pending =
         await _syncQueueRepo.pendingRecordIds(entityTable: 'expenses');
     final safe =
         expenses.where((item) => !pending.contains(item.expenseId)).toList();
     if (safe.isEmpty) return 0;
+    final stored = await (_db.select(_db.expenses)
+          ..where((e) => e.expenseId.isIn(safe.map((e) => e.expenseId))))
+        .get();
+    final existingById = {for (final row in stored) row.expenseId: _fromRow(row)};
+    final changed = changedRows(
+      safe,
+      existingById,
+      (e) => e.expenseId,
+      _differs,
+    );
+    if (changed.isEmpty) return 0;
     await _db.batch((batch) {
       batch.insertAllOnConflictUpdate(
         _db.expenses,
-        safe.map(_toCompanion).toList(),
+        changed.map(_toCompanion).toList(),
       );
     });
-    return safe.length;
+    return changed.length;
+  }
+
+  /// True when [incoming] differs from what is already stored. Covers
+  /// every column this table persists.
+  bool _differs(Expense incoming, Expense stored) {
+    return incoming.batchId != stored.batchId ||
+        incoming.recordedBy != stored.recordedBy ||
+        incoming.category != stored.category ||
+        !sameStoredInstant(incoming.date, stored.date) ||
+        incoming.amount != stored.amount ||
+        incoming.quantity != stored.quantity ||
+        incoming.unitPrice != stored.unitPrice ||
+        incoming.feedType != stored.feedType ||
+        incoming.medicationName != stored.medicationName ||
+        incoming.description != stored.description ||
+        !sameStoredInstant(incoming.recordedAt, stored.recordedAt);
   }
 
   /// Saves a new expense on the device and returns it.
