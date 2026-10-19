@@ -208,6 +208,7 @@ class _AssignStaffScreenState extends ConsumerState<AssignStaffScreen> {
                     final isAssigned = staff.accountId == assignedStaffId;
                     return _StaffRow(
                       name: staff.name,
+                      email: staff.email,
                       isCurrentlyAssigned: isAssigned,
                       // Tapping the person already on the batch is a
                       // no-op: there is nothing to change, and the
@@ -249,6 +250,7 @@ class _AssignStaffScreenState extends ConsumerState<AssignStaffScreen> {
       entries: [
         ReviewEntry('Batch', batch?.batchName ?? '—'),
         ReviewEntry('Assign to', staff.name),
+        ReviewEntry('Email', staff.email),
       ],
       onEdit: () => setState(() => _showingReview = false),
       onConfirm: _isSaving ? () {} : _confirm,
@@ -265,11 +267,15 @@ class _StaffRow extends StatelessWidget {
   const _StaffRow({
     required this.name,
     required this.isCurrentlyAssigned,
+    this.email,
     this.onTap,
   });
 
   final String name;
   final bool isCurrentlyAssigned;
+
+  /// Shown under the name when present, to tell apart staff who share a name.
+  final String? email;
 
   /// Null for the currently assigned row — tapping it does nothing.
   final VoidCallback? onTap;
@@ -289,14 +295,32 @@ class _StaffRow extends StatelessWidget {
         child: Row(
           children: [
             Expanded(
-              child: Text(
-                name,
-                style: const TextStyle(
-                  fontFamily: 'RobotoSlab',
-                  fontWeight: FontWeight.w700,
-                  fontSize: 15,
-                  color: AppColors.ink,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      fontFamily: 'RobotoSlab',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                      color: AppColors.ink,
+                    ),
+                  ),
+                  if (email != null && email!.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      email!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'PublicSans',
+                        fontSize: 12.5,
+                        color: AppColors.ink.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
             if (isCurrentlyAssigned)
