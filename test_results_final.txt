@@ -1,0 +1,589 @@
+Resolving dependencies...
+Downloading packages...
+  _fe_analyzer_shared 91.0.0 (109.0.0 available)
+  analyzer 8.4.1 (14.5.0 available)
+  analyzer_buffer 0.1.11 (0.3.4 available)
+  app_links 7.0.0 (7.2.2 available)
+  app_links_linux 1.0.3 (1.0.4 available)
+  app_links_platform_interface 2.0.2 (2.0.4 available)
+  app_links_web 1.0.4 (1.0.5 available)
+  build 4.0.7 (5.0.0 available)
+  build_config 1.3.3 (1.4.0 available)
+  build_daemon 4.1.2 (4.1.7 available)
+  build_runner 2.15.1 (2.17.1 available)
+  built_collection 5.1.1 (5.1.2 available)
+  characters 1.4.0 (1.4.1 available)
+  cli_util 0.4.2 (0.6.0 available)
+  clock 1.1.2 (1.1.3 available)
+  code_builder 4.12.0 (4.13.0 available)
+  connectivity_plus 7.3.1 (7.3.2 available)
+  coverage 1.15.1 (1.16.0 available)
+  cupertino_icons 1.0.9 (2.0.0 available)
+  dart_style 3.1.3 (3.1.14 available)
+  dbus 0.7.15 (0.8.0 available)
+  drift 2.31.0 (2.35.2 available)
+  drift_dev 2.31.0 (2.35.1 available)
+  flutter_riverpod 3.1.0 (3.4.3 available)
+  frontend_server_client 4.0.0 (4.1.0 available)
+  go_router 17.5.0 (18.1.0 available)
+  gotrue 2.27.2 (2.27.3 available)
+  intl 0.19.0 (0.20.3 available)
+  jni 1.0.3 (1.1.0 available)
+  jni_flutter 1.0.3 (1.0.4+1 available)
+  matcher 0.12.17 (0.12.20 available)
+  material_color_utilities 0.11.1 (0.13.1 available)
+  meta 1.17.0 (1.19.0 available)
+  mockito 5.6.4 (5.8.1 available)
+  nm 0.5.0 (0.6.0 available)
+  package_config 2.2.0 (3.0.0 available)
+  path_provider_foundation 2.5.1 (2.6.0 available)
+  petitparser 7.0.2 (7.1.0 available)
+  platform 3.1.6 (3.2.0 available)
+  realtime_client 2.13.0 (2.13.2 available)
+  riverpod 3.1.0 (3.4.3 available)
+  riverpod_analyzer_utils 1.0.0-dev.8 (1.0.0-dev.12 available)
+  riverpod_annotation 4.0.0 (4.0.7 available)
+  riverpod_generator 4.0.0+1 (4.0.9 available)
+  shared_preferences 2.5.5 (2.5.6 available)
+  shared_preferences_android 2.4.23 (2.5.1 available)
+  shared_preferences_foundation 2.5.7 (2.6.0 available)
+  shelf 1.4.2 (1.4.3 available)
+  shelf_static 1.1.3 (1.2.0 available)
+  source_gen 4.2.4 (4.3.1 available)
+  sqlite3 2.9.4 (3.7.1 available)
+  sqlite3_flutter_libs 0.5.42 (0.6.0+eol available)
+  sqlparser 0.43.1 (0.45.0 available)
+  stack_trace 1.12.1 (1.12.2 available)
+  storage_client 2.8.0 (2.8.1 available)
+  supabase 2.16.1 (2.16.5 available)
+  supabase_flutter 2.17.2 (2.18.3 available)
+  test 1.26.3 (1.33.0 available)
+  test_api 0.7.7 (0.7.15 available)
+  test_core 0.6.12 (0.6.21 available)
+  url_launcher 6.3.2 (6.3.3 available)
+  url_launcher_android 6.3.30 (6.3.33 available)
+  vector_math 2.2.0 (2.4.3 available)
+  vm_service 15.3.0 (15.4.0 available)
+  xml 6.6.1 (7.1.0 available)
+Got dependencies!
+65 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+00:00 +0: loading /media/ssd/develop/FYP/app/broiler_fms/test/data/local/sync_queue_watch_test.dart
+00:00 +0: /media/ssd/develop/FYP/app/broiler_fms/test/data/local/sync_queue_watch_test.dart: emits the current count on subscribe
+00:00 +1: /media/ssd/develop/FYP/app/broiler_fms/test/data/local/sync_queue_watch_test.dart: emits when a row is enqueued
+00:00 +2: /media/ssd/develop/FYP/app/broiler_fms/test/data/local/sync_queue_watch_test.dart: emits when a row is marked synced and deleted
+00:00 +3: /media/ssd/develop/FYP/app/broiler_fms/test/data/local/sync_queue_watch_test.dart: emits when a row is marked failed, even though the count holds
+00:00 +4: /media/ssd/develop/FYP/app/broiler_fms/test/data/local/sync_queue_watch_test.dart: matches the one-shot read it is meant to mirror
+00:00 +5: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: sendLoginCode a SocketException becomes the no-internet message
+00:00 +6: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: sendLoginCode a ClientException becomes the no-internet message
+00:00 +7: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: sendLoginCode a TimeoutException becomes the no-internet message
+00:00 +8: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: sendLoginCode an HttpException becomes the no-internet message
+00:00 +9: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: sendLoginCode the signInWithOtp call is never reached
+00:00 +10: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: verifyLoginCode a SocketException becomes the no-internet message
+00:00 +11: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: verifyLoginCode a ClientException becomes the no-internet message
+00:00 +12: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: verifyLoginCode a TimeoutException becomes the no-internet message
+00:00 +13: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: verifyLoginCode a network failure does not trigger the signup retry
+00:00 +14: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: verifyLoginCode onLoginSuccess is not run when the network fails
+00:00 +15: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: verifyLoginCode onLoginSuccess failing on the network is reported too
+00:00 +16: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper passes an unrelated error straight through
+00:00 +17: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper rethrows a DomainException unchanged
+00:00 +18: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper returns the value when nothing goes wrong
+00:00 +19: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:00 +20: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:00 +21: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:01 +22: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:01 +23: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:01 +24: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:01 +25: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:01 +26: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:01 +27: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:01 +28: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:01 +29: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:01 +30: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:01 +31: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:01 +32: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:01 +33: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:01 +34: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:01 +35: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:01 +36: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:01 +37: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:02 +38: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:02 +39: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:02 +40: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:02 +41: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:02 +42: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:02 +43: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:02 +44: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:02 +45: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:02 +46: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:02 +47: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:02 +48: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:02 +49: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:02 +50: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:02 +51: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +52: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +53: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +54: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +55: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +56: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +57: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +58: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +59: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +60: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +61: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +62: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +63: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +64: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +65: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +66: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +67: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +68: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +69: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +70: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +71: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +72: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +73: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +74: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +75: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +76: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +77: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +78: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +79: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +80: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +81: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +82: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +83: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +84: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +85: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +86: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +87: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +88: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:03 +89: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +90: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +91: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +92: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +93: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +94: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +95: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +96: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +97: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +98: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +99: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +100: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +101: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +102: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +103: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +104: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +105: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +106: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +107: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +108: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +109: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +110: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +111: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +112: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +113: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +114: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +115: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +116: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +117: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +118: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +119: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +120: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +121: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +122: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +123: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +124: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +125: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +126: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +127: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +128: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +129: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +130: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +131: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +132: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +133: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +134: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +135: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +136: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +137: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +138: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +139: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +140: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +141: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +142: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +143: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +144: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +145: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +146: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +147: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +148: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +149: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +150: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +151: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +152: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +153: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +154: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +155: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +156: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +157: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +158: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +159: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +160: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +161: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +162: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +163: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:04 +164: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:05 +165: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:05 +166: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:05 +167: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:05 +168: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:05 +169: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:05 +170: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:05 +171: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:05 +172: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:05 +173: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:05 +174: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:05 +175: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:06 +176: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:06 +177: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:06 +178: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:06 +179: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:06 +180: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:06 +181: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:06 +182: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:07 +183: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:07 +184: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:07 +185: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:07 +186: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:07 +187: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:07 +188: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:07 +189: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:07 +190: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:07 +191: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:07 +192: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:07 +193: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:07 +194: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:08 +195: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:08 +196: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:08 +197: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:08 +198: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:08 +199: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:08 +200: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:09 +201: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:09 +202: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:09 +203: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:09 +204: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:09 +205: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:09 +206: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:09 +207: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:09 +208: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:09 +209: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:09 +210: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:09 +211: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:09 +212: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:09 +213: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:10 +214: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:10 +215: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:10 +216: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:10 +217: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:10 +218: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:10 +219: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:10 +220: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:11 +221: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:11 +222: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:11 +223: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:11 +224: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:11 +225: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:11 +226: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:11 +227: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:11 +228: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:11 +229: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:12 +230: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:12 +231: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:12 +232: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:12 +233: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:12 +234: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:12 +235: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:12 +236: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:12 +237: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:12 +238: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:12 +239: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:12 +240: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:12 +241: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:12 +242: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:12 +243: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:13 +244: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:13 +245: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:13 +246: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:13 +247: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:13 +248: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:13 +249: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:13 +250: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:13 +251: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:13 +252: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:13 +253: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:14 +254: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:14 +255: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:14 +256: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:14 +257: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:14 +258: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:14 +259: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:14 +260: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:14 +261: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:14 +262: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:14 +263: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:14 +264: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:14 +265: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:14 +266: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:14 +267: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:14 +268: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:14 +269: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:14 +270: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:14 +271: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:14 +272: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:14 +273: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:14 +274: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:14 +275: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:15 +276: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:15 +277: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:15 +278: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:15 +279: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:15 +280: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:15 +281: /media/ssd/develop/FYP/app/broiler_fms/test/domain/auth_network_failure_test.dart: the shared helper a call that never answers is rescued by the timeout
+00:15 +282: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing rows went up and came down (staff)
+00:15 +283: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing rows went up and came down (staff)
+00:15 +284: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing rows went up and came down (staff)
+00:15 +285: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing rows went up and came down (staff)
+00:15 +286: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing rows went up and came down (staff)
+00:15 +287: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing rows went up and came down (staff)
+00:15 +288: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing rows went up and came down (staff)
+00:15 +289: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing rows went up and came down (staff)
+00:15 +290: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing rows went up and came down (staff)
+00:15 +291: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing rows went up and came down (staff)
+00:15 +292: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing rows went up and came down (staff)
+00:15 +293: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing rows went up and came down (staff)
+00:15 +294: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing rows went up and came down (staff)
+00:15 +295: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing rows went up and came down (staff)
+00:15 +296: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing rows went up and came down (staff)
+00:15 +297: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing rows went up and came down (staff)
+00:15 +298: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing rows went up and came down (staff)
+00:15 +299: /media/ssd/develop/FYP/app/broiler_fms/test/repository/changed_rows_upsert_test.dart: LocalFeedRepository.upsertAll a mixed list counts only the new and the different
+00:15 +300: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing some tables could not be refreshed (manager)
+00:15 +301: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing some tables could not be refreshed (manager)
+00:15 +302: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing some tables could not be refreshed (manager)
+00:15 +303: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing some tables could not be refreshed (manager)
+00:15 +304: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing some tables could not be refreshed (manager)
+00:15 +305: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing some tables could not be refreshed (manager)
+00:15 +306: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing some tables could not be refreshed (manager)
+00:15 +307: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing some tables could not be refreshed (manager)
+00:15 +308: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing some tables could not be refreshed (manager)
+00:15 +309: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing some tables could not be refreshed (manager)
+00:15 +310: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing some tables could not be refreshed (manager)
+00:15 +311: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing some tables could not be refreshed (manager)
+00:15 +312: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing some tables could not be refreshed (manager)
+00:15 +313: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing some tables could not be refreshed (manager)
+00:15 +314: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing some tables could not be refreshed (manager)
+00:15 +315: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing some tables could not be refreshed (manager)
+00:15 +316: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing some tables could not be refreshed (manager)
+00:15 +317: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing some tables could not be refreshed (manager)
+00:15 +318: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing some tables could not be refreshed (manager)
+00:15 +319: /media/ssd/develop/FYP/app/broiler_fms/test/repository/changed_rows_upsert_test.dart: LocalExpenseRepository.upsertAll a changed field is counted and applied
+00:15 +320: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing some tables could not be refreshed (staff)
+00:15 +321: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing some tables could not be refreshed (staff)
+00:16 +322: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing some tables could not be refreshed (staff)
+00:16 +323: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing some tables could not be refreshed (staff)
+00:16 +324: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing some tables could not be refreshed (staff)
+00:16 +325: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing some tables could not be refreshed (staff)
+00:16 +326: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing some tables could not be refreshed (staff)
+00:16 +327: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing some tables could not be refreshed (staff)
+00:16 +328: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing some tables could not be refreshed (staff)
+00:16 +329: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing some tables could not be refreshed (staff)
+00:16 +330: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing some tables could not be refreshed (staff)
+00:16 +331: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing some tables could not be refreshed (staff)
+00:16 +332: /media/ssd/develop/FYP/app/broiler_fms/test/repository/feed_local_repository_test.dart: LocalFeedRepository.upsertAll writes pulled feed entries without enqueueing them for push
+00:16 +333: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing every table failed (manager)
+00:16 +334: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing every table failed (manager)
+00:16 +335: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing every table failed (manager)
+00:16 +336: /media/ssd/develop/FYP/app/broiler_fms/test/repository/harvest_local_repository_test.dart: LocalHarvestRepository.upsertAll writes pulled harvest entries without enqueueing them for push
+00:16 +337: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing every table failed (staff)
+00:16 +338: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing every table failed (staff)
+00:16 +339: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing every table failed (staff)
+00:16 +340: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing the server rejected a row (manager)
+00:16 +341: /media/ssd/develop/FYP/app/broiler_fms/test/repository/logout_local_repository_test.dart: LocalLogoutRepository counts zero unsynced rows on an empty device
+00:16 +342: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing the server rejected a row (staff)
+00:16 +343: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing the server rejected a row (staff)
+00:17 +344: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing the server rejected a row (staff)
+00:17 +345: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing the server rejected a row (staff)
+00:17 +346: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing the server rejected a row (staff)
+00:17 +347: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing the server rejected a row (staff)
+00:17 +348: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: both paths say the same thing the server rejected a row (staff)
+00:17 +349: /media/ssd/develop/FYP/app/broiler_fms/test/repository/logout_local_repository_test.dart: LogoutDomain drainAndCountUnsyncedRows warns about rejected rows without blocking
+00:17 +350: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: nothing that is not a network failure may claim the network a pull already in flight (manager)
+00:17 +351: /media/ssd/develop/FYP/app/broiler_fms/test/repository/mortality_local_repository_test.dart: LocalMortalityRepository.upsertAll writes pulled mortality entries without enqueueing them for push
+00:17 +352: /media/ssd/develop/FYP/app/broiler_fms/test/repository/sale_local_repository_test.dart: LocalSaleRepository.upsertAll writes pulled sales without enqueueing them for push
+00:17 +353: /media/ssd/develop/FYP/app/broiler_fms/test/repository/sale_local_repository_test.dart: LocalSaleRepository.upsertAll writes pulled sales without enqueueing them for push
+00:17 +354: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: nothing that is not a network failure may claim the network a pull already in flight (staff)
+00:17 +355: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: nothing that is not a network failure may claim the network a pull already in flight (staff)
+00:17 +356: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: nothing that is not a network failure may claim the network a pull already in flight (staff)
+00:17 +357: /media/ssd/develop/FYP/app/broiler_fms/test/repository/sale_local_repository_test.dart: LocalSaleRepository.upsertAll applies the server copy once the id is no longer queued
+00:17 +358: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: nothing that is not a network failure may claim the network a pull in flight reports the result it produced (manager)
+00:17 +359: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: nothing that is not a network failure may claim the network a pull in flight reports the result it produced (staff)
+00:17 +360: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: nothing that is not a network failure may claim the network an account that is not ready yet (manager)
+00:17 +361: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: nothing that is not a network failure may claim the network an account that is not ready yet (manager)
+00:17 +362: /media/ssd/develop/FYP/app/broiler_fms/test/repository/vaccination_local_repository_test.dart: LocalVaccinationRepository.upsertAll keeps the local row while its id is still queued for push
+00:17 +363: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: nothing that is not a network failure may claim the network an account that is not ready yet (staff)
+00:17 +364: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: nothing that is not a network failure may claim the network an account that is not ready yet (staff)
+00:18 +365: /media/ssd/develop/FYP/app/broiler_fms/test/repository/weight_local_repository_test.dart: LocalWeightRepository.upsertAll writes pulled weight samples without enqueueing them for push
+00:18 +366: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: an unreadable account says so, never no-internet
+00:18 +367: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: an unreadable account says so, never no-internet
+00:18 +368: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: an unreadable account says so, never no-internet
+00:18 +369: /media/ssd/develop/FYP/app/broiler_fms/test/sync/auto_pull_periodic_test.dart: the cold-start race waits for the account, then pulls exactly once (manager)
+00:18 +370: /media/ssd/develop/FYP/app/broiler_fms/test/sync/auto_pull_periodic_test.dart: the cold-start race waits for the account, then pulls exactly once (manager)
+00:18 +371: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a socket that never opened (manager)
+00:18 +372: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a socket that never opened (manager)
+00:18 +373: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a socket that never opened (manager)
+00:18 +374: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a socket that never opened (manager)
+00:18 +375: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a socket that never opened (manager)
+00:18 +376: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a socket that never opened (manager)
+00:18 +377: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a socket that never opened (manager)
+00:18 +378: /media/ssd/develop/FYP/app/broiler_fms/test/sync/auto_pull_periodic_test.dart: the cold-start race sign-out while waiting cancels the run (staff)
+00:18 +379: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a socket that never opened (staff)
+00:18 +380: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a socket that never opened (staff)
+00:18 +381: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a socket that never opened (staff)
+00:18 +382: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a socket that never opened (staff)
+00:18 +383: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a socket that never opened (staff)
+00:18 +384: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a socket that never opened (staff)
+00:18 +385: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a socket that never opened (staff)
+00:18 +386: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a socket that never opened (staff)
+00:18 +387: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a socket that never opened (staff)
+00:18 +388: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a socket that never opened (staff)
+00:18 +389: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a socket that never opened (staff)
+00:18 +390: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a socket that never opened (staff)
+00:18 +391: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a socket that never opened (staff)
+00:18 +392: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a socket that never opened (staff)
+00:18 +393: /media/ssd/develop/FYP/app/broiler_fms/test/sync/auto_pull_trigger_test.dart: ordering the push runs before the pull, and both run
+00:18 +394: /media/ssd/develop/FYP/app/broiler_fms/test/sync/auto_pull_trigger_test.dart: ordering the push runs before the pull, and both run
+00:18 +395: /media/ssd/develop/FYP/app/broiler_fms/test/sync/auto_pull_trigger_test.dart: ordering the push runs before the pull, and both run
+00:18 +396: /media/ssd/develop/FYP/app/broiler_fms/test/sync/auto_pull_trigger_test.dart: ordering the push runs before the pull, and both run
+00:18 +397: /media/ssd/develop/FYP/app/broiler_fms/test/sync/auto_pull_trigger_test.dart: ordering the push runs before the pull, and both run
+00:18 +398: /media/ssd/develop/FYP/app/broiler_fms/test/sync/auto_pull_trigger_test.dart: ordering the push runs before the pull, and both run
+00:18 +399: /media/ssd/develop/FYP/app/broiler_fms/test/sync/auto_pull_trigger_test.dart: ordering the push runs before the pull, and both run
+00:18 +400: /media/ssd/develop/FYP/app/broiler_fms/test/sync/auto_pull_trigger_test.dart: ordering the push runs before the pull, and both run
+00:18 +401: /media/ssd/develop/FYP/app/broiler_fms/test/sync/auto_pull_trigger_test.dart: ordering the push runs before the pull, and both run
+00:18 +402: /media/ssd/develop/FYP/app/broiler_fms/test/sync/auto_pull_trigger_test.dart: ordering the push runs before the pull, and both run
+00:18 +403: /media/ssd/develop/FYP/app/broiler_fms/test/sync/auto_pull_trigger_test.dart: ordering the push runs before the pull, and both run
+00:18 +404: /media/ssd/develop/FYP/app/broiler_fms/test/sync/auto_pull_trigger_test.dart: ordering the push runs before the pull, and both run
+00:18 +405: /media/ssd/develop/FYP/app/broiler_fms/test/sync/auto_pull_trigger_test.dart: ordering the push runs before the pull, and both run
+00:18 +406: /media/ssd/develop/FYP/app/broiler_fms/test/sync/auto_pull_trigger_test.dart: ordering the push runs before the pull, and both run
+00:18 +407: /media/ssd/develop/FYP/app/broiler_fms/test/sync/auto_pull_trigger_test.dart: ordering the push runs before the pull, and both run
+00:18 +408: /media/ssd/develop/FYP/app/broiler_fms/test/sync/auto_pull_trigger_test.dart: ordering the push runs before the pull, and both run
+00:18 +409: /media/ssd/develop/FYP/app/broiler_fms/test/sync/auto_pull_trigger_test.dart: ordering the push runs before the pull, and both run
+00:18 +410: /media/ssd/develop/FYP/app/broiler_fms/test/sync/auto_pull_trigger_test.dart: ordering the push runs before the pull, and both run
+00:18 +411: /media/ssd/develop/FYP/app/broiler_fms/test/sync/auto_pull_trigger_test.dart: ordering the push runs before the pull, and both run
+00:18 +412: /media/ssd/develop/FYP/app/broiler_fms/test/sync/auto_pull_trigger_test.dart: ordering the push runs before the pull, and both run
+00:18 +413: /media/ssd/develop/FYP/app/broiler_fms/test/sync/auto_pull_trigger_test.dart: ordering the push runs before the pull, and both run
+00:18 +414: /media/ssd/develop/FYP/app/broiler_fms/test/sync/auto_pull_trigger_test.dart: ordering the push runs before the pull, and both run
+00:19 +415: /media/ssd/develop/FYP/app/broiler_fms/test/sync/auto_pull_trigger_test.dart: ordering the push runs before the pull, and both run
+00:19 +416: /media/ssd/develop/FYP/app/broiler_fms/test/sync/auto_pull_trigger_test.dart: ordering the push runs before the pull, and both run
+00:19 +417: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so an http client that gave up (manager)
+00:19 +418: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so an http client that gave up (manager)
+00:19 +419: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so an http client that gave up (manager)
+00:19 +420: /media/ssd/develop/FYP/app/broiler_fms/test/sync/auto_pull_trigger_test.dart: throttle a second run inside 60 s is skipped
+00:19 +421: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so an http client that gave up (staff)
+00:19 +422: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so an http client that gave up (staff)
+00:19 +423: /media/ssd/develop/FYP/app/broiler_fms/test/sync/auto_pull_trigger_test.dart: throttle the throttle is counted from the end of a successful run
+00:19 +424: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a request that timed out (manager)
+00:19 +425: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a request that timed out (manager)
+00:19 +426: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a request that timed out (manager)
+00:19 +427: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a request that timed out (manager)
+00:19 +428: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a request that timed out (manager)
+00:19 +429: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a request that timed out (manager)
+00:19 +430: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a request that timed out (manager)
+00:19 +431: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a request that timed out (manager)
+00:19 +432: /media/ssd/develop/FYP/app/broiler_fms/test/sync/auto_pull_trigger_test.dart: overlap a manual pull in flight is joined, not duplicated
+00:19 +433: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a request that timed out (staff)
+00:19 +434: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a request that timed out (staff)
+00:19 +435: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a request that timed out (staff)
+00:19 +436: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a request that timed out (staff)
+00:19 +437: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a request that timed out (staff)
+00:19 +438: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a request that timed out (staff)
+00:19 +439: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a request that timed out (staff)
+00:19 +440: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a request that timed out (staff)
+00:19 +441: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a request that timed out (staff)
+00:19 +442: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a request that timed out (staff)
+00:19 +443: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a request that timed out (staff)
+00:19 +444: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a request that timed out (staff)
+00:19 +445: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a request that timed out (staff)
+00:19 +446: /media/ssd/develop/FYP/app/broiler_fms/test/sync/auto_pull_trigger_test.dart: connection gate app resume while online drains then pulls
+00:19 +447: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a failure that is not the network keeps its own words (manager)
+00:19 +448: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a failure that is not the network keeps its own words (manager)
+00:19 +449: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a failure that is not the network keeps its own words (manager)
+00:19 +450: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a failure that is not the network keeps its own words (manager)
+00:19 +451: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a failure that is not the network keeps its own words (manager)
+00:19 +452: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a failure that is not the network keeps its own words (manager)
+00:19 +453: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a failure that is not the network keeps its own words (manager)
+00:19 +454: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a failure that is not the network keeps its own words (manager)
+00:19 +455: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a failure that is not the network keeps its own words (manager)
+00:19 +456: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a failure that is not the network keeps its own words (manager)
+00:19 +457: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a failure that is not the network keeps its own words (manager)
+00:19 +458: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: a genuine network failure does say so a failure that is not the network keeps its own words (manager)
+00:19 +459: /media/ssd/develop/FYP/app/broiler_fms/test/sync/pull_changed_rows_test.dart: the first pull reports the new row, the second reports nothing
+00:19 +460: /media/ssd/develop/FYP/app/broiler_fms/test/sync/pull_changed_rows_test.dart: the first pull reports the new row, the second reports nothing
+00:19 +461: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: connectivity reports none but the request succeeds, so the sync succeeds
+00:19 +462: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: connectivity reports none but the request succeeds, so the sync succeeds
+00:19 +463: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: connectivity reports none but the request succeeds, so the sync succeeds
+00:20 +464: /media/ssd/develop/FYP/app/broiler_fms/test/sync/pull_service_provider_test.dart: reading pullServiceProvider while signed out does not throw
+00:20 +465: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: single flight a drag during a run starts no second run (manager)
+00:20 +466: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: single flight a drag during a run starts no second run (manager)
+00:20 +467: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: single flight a drag during a run starts no second run (manager)
+00:20 +468: /media/ssd/develop/FYP/app/broiler_fms/test/sync/pull_service_provider_test.dart: pulling after sign-in resolves the domains and reports every table
+00:20 +469: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: single flight a drag during a run starts no second run (staff)
+00:20 +470: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: single flight a drag during a run starts no second run (staff)
+00:20 +471: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: single flight a drag during a run starts no second run (staff)
+00:20 +472: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: single flight a drag during a run starts no second run (staff)
+00:20 +473: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: single flight a drag during a run starts no second run (staff)
+00:20 +474: /media/ssd/develop/FYP/app/broiler_fms/test/sync/pull_service_provider_test.dart: the in-flight guard isPulling is false before a run and true during it
+00:20 +475: /media/ssd/develop/FYP/app/broiler_fms/test/sync/pull_service_test.dart: PullService.pullAll pulls every table and totals the rows written
+00:20 +476: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: single flight a button press during a drag starts no second run (manager)
+00:20 +477: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: single flight a button press during a drag starts no second run (manager)
+00:20 +478: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: single flight a button press during a drag starts no second run (manager)
+00:20 +479: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: single flight a button press during a drag starts no second run (manager)
+00:20 +480: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: single flight a button press during a drag starts no second run (manager)
+00:20 +481: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: single flight a button press during a drag starts no second run (staff)
+00:20 +482: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: automatic runs stay silent an automatic run shows no snackbar (manager)
+00:20 +483: /media/ssd/develop/FYP/app/broiler_fms/test/sync/pull_single_flight_test.dart: two concurrent calls share one pass and the same result
+00:20 +484: /media/ssd/develop/FYP/app/broiler_fms/test/sync/pull_single_flight_test.dart: two concurrent calls share one pass and the same result
+00:20 +485: /media/ssd/develop/FYP/app/broiler_fms/test/sync/pull_single_flight_test.dart: two concurrent calls share one pass and the same result
+00:20 +486: /media/ssd/develop/FYP/app/broiler_fms/test/sync/pull_single_flight_test.dart: two concurrent calls share one pass and the same result
+00:20 +487: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: automatic runs stay silent a periodic pull shows no snackbar (manager)
+00:20 +488: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: automatic runs stay silent a periodic pull shows no snackbar (manager)
+00:20 +489: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: automatic runs stay silent a periodic pull shows no snackbar (manager)
+00:20 +490: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: automatic runs stay silent a periodic pull shows no snackbar (manager)
+00:20 +491: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: automatic runs stay silent a periodic pull shows no snackbar (staff)
+00:20 +492: /media/ssd/develop/FYP/app/broiler_fms/test/presentation/shared/sync_parity_test.dart: the drain is awaited before the pull on both paths
+00:21 +493: /media/ssd/develop/FYP/app/broiler_fms/test/sync/sync_outcome_message_test.dart: syncOutcomeMessage nothing sent and nothing received: already up to date
+00:21 +494: /media/ssd/develop/FYP/app/broiler_fms/test/sync/sync_outcome_message_test.dart: syncOutcomeMessage one sent, nothing received: singular
+00:21 +495: /media/ssd/develop/FYP/app/broiler_fms/test/sync/sync_outcome_message_test.dart: syncOutcomeMessage several sent, nothing received: plural
+00:21 +496: /media/ssd/develop/FYP/app/broiler_fms/test/sync/sync_outcome_message_test.dart: syncOutcomeMessage nothing sent, one received: singular
+00:21 +497: /media/ssd/develop/FYP/app/broiler_fms/test/sync/sync_outcome_message_test.dart: syncOutcomeMessage nothing sent, several received: plural
+00:21 +498: /media/ssd/develop/FYP/app/broiler_fms/test/sync/sync_outcome_message_test.dart: syncOutcomeMessage both: one of each stays singular
+00:21 +499: /media/ssd/develop/FYP/app/broiler_fms/test/sync/sync_outcome_message_test.dart: syncOutcomeMessage both: plurals on both sides
+00:21 +500: /media/ssd/develop/FYP/app/broiler_fms/test/sync/sync_outcome_message_test.dart: syncOutcomeMessage an unchanged pull reports nothing at all, not a row count
+00:21 +501: /media/ssd/develop/FYP/app/broiler_fms/test/sync/sync_service_test.dart: queue wiring a new batch is queued as an insert, later edits as updates
+00:21 +502: /media/ssd/develop/FYP/app/broiler_fms/test/sync/sync_service_test.dart: queue wiring a recorded expense is queued and marked synced on demand
+00:21 +503: /media/ssd/develop/FYP/app/broiler_fms/test/sync/sync_service_test.dart: SyncService.drain pushes parents before children, whatever the queue order is
+00:21 +504: /media/ssd/develop/FYP/app/broiler_fms/test/sync/triggers_test.dart: LifecycleSyncTrigger a burst of writes collapses into a single drain
+00:21 +505: /media/ssd/develop/FYP/app/broiler_fms/test/sync/triggers_test.dart: LifecycleSyncTrigger a burst of writes collapses into a single drain
+00:21 +506: /media/ssd/develop/FYP/app/broiler_fms/test/sync/triggers_test.dart: LifecycleSyncTrigger a burst of writes collapses into a single drain
+00:21 +507: /media/ssd/develop/FYP/app/broiler_fms/test/sync/triggers_test.dart: LifecycleSyncTrigger a burst of writes collapses into a single drain
+00:21 +508: /media/ssd/develop/FYP/app/broiler_fms/test/sync/triggers_test.dart: LifecycleSyncTrigger a burst of writes collapses into a single drain
+00:21 +509: /media/ssd/develop/FYP/app/broiler_fms/test/sync/triggers_test.dart: LifecycleSyncTrigger a burst of writes collapses into a single drain
+00:21 +510: /media/ssd/develop/FYP/app/broiler_fms/test/sync/triggers_test.dart: LifecycleSyncTrigger a burst of writes collapses into a single drain
+00:21 +511: /media/ssd/develop/FYP/app/broiler_fms/test/sync/triggers_test.dart: LifecycleSyncTrigger a burst of writes collapses into a single drain
+00:21 +512: /media/ssd/develop/FYP/app/broiler_fms/test/sync/triggers_test.dart: LifecycleSyncTrigger disposing cancels a drain that has not fired yet
+00:21 +513: /media/ssd/develop/FYP/app/broiler_fms/test/sync/triggers_test.dart: ConnectivitySyncTrigger drains on coming online, never on dropping offline
+00:22 +514: /media/ssd/develop/FYP/app/broiler_fms/test/sync/triggers_test.dart: ConnectivitySyncTrigger stops listening once disposed
+00:22 +515: /media/ssd/develop/FYP/app/broiler_fms/test/sync/triggers_test.dart: queue-table listener sees the inserts enqueue writes, not the engine’s own edits
+00:22 +516: /media/ssd/develop/FYP/app/broiler_fms/test/sync/triggers_test.dart: queue-table listener an enqueue reaches a debounced drain through its provider
+00:22 +517: All tests passed!
