@@ -3,12 +3,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'package:broiler_fms/domain/current_account_domain.dart';
-import 'package:broiler_fms/domain/logout_domain.dart';
-import 'package:broiler_fms/domain/session_poll_trigger.dart';
+import 'package:broiler_fms/data/remote/supabase_provider.dart';
+import 'package:broiler_fms/presentation/mobile/forced_logout.dart';
 import 'package:broiler_fms/presentation/mobile/router.dart';
 import 'package:broiler_fms/presentation/shared/theme/app_theme.dart';
 import 'package:broiler_fms/presentation/shared/widgets/auto_pull_host.dart';
@@ -22,6 +20,16 @@ Future<void> main() async {
   await Supabase.initialize(
     url: config['SUPABASE_URL'] as String,
     publishableKey: config['SUPABASE_ANON_KEY'] as String,
+    // Rate the PostgREST client's patience for this mobile build. By
+    // default a request has no timeout and is retried three times with a
+    // 1s/2s/4s back-off, and the pull fetches its tables one after
+    // another, so a phone with no signal sat on "syncing" for about a
+    // minute before saying anything. Fail each request quickly instead: a
+    // 12s cap and no retry keeps the offline wait to seconds. The pull
+    // still completes with every table errored, so the message the person
+    // sees is unchanged ("Couldn't reach the server..."). Web keeps the
+    // defaults.
+    postgrestOptions: mobilePostgrestOptions,
   );
 
   runApp(const ProviderScope(child: BroilerFmsApp()));
@@ -34,23 +42,6 @@ Future<void> main() async {
 Future<Map<String, dynamic>> _loadConfig() async {
   final contents = await rootBundle.loadString('env/config.json');
   return jsonDecode(contents) as Map<String, dynamic>;
-}
-
-/// Forced logout from the session poller: runs forcedLogOut (bounded
-/// drain, then wipe-or-keep), drops the cached account, and goes to
-/// login with an explanation. Never blocked by unsynced data, unlike
-/// the voluntary logout — the lockout always happens, only the fate
-/// of local rows differs.
-Future<void> _forceLogOut(BuildContext context, WidgetRef ref) async {
-  try {
-    await ref.read(logoutDomainProvider).forcedLogOut();
-  } catch (_) {
-    // Forced means forced: the lockout proceeds regardless.
-  }
-  ref.invalidate(currentAccountProvider);
-  if (context.mounted) {
-    context.go('/login', extra: forcedLogoutMessage);
-  }
 }
 
 /// The mobile app's root widget, used by Staff and Manager.
@@ -75,7 +66,7 @@ class BroilerFmsApp extends ConsumerWidget {
     // Inside SessionPoller, so the automatic pull has the same lifetime as
     // the rest of the session watch and is torn down with it.
     return SessionPoller(
-      onAccessLost: () => _forceLogOut(context, ref),
+      onAccessLost: () => forceLogOut(ref),
       child: AutoPullHost(
         child: MaterialApp.router(
           debugShowCheckedModeBanner: false,

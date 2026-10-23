@@ -760,6 +760,16 @@ input[type="range"]::-moz-range-thumb{
   .site-header,.menu,.progress,.to-top,.btn,.skip{display:none}
   body::before{display:none}
 }
+
+/* ── 8. ADMIN LINK — acknowledge the click while the console loads ───────── */
+.btn[aria-busy="true"]{pointer-events:none}
+.btn .opening-spinner{
+  width:.9em; height:.9em; flex:0 0 auto; border-radius:50%;
+  border:2px solid currentColor; border-right-color:transparent;
+  animation:opening-spin .7s linear infinite;
+}
+@keyframes opening-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){.btn .opening-spinner{animation:none}}
 </style>
 </head>
 <body>
@@ -2085,6 +2095,46 @@ input[type="range"]::-moz-range-thumb{
       } else {
         fallbackCopy();
       }
+    });
+  })();
+
+  /* =======================================================================
+     12. ADMIN LINK — acknowledge the click while the console bundle loads
+     ======================================================================= */
+  (function adminLinkFeedback() {
+    var ADMIN_LINKS = 'a[href="/admin"], a[href="/admin/"]';
+
+    function reset(link) {
+      var spinner = link.querySelector('.opening-spinner');
+      if (spinner) spinner.remove();
+      link.classList.remove('is-opening');
+      link.removeAttribute('aria-busy');
+      var label = link.querySelector('.lbl') || link;
+      if (label.dataset && label.dataset.openingLabel) {
+        label.textContent = label.dataset.openingLabel;
+        delete label.dataset.openingLabel;
+      }
+    }
+
+    document.addEventListener('click', function (e) {
+      var link = e.target && e.target.closest ? e.target.closest(ADMIN_LINKS) : null;
+      if (!link || link.classList.contains('is-opening')) return;
+      link.classList.add('is-opening');
+      link.setAttribute('aria-busy', 'true');
+      var label = link.querySelector('.lbl') || link;
+      label.dataset.openingLabel = label.textContent;
+      label.textContent = 'Opening…';
+      var spinner = document.createElement('span');
+      spinner.className = 'opening-spinner';
+      spinner.setAttribute('aria-hidden', 'true');
+      link.insertBefore(spinner, link.firstChild);
+    }, true);
+
+    /* Coming back through the browser cache restores the page as it was
+       left, which would be stuck on "Opening…". Put it back. */
+    window.addEventListener('pageshow', function (e) {
+      if (!e.persisted) return;
+      Array.prototype.forEach.call(document.querySelectorAll(ADMIN_LINKS), reset);
     });
   })();
 })();

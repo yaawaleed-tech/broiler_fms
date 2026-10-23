@@ -184,6 +184,13 @@ class BatchDomain {
   /// internally, exposed here for batch detail screens to display.
   Future<int> getTotalHarvested(String batchId) => _totalHarvested(batchId);
 
+  /// Total birds in harvests that have no sale yet, so their price is
+  /// still owed. A thin public wrapper around the same total the
+  /// financial summary uses, exposed here so batch detail can say how
+  /// many birds are waiting to be priced without opening the price page.
+  Future<int> getTotalAwaitingPrice(String batchId) =>
+      _totalAwaitingPrice(batchId);
+
   /// The computed financial picture for one batch: expenses, revenue,
   /// profit or loss, breakeven price, and an approximate FCR.
   Future<FinancialSummary> getFinancialSummary(String batchId) async {

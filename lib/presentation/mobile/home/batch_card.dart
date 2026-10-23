@@ -147,7 +147,7 @@ class BatchCard extends ConsumerWidget {
                   reassigned: reassigned,
                   remainingAsync: reassigned
                       ? const AsyncValue<int>.data(0)
-                      : ref.watch(_remainingProvider(batch.batchId)),
+                      : ref.watch(batchRemainingProvider(batch.batchId)),
                 ),
               ],
             ),
@@ -157,7 +157,7 @@ class BatchCard extends ConsumerWidget {
           if (!reassigned) ...[
             const SizedBox(width: 12),
             ref
-                .watch(_remainingProvider(batch.batchId))
+                .watch(batchRemainingProvider(batch.batchId))
                 .when(
               loading: () => const SizedBox(
                 width: 18,
@@ -240,6 +240,12 @@ class _StatusBadge extends ConsumerWidget {
   }
 }
 
-final _remainingProvider = FutureProvider.autoDispose.family<int, String>(
+/// The remaining-bird count on the home card.
+///
+/// Public so the screens that write entries can drop it: the batch list
+/// reads the batches table through a Drift `watch()`, and the entry
+/// tables are separate, so without an explicit invalidation the count on
+/// the card is only recomputed when the card happens to rebuild.
+final batchRemainingProvider = FutureProvider.autoDispose.family<int, String>(
       (ref, batchId) => ref.watch(batchDomainProvider).getRemainingBirdCount(batchId),
 );

@@ -116,6 +116,17 @@ class AutoPullTrigger with WidgetsBindingObserver {
   /// presentation to refresh.
   void Function(int updated)? onChangesArrived;
 
+  /// Called after every run that got as far as pulling, with the number of
+  /// rows that came back — zero included.
+  ///
+  /// [onChangesArrived] deliberately stays quiet when nothing changed, so
+  /// it cannot be used for work that has to happen every single time. The
+  /// Staff pool is that work: it is not one of the eight tables this pull
+  /// fetches, and it can change on its own without any of them moving, so
+  /// a Manager's assign-staff picker would keep showing a stale list until
+  /// the next login.
+  void Function(int updated)? onSyncCompleted;
+
   StreamSubscription<List<ConnectivityResult>>? _subscription;
 
   /// The one run in flight, if any.
@@ -382,6 +393,7 @@ class AutoPullTrigger with WidgetsBindingObserver {
       // still trying to send.
       final push = await _syncService.drain();
       final pull = await _pullService.pullAll();
+      onSyncCompleted?.call(pull.updated);
       if (pull.updated > 0) onChangesArrived?.call(pull.updated);
       // Any trigger at all re-arms the periodic timer, so signing back in
       // after a sign-out cancelled it brings it straight back.

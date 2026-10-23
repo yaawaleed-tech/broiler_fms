@@ -24,6 +24,15 @@ final _batchProvider = FutureProvider.autoDispose.family<Batch?, String>((
   return ref.watch(batchDomainProvider).getById(batchId);
 });
 
+/// What the picker says when the pool has nobody in it.
+///
+/// The pool is refreshed when the screen opens, so an empty list means the
+/// business genuinely has no active Staff accounts yet, not that the
+/// phone is behind: the message has to point at the fix, which is adding
+/// the account elsewhere.
+const _emptyPoolMessage =
+    'No active Staff accounts yet.\nAdd Staff on the web, then reopen this screen.';
+
 /// Manager picks one Staff account to assign to a batch, from the
 /// cached Staff pool, works offline.
 ///
@@ -49,6 +58,27 @@ class _AssignStaffScreenState extends ConsumerState<AssignStaffScreen> {
   bool _showingReview = false;
   bool _isSaving = false;
   String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    // Pull the latest Staff pool from the server when this screen opens.
+    _refreshStaffPool();
+  }
+
+  /// Best-effort refresh of the Staff pool.
+  ///
+  /// The list below renders from the local cache, so it works offline from
+  /// the last copy; this just keeps it current while a Manager is looking
+  /// at it. A failure (offline) is ignored on purpose: the cached list
+  /// stays, and the next open or sync tries again.
+  Future<void> _refreshStaffPool() async {
+    try {
+      await ref.read(accountDomainProvider).refreshStaffPool();
+    } catch (_) {
+      // Offline: keep showing whatever was cached.
+    }
+  }
 
   Future<void> _confirm() async {
     final staff = _selectedStaff;
@@ -167,7 +197,7 @@ class _AssignStaffScreenState extends ConsumerState<AssignStaffScreen> {
         // account is no longer active, and the Manager still needs a
         // way to clear that.
         if (staffList.isEmpty && assignedStaffId == null) {
-          return const Center(child: Text('No active Staff accounts yet.'));
+          return const Center(child: Text(_emptyPoolMessage));
         }
 
         return Column(
@@ -196,7 +226,7 @@ class _AssignStaffScreenState extends ConsumerState<AssignStaffScreen> {
                 ),
               ),
             if (staffList.isEmpty)
-              const Center(child: Text('No active Staff accounts yet.'))
+              const Center(child: Text(_emptyPoolMessage))
             else
               Expanded(
                 child: ListView.separated(

@@ -36,12 +36,18 @@ class _BatchDetailData {
     required this.remaining,
     required this.mortality,
     required this.harvested,
+    required this.unpricedHarvests,
   });
 
   final Batch batch;
   final int remaining;
   final int mortality;
   final int harvested;
+
+  /// The birds in this batch's harvests that have no sale yet: how many
+  /// are still waiting to be priced. Shown on the screen so a Manager can
+  /// see the pricing still owed without opening the price list.
+  final int unpricedHarvests;
 }
 
 final batchDetailProvider = FutureProvider.autoDispose.family<
@@ -54,11 +60,15 @@ final batchDetailProvider = FutureProvider.autoDispose.family<
   final remaining = await batchDomain.getRemainingBirdCount(batchId);
   final mortality = await batchDomain.getTotalMortality(batchId);
   final harvested = await batchDomain.getTotalHarvested(batchId);
+  // Birds in harvests that have not been priced yet, so the screen can
+  // show the pricing still owed without opening the price page.
+  final unpricedHarvests = await batchDomain.getTotalAwaitingPrice(batchId);
   return _BatchDetailData(
     batch: batch,
     remaining: remaining,
     mortality: mortality,
     harvested: harvested,
+    unpricedHarvests: unpricedHarvests,
   );
 });
 
@@ -293,6 +303,15 @@ class _BatchDetailBody extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 16),
+        if (data.unpricedHarvests > 0) ...[
+          _UnpricedHarvestsRow(
+            birds: data.unpricedHarvests,
+            onTap: isManager
+                ? () => context.push('/batches/$batchId/harvests')
+                : null,
+          ),
+          const SizedBox(height: 16),
+        ],
         _AssignedToRow(
           staffName: _assignedStaffName(ref),
           onAssign: isManager
@@ -467,6 +486,77 @@ class _BannerButton extends StatelessWidget {
           side: const BorderSide(color: AppColors.ink, width: 1.5),
         ),
         child: Text(label),
+      ),
+    );
+  }
+}
+
+/// The "Unpriced harvests" row under the stat cards.
+///
+/// Birds that have been harvested but not yet priced are money the farm is
+/// owed but has not recorded, so the count belongs on the batch screen
+/// rather than only in the price list. Manager gets the link across to
+/// the price page; Staff sees the same count with no control they are not
+/// allowed to use.
+class _UnpricedHarvestsRow extends StatelessWidget {
+  const _UnpricedHarvestsRow({required this.birds, this.onTap});
+
+  final int birds;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.hairlineStrong, width: 1.5),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Unpriced harvests',
+                  style: TextStyle(
+                    fontFamily: 'PublicSans',
+                    fontSize: 12,
+                    color: AppColors.inkMuted,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  '${AppFormat.count(birds)} '
+                  '${birds == 1 ? 'bird' : 'birds'} waiting for a price',
+                  style: const TextStyle(
+                    fontFamily: 'RobotoSlab',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                    color: AppColors.ink,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (onTap != null)
+            TextButton(
+              onPressed: onTap,
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.rust,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+              ),
+              child: const Text(
+                'Price',
+                style: TextStyle(
+                  fontFamily: 'PublicSans',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
