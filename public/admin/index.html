@@ -18,18 +18,21 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="Offline-first batch records, finances and sync for broiler farms.">
+
+  <meta name="theme-color" content="#B2472D">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="broiler_fms">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="icon" type="image/png" href="favicon-48.png"/>
 
-  <title>broiler_fms</title>
+  <title>Broiler FMS</title>
   <link rel="manifest" href="manifest.json">
 
   <!-- Shown while the Flutter bundle downloads; removed on first frame. -->
@@ -37,13 +40,13 @@
     #app-loading{
       position:fixed; inset:0; z-index:9999;
       display:flex; flex-direction:column; align-items:center; justify-content:center;
-      gap:16px; background:#EFE9D8; color:#5A4E3E;
+      gap:16px; background:#F1EBDD; color:#4A3A2F;
       font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
       font-size:.95rem;
     }
     #app-loading .spinner{
       width:40px; height:40px; border-radius:50%;
-      border:4px solid #DED3BE; border-top-color:#A8442A;
+      border:4px solid #F1EBDD; border-top-color:#B2472D;
       animation:app-loading-spin .8s linear infinite;
     }
     #app-loading p{margin:0}
@@ -52,6 +55,20 @@
       #app-loading .spinner{animation:none; border-top-color:#DED3BE}
     }
   </style>
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Broiler FMS">
+  <meta property="og:description" content="Offline-first batch records, finances and sync for broiler farms.">
+  <meta property="og:url" content="https://broiler-fms.web.app/admin/">
+  <meta property="og:image" content="https://broiler-fms.web.app/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Broiler FMS">
+  <meta name="twitter:description" content="Offline-first batch records, finances and sync for broiler farms.">
+  <meta name="twitter:image" content="https://broiler-fms.web.app/og-image.png">
 </head>
 <body>
   <div id="app-loading" role="status" aria-live="polite">
